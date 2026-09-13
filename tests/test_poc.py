@@ -38,6 +38,7 @@ from scripts.normalize_google_maps_results import candidate_score  # noqa: E402
 from scripts.run_scrapy_websites import terminal_events_for_run  # noqa: E402
 from scripts.run_sentiment_model import MODEL_REVISION, normalize_generated_label  # noqa: E402
 from scripts.score_company_completeness import score_rows, summarize  # noqa: E402
+from scripts.build_output_contract import build_envelope, summarize_profile  # noqa: E402
 from scripts.extract_company_site_activity import observation as site_activity_observation  # noqa: E402
 from scripts.extract_company_site_news import observation as site_news_observation  # noqa: E402
 from scripts.build_verified_observations import build as build_verified_observations  # noqa: E402
@@ -834,6 +835,75 @@ class OperationsTests(unittest.TestCase):
         self.assertEqual(result["domains"], 3)
         self.assertEqual(result["p50_requests"], 2.0)
         self.assertEqual(result["max_requests"], 9)
+
+
+class OutputContractTests(unittest.TestCase):
+    def _profile(self) -> dict:
+        return {
+            "organisation_number": "923609016",
+            "run_metrics": {"requests": 4},
+            "evidence": {
+                "registry_live": evidence(
+                    "registry_live", "available", "official_registry_live", "https://example.test",
+                    content_sha256="a" * 64,
+                    value={
+                        "name": "Example AS", "legal_form": "AS", "employees": 3, "bankrupt": False, "liquidating": False,
+                        "business_address": {"kommune": "OSLO"}, "industry": {"kode": "62.010", "beskrivelse": "Computer programming"},
+                    },
+                ),
+                "financials": evidence(
+                    "financials", "available", "official_annual_accounts", "https://example.test", content_sha256="b" * 64,
+                    value={"records": [
+                        {"record_id": 1, "period": {"tilDato": "2023-12-31"}, "revenue": 100},
+                        {"record_id": 2, "period": {"tilDato": "2024-12-31"}, "revenue": 200, "annual_result": 20},
+                    ]},
+                ),
+                "roles": evidence(
+                    "roles", "available", "official_roles", "https://example.test", content_sha256="c" * 64,
+                    value={"roles": [{"name": "Kari Nordmann", "role_code": "DAGL", "role": "Daglig leder", "inactive": False}]},
+                ),
+                "locations": evidence("locations", "available", "official_subunits", "https://example.test", content_sha256="d" * 64, value={"locations": []}),
+                "website": evidence(
+                    "website", "available", "search_discovered_company_website", "https://example.test", content_sha256="e" * 64,
+                    value={"final_url": "https://example.no/"},
+                ),
+            },
+        }
+
+    def test_build_envelope_matches_output_contract_shape(self):
+        envelope = build_envelope(self._profile(), run_id="r1", started_at="2026-01-01T00:00:00Z", completed_at="2026-01-01T00:01:00Z")
+        self.assertEqual(envelope["organisation_number"], "923609016")
+        self.assertEqual(envelope["run"]["terminal_status"], "completed")
+        evidence_ids = {item["id"] for item in envelope["evidence"]}
+        for claim in envelope["claims"]:
+            self.assertIn(claim["availability"], {"available", "not_available", "blocked", "not_applicable", "ambiguous", "failed"})
+            for eid in claim["evidence_ids"]:
+                self.assertIn(eid, evidence_ids)
+        self.assertEqual(envelope["operations"]["requests"], 4)
+
+    def test_financials_pick_latest_year_by_period_not_list_order(self):
+        envelope = build_envelope(self._profile(), run_id="r1", started_at="2026-01-01T00:00:00Z", completed_at="2026-01-01T00:01:00Z")
+        year_claims = {c["field"]: c["value"] for c in envelope["claims"] if c["field"].startswith("annual_accounts.")}
+        self.assertEqual(set(year_claims), {"annual_accounts.2023", "annual_accounts.2024"})
+
+    def test_summary_is_grounded_and_reports_unknowns(self):
+        summary = summarize_profile(self._profile()["evidence"])
+        self.assertIn("Example AS", summary["text"])
+        self.assertIn("Kari Nordmann", summary["text"])
+        self.assertIn("2024", summary["text"])
+        self.assertIn("revenue of 200", summary["text"])
+        self.assertIn("group/ownership structure", summary["unknown_fields"])
+
+    def test_summary_uses_an_before_vowel_legal_forms(self):
+        summary = summarize_profile(self._profile()["evidence"])
+        self.assertIn("is an AS", summary["text"])
+
+    def test_summary_never_fabricates_missing_sections(self):
+        thin_profile = {"evidence": {"registry": evidence("registry", "not_found", "official_registry_bulk", "https://example.test")}}
+        summary = summarize_profile(thin_profile["evidence"])
+        self.assertIn("financial results", summary["unknown_fields"])
+        self.assertIn("leadership", summary["unknown_fields"])
+        self.assertIn("official website", summary["unknown_fields"])
 
 
 class WebsiteTests(unittest.TestCase):

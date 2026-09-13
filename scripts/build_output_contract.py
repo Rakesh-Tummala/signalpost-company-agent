@@ -186,6 +186,75 @@ def emit_website(emitter: Emitter, evidence: dict[str, Any]) -> None:
     emitter.claim("official_website", value.get("final_url") or value.get("requested_url"), record, module="website")
 
 
+def summarize_profile(evidence: dict[str, Any]) -> dict[str, Any]:
+    """Build a grounded, template-based summary -- every sentence traces to a claim
+    we already published above. No model invents or infers anything here; this is
+    string formatting over facts that already passed the identity/evidence gates.
+    """
+    registry_module = "registry_live" if (evidence.get("registry_live") or {}).get("status") == "available" else "registry"
+    registry_value = (evidence.get(registry_module) or {}).get("value") or {}
+    name = registry_value.get("name") or registry_value.get("navn") or "This company"
+    legal_form = registry_value.get("legal_form") or registry_value.get("organisasjonsform.kode")
+    industry = registry_value.get("industry") or registry_value.get("naeringskode1") or {}
+    industry_label = industry.get("beskrivelse") if isinstance(industry, dict) else None
+    municipality = None
+    address = registry_value.get("business_address") or registry_value.get("forretningsadresse")
+    if isinstance(address, dict):
+        municipality = address.get("kommune")
+
+    sentences: list[str] = []
+    article = "an" if legal_form and legal_form[0].upper() in "AEIOU" else "a"
+    identity_bits = [f"{article} {legal_form}" if legal_form else "a company", "registered in Norway"]
+    if industry_label:
+        identity_bits.append(f"operating in {industry_label.lower()}")
+    if municipality:
+        identity_bits.append(f"based in {municipality.title()}")
+    sentences.append(f"{name} is " + ", ".join(identity_bits) + ".")
+
+    financials_record = evidence.get("financials") or {}
+    financials_records = (financials_record.get("value") or {}).get("records") or []
+    unknowns: list[str] = []
+    if financials_record.get("status") == "available" and financials_records:
+        latest = max(financials_records, key=lambda item: (item.get("period") or {}).get("tilDato") or "")
+        period = latest.get("period") or {}
+        year = str(period.get("tilDato") or "")[:4] or "the latest filed year"
+        revenue = latest.get("revenue")
+        result = latest.get("annual_result")
+        if revenue is not None:
+            sentences.append(f"Its most recently filed accounts ({year}) report revenue of {revenue:,.0f} NOK" + (f" and a result of {result:,.0f} NOK." if result is not None else "."))
+    else:
+        unknowns.append("financial results")
+
+    roles_record = evidence.get("roles") or {}
+    roles = (roles_record.get("value") or {}).get("roles") or []
+    leader = next((r for r in roles if not r.get("inactive") and str(r.get("role_code") or "").upper() == "DAGL"), None)
+    if leader and leader.get("name"):
+        sentences.append(f"{leader['name']} is listed as daglig leder (managing director).")
+    elif roles_record.get("status") != "available" or not roles:
+        unknowns.append("leadership")
+
+    website_record = evidence.get("website") or {}
+    website_value = (website_record.get("value") or {})
+    website_url = website_value.get("final_url") or website_value.get("requested_url")
+    if website_record.get("status") == "available" and website_url:
+        sentences.append(f"Its verified official website is {website_url}.")
+    else:
+        unknowns.append("official website")
+
+    if (evidence.get("group") or {}).get("status") != "available" or not ((evidence.get("group") or {}).get("value") or {}).get("companies"):
+        unknowns.append("group/ownership structure")
+    unknowns.append("hiring activity and dated public activity (no rights-cleared source integrated yet)")
+
+    if unknowns:
+        sentences.append("Not yet determined: " + "; ".join(unknowns) + ".")
+
+    return {
+        "text": " ".join(sentences),
+        "unknown_fields": unknowns,
+        "grounded_in_claims": True,
+    }
+
+
 def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, completed_at: str) -> dict[str, Any]:
     evidence = profile.get("evidence") or {}
     emitter = Emitter()
@@ -213,6 +282,7 @@ def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, com
         },
         "claims": emitter.claims,
         "evidence": emitter.evidence,
+        "summary": summarize_profile(evidence),
         "changes": [],
         "errors": errors,
         "operations": {
