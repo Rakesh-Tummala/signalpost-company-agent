@@ -162,6 +162,19 @@ def emit_financials(emitter: Emitter, evidence: dict[str, Any]) -> None:
         emitter.claim(f"annual_accounts.{year}", item, record, module="financials")
 
 
+def emit_financial_history(emitter: Emitter, evidence: dict[str, Any]) -> None:
+    # The financials module above only returns the most recent filing(s) -- the
+    # official API doesn't hand back full historical figures in one call. We do
+    # cheaply have the *list* of years with a filing on record (financial_history),
+    # which is real "available history" even without every year's full P&L.
+    record = evidence.get("financial_history") or {}
+    if record.get("status") != "available":
+        return
+    years = (record.get("value") or {}).get("years") or []
+    if years:
+        emitter.claim("annual_accounts_years_on_file", years, record, module="financial_history")
+
+
 def emit_roles(emitter: Emitter, evidence: dict[str, Any]) -> None:
     record = evidence.get("roles") or {}
     if record.get("status") != "available":
@@ -325,6 +338,7 @@ def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, com
     emit_registry_claims(emitter, evidence)
     emit_accounting_obligation(emitter, evidence)
     emit_financials(emitter, evidence)
+    emit_financial_history(emitter, evidence)
     emit_roles(emitter, evidence)
     emit_locations(emitter, evidence)
     emit_group(emitter, evidence)
