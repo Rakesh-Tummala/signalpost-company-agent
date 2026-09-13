@@ -186,6 +186,7 @@ def main() -> None:
             counts["verified_sites"] += 1
             if args.promote_verified:
                 row["evidence"]["website"] = website
+                row["website"] = website.get("value", {}).get("final_url") or website.get("source_url")
                 counts["promoted_sites"] += 1
         else:
             counts["quarantined_sites"] += 1
