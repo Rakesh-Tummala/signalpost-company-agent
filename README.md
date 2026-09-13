@@ -82,6 +82,38 @@ The published archive was clean-room verified on August 24, 2026: 104 tests and 
 
 Increase `--count` and `--expected-count` together if you want to publish more than the 1,000-company minimum. The ten-row smoke test above is practice only. Do not set `select_entry_batch.py --count 10`: the selector enforces the 1,000-company entry minimum.
 
+`run_competition_batch.py` above is just the official-registry stage. **The actual
+one-command evaluator entrypoint is `scripts/run_agent.py`** (see the next section):
+it chains that registry stage together with website discovery, a deeper site crawl,
+company-owned activity/news extraction, and official annual-report OCR workforce
+extraction, then converts everything into the submission's claims/evidence format in
+one call.
+
+## Running the full agent (one command)
+
+```bash
+# Server-side secrets, per the locked evaluator budget -- optional; the agent
+# still produces a complete submission without them, just with lower website
+# discovery coverage.
+export TAVILY_API_KEY=...
+export EXA_API_KEY=...
+
+uv run python scripts/run_agent.py \
+  --organisations entry-companies.jsonl \
+  --bulk brreg-enheter.csv \
+  --output-dir out/agent-run \
+  --run-id local-001 \
+  --expected-count 1000
+```
+
+This is the single command referenced in the submission contract below. Every stage
+past the initial registry batch is best-effort: a missing API key skips discovery, a
+missing `scrapy` install skips the deep crawl (and the activity/news extraction that
+depends on it), and missing `tesseract`/`poppler` binaries degrade the OCR workforce
+stage to "no workforce data" rather than failing the run. `out/agent-run/envelopes.jsonl`
+is the final submission artifact — see `DATA_SCHEMA.md` for its exact shape, and
+`CRAWLERS.md` for what each stage needs and how it degrades.
+
 ## The improvement loop
 
 1. Treat the organisation number as the anchor.
@@ -112,5 +144,11 @@ Submit a repository with:
 - a previous-snapshot input and material-change output;
 - a machine-readable run report with runtime, request count and third-party cost;
 - declared models, APIs, licences and source-rights assumptions.
+
+**The one command**: `scripts/run_agent.py` (see "Running the full agent" above).
+No model/LLM decides identity or invents any field in this submission — see
+`AGENT.md`. APIs used: Tavily Search and Exa Search (both optional, website
+discovery only); no model API calls. Third-party cost is small and bounded — see
+each discovery connector's own `--report` output for per-run `total_cost_usd`.
 
 Email the repository URL, run command, models/APIs and expected cost per 100-company run to `submit@builderr.ai`.
