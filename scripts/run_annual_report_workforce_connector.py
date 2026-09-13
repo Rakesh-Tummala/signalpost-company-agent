@@ -117,10 +117,11 @@ def ocr_pdf(pdf_path: Path, *, pages: int, dpi: int) -> str:
         text = []
         for image_path in sorted(Path(temporary).glob("page-*.jpg")):
             completed = subprocess.run(
-                ["tesseract", str(image_path), "stdout", "-l", "eng", "--psm", "6"],
+                ["tesseract", str(image_path), "stdout", "-l", "nor", "--psm", "6"],
                 check=True,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
                 timeout=60,
             )
             text.append(completed.stdout)
@@ -214,10 +215,10 @@ def main() -> None:
     parser.add_argument("--ocr-pages", type=int, default=15)
     parser.add_argument("--ocr-dpi", type=int, default=130)
     args = parser.parse_args()
-    wanted = [line.strip() for line in Path(args.organisations).read_text().splitlines() if line.strip()]
+    wanted = [line.strip() for line in Path(args.organisations).read_text(encoding="utf-8").splitlines() if line.strip()]
     profile_map = {
         str(row["organisation_number"]): row
-        for row in (json.loads(line) for line in Path(args.profiles).read_text().splitlines() if line.strip())
+        for row in (json.loads(line) for line in Path(args.profiles).read_text(encoding="utf-8").splitlines() if line.strip())
         if str(row["organisation_number"]) in set(wanted)
     }
     eligible = []

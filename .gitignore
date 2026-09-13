@@ -12,3 +12,4 @@ signalpost-universe.jsonl.gz
 # Scratch logs
 out/full-run-stdout.log
 .env
+.tessdata/
