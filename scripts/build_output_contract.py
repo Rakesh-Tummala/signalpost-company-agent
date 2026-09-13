@@ -388,6 +388,40 @@ def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, com
     }
 
 
+def build_envelopes_safe(
+    profiles: list[dict[str, Any]],
+    observations_by_org: dict[str, list[dict[str, Any]]],
+    *, run_id: str, started_at: str, completed_at: str,
+) -> tuple[list[dict[str, Any]], int]:
+    """build_envelope() for every profile, but one bad profile can't drop the batch.
+
+    The hard gate is "exactly N terminal envelopes" for N inputs -- a single
+    malformed profile crashing a list comprehension would silently produce zero
+    envelopes for everyone else. A conversion failure here gets an honest
+    submission_error envelope (empty claims, the exception recorded in errors)
+    instead of taking down the whole run.
+    """
+    envelopes = []
+    failures = 0
+    for profile in profiles:
+        org = str(profile.get("organisation_number") or "")
+        try:
+            envelopes.append(build_envelope(profile, run_id=run_id, started_at=started_at, completed_at=completed_at, observations=observations_by_org.get(org)))
+        except Exception as exc:  # noqa: BLE001 -- one bad profile must not drop the whole batch
+            failures += 1
+            envelopes.append({
+                "organisation_number": org,
+                "run": {"run_id": run_id, "started_at": started_at, "completed_at": completed_at, "terminal_status": "submission_error"},
+                "claims": [],
+                "evidence": [],
+                "summary": {"text": "", "unknown_fields": ["all fields -- envelope conversion failed"], "grounded_in_claims": False},
+                "changes": [],
+                "errors": [{"module": "build_output_contract", "note": f"{type(exc).__name__}: {exc}"}],
+                "operations": {"requests": 0, "runtime_ms": None, "third_party_cost_usd": 0},
+            })
+    return envelopes, failures
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Reshape profiles.jsonl into OUTPUT_CONTRACT.md's claims/evidence envelope.")
     parser.add_argument("--profiles", required=True)
@@ -405,16 +439,14 @@ def main() -> None:
             org = str(observation.get("organisation_number"))
             observations_by_org.setdefault(org, []).append(observation)
 
-    envelopes = [
-        build_envelope(profile, run_id=args.run_id, started_at=args.started_at, completed_at=args.completed_at, observations=observations_by_org.get(str(profile["organisation_number"])))
-        for profile in profiles
-    ]
+    envelopes, conversion_failures = build_envelopes_safe(profiles, observations_by_org, run_id=args.run_id, started_at=args.started_at, completed_at=args.completed_at)
     write_jsonl(Path(args.output), envelopes)
     total_claims = sum(len(e["claims"]) for e in envelopes)
     print(json.dumps({
         "profiles": len(envelopes),
         "total_claims": total_claims,
         "mean_claims_per_profile": round(total_claims / len(envelopes), 2) if envelopes else 0,
+        "conversion_failures": conversion_failures,
     }, indent=2))
 
 

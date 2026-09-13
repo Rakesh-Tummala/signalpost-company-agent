@@ -38,7 +38,7 @@ from scripts.normalize_google_maps_results import candidate_score  # noqa: E402
 from scripts.run_scrapy_websites import terminal_events_for_run  # noqa: E402
 from scripts.run_sentiment_model import MODEL_REVISION, normalize_generated_label  # noqa: E402
 from scripts.score_company_completeness import score_rows, summarize  # noqa: E402
-from scripts.build_output_contract import build_envelope, summarize_profile  # noqa: E402
+from scripts.build_output_contract import build_envelope, build_envelopes_safe, summarize_profile  # noqa: E402
 from scripts.extract_company_site_activity import observation as site_activity_observation  # noqa: E402
 from scripts.extract_company_site_news import observation as site_news_observation  # noqa: E402
 from scripts.build_verified_observations import build as build_verified_observations  # noqa: E402
@@ -914,6 +914,23 @@ class OutputContractTests(unittest.TestCase):
         self.assertEqual(workforce_claims[0]["confidence"], 1.0)
         self.assertIn("4 full-time equivalents (2024)", envelope["summary"]["text"])
         self.assertNotIn("hiring/workforce size", " ".join(envelope["summary"]["unknown_fields"]))
+
+    def test_one_malformed_profile_does_not_drop_the_whole_batch(self):
+        good = self._profile()
+        malformed = {"evidence": {}}  # no organisation_number key -> KeyError in build_envelope
+        another_good = {**self._profile(), "organisation_number": "999999999"}
+        envelopes, failures = build_envelopes_safe(
+            [good, malformed, another_good], {},
+            run_id="r1", started_at="2026-01-01T00:00:00Z", completed_at="2026-01-01T00:01:00Z",
+        )
+        self.assertEqual(len(envelopes), 3)
+        self.assertEqual(failures, 1)
+        self.assertEqual(envelopes[0]["organisation_number"], "923609016")
+        self.assertGreater(len(envelopes[0]["claims"]), 0)
+        self.assertEqual(envelopes[1]["run"]["terminal_status"], "submission_error")
+        self.assertEqual(envelopes[1]["errors"][0]["module"], "build_output_contract")
+        self.assertEqual(envelopes[2]["organisation_number"], "999999999")
+        self.assertGreater(len(envelopes[2]["claims"]), 0)
 
     def test_summary_never_fabricates_missing_sections(self):
         thin_profile = {"evidence": {"registry": evidence("registry", "not_found", "official_registry_bulk", "https://example.test")}}
