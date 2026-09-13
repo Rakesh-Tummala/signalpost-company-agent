@@ -186,6 +186,24 @@ def emit_website(emitter: Emitter, evidence: dict[str, Any]) -> None:
     emitter.claim("official_website", value.get("final_url") or value.get("requested_url"), record, module="website")
 
 
+def emit_social_links(emitter: Emitter, evidence: dict[str, Any]) -> None:
+    # apply_website_identity_gate already independently verified each link against
+    # the company's legal name (assess_social_identity, publishable only >= 0.9)
+    # before it ever reached evidence.website.value.social_links -- this is not new
+    # collection, just claims we were sitting on but never emitted.
+    seen: set[str] = set()
+    for module in ("website", "website_discovered"):
+        record = evidence.get(module) or {}
+        links = (record.get("value") or {}).get("social_links") or []
+        for link in links:
+            url = link.get("url")
+            if not url or url in seen:
+                continue
+            seen.add(url)
+            platform = link.get("platform") or "unknown"
+            emitter.claim(f"social_profile.{platform}", url, record, module=module)
+
+
 def summarize_profile(evidence: dict[str, Any]) -> dict[str, Any]:
     """Build a grounded, template-based summary -- every sentence traces to a claim
     we already published above. No model invents or infers anything here; this is
@@ -241,6 +259,11 @@ def summarize_profile(evidence: dict[str, Any]) -> dict[str, Any]:
     else:
         unknowns.append("official website")
 
+    social_links = (website_value.get("social_links") or []) + ((evidence.get("website_discovered") or {}).get("value") or {}).get("social_links", [])
+    if social_links:
+        platforms = ", ".join(sorted({link.get("platform", "unknown") for link in social_links}))
+        sentences.append(f"Verified social profiles were found on: {platforms}.")
+
     if (evidence.get("group") or {}).get("status") != "available" or not ((evidence.get("group") or {}).get("value") or {}).get("companies"):
         unknowns.append("group/ownership structure")
     unknowns.append("hiring activity and dated public activity (no rights-cleared source integrated yet)")
@@ -265,6 +288,7 @@ def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, com
     emit_locations(emitter, evidence)
     emit_group(emitter, evidence)
     emit_website(emitter, evidence)
+    emit_social_links(emitter, evidence)
 
     metrics = profile.get("run_metrics") or {}
     errors = [
