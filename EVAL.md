@@ -15,9 +15,24 @@
 - `tests/test_poc.py` — 107 unit tests, 5 subtests, covering identity-gate edge
   cases (parent/subsidiary confusion, generic name collisions, parked domains),
   the missing-from-bulk-registry path, and the registry_live backfill.
-- `scripts/score_company_completeness.py` and
-  `scripts/evaluate_external_footprint.py` — the starter kit's own scoring/audit
-  scripts. **Not yet run against our real output** (see below).
+- `scripts/score_company_completeness.py` — run against our real 1,000-company batch
+  with zero external-connector observations (`out/self-score-report.json`). Result:
+  foundation (official-registry-derived fields) mean 29.98/30 — essentially maxed,
+  since this component only checks that a module reached a terminal state, not that
+  it found a positive result. Every external-enrichment dimension (jobs, social
+  handles, reviews, sentiment, places) scored 0.0, confirming what LIMITATIONS.md
+  already says plainly: those connectors aren't wired in. Important caveat — this
+  scorer reads from the `run_company_control`/`external_footprint` observation
+  pipeline, a different, older path than the `claims`/`evidence` output-contract
+  format `build_output_contract.py` now produces. It does **not** reflect the
+  83 social-profile claims added after this run, and it is **not** the same rubric
+  Builderr actually scores against (its foundation/enrichment split and weights are
+  the starter kit's own internal proxy, not the 35/30/20/10/5 official one). Useful
+  as a directional signal that external recall is near-zero; not a preview of the
+  real score.
+- `scripts/evaluate_external_footprint.py` — audit gate for published external
+  observations against evaluator-owned labels. **Not run** — we have no external
+  observations to audit yet.
 
 ## What's missing
 
@@ -34,9 +49,7 @@ actually receive.
    exact-identity correctness on the discovered websites, since that's the one
    field with real false-positive risk (registry-derived fields are inherently
    correct — they're sourced straight from the government record).
-2. Run `scripts/score_company_completeness.py` against `out/profiles.jsonl` to get
-   a self-reported completeness number, understanding it measures our own claimed
-   coverage, not the evaluator's independently-verified collection.
+2. ~~Run `scripts/score_company_completeness.py`~~ — done, see above.
 3. Track precision informally: of the 26+26 Tavily/Exa-discovered websites promoted
    into `evidence.website`, spot-check a sample against the actual company to
    confirm the identity gate's decisions hold up to a human check, not just its own
