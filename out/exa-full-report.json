@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-09-13T17:50:32.329968Z",
+  "started_at": "2026-09-13T17:32:30.549211Z",
+  "provider": "Exa Search API",
+  "provider_endpoint": "https://api.exa.ai/search",
+  "input_profiles": 1000,
+  "queried_missing_website_profiles": 867,
+  "counts": {
+    "provider_requests": 867,
+    "provider_bytes": 8735081,
+    "abstained_before_crawl": 823,
+    "independent_crawls": 44,
+    "crawl_requests": 238,
+    "quarantined_sites": 18,
+    "registry_website_present_skipped": 133,
+    "verified_sites": 26,
+    "promoted_sites": 26
+  },
+  "provider_latency_ms": {
+    "p50": 558,
+    "p95": 833
+  },
+  "total_cost_usd": 6.069,
+  "raw_search_results_persisted": false,
+  "promote_verified_enabled": true,
+  "qualification": "not_evaluated_on_500_org_external_final_corpus"
+}
