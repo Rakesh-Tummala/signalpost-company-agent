@@ -60,6 +60,25 @@ def parse_tavily_web_results(payload: dict[str, Any], *, query: str) -> list[dic
     return parsed
 
 
+def parse_exa_web_results(payload: dict[str, Any], *, query: str) -> list[dict[str, Any]]:
+    results = payload.get("results") or []
+    parsed = []
+    for rank, result in enumerate(results, start=1):
+        if not isinstance(result, dict) or not result.get("url"):
+            continue
+        highlights = result.get("highlights") or []
+        snippet = " ".join(highlights) if highlights else (result.get("summary") or result.get("text") or "")
+        parsed.append({
+            "url": result.get("url"),
+            "title": result.get("title") or "",
+            "snippet": snippet,
+            "rank": rank,
+            "provider": "exa_search_api",
+            "query": query,
+        })
+    return parsed
+
+
 def _tokens(value: Any) -> list[str]:
     text = str(value or "").translate(str.maketrans({"ø": "o", "å": "a", "æ": "ae", "Ø": "O", "Å": "A", "Æ": "AE"}))
     text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().casefold()
