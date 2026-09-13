@@ -11,10 +11,13 @@
 - `scripts/build_output_contract.py`'s own validation (run manually, not yet
   automated into a test): every claim's `evidence_ids` resolves, every
   `availability` value is one of the six allowed states. Passes on all 1,000
-  profiles, 16,228 claims, zero violations.
-- `tests/test_poc.py` — 107 unit tests, 5 subtests, covering identity-gate edge
+  profiles, 17,897 claims, zero violations, zero per-profile conversion failures
+  (the last one guarded by `build_envelopes_safe`, see its own commit).
+- `tests/test_poc.py` — 114 unit tests, 5 subtests, covering identity-gate edge
   cases (parent/subsidiary confusion, generic name collisions, parked domains),
-  the missing-from-bulk-registry path, and the registry_live backfill.
+  the missing-from-bulk-registry path, the registry_live backfill, the
+  claims/evidence conversion (shape, grounding, malformed-profile isolation), and
+  the workforce-observation-to-claim path.
 - `scripts/score_company_completeness.py` — run against our real 1,000-company batch
   with zero external-connector observations (`out/self-score-report.json`). Result:
   foundation (official-registry-derived fields) mean 29.98/30 — essentially maxed,
@@ -33,6 +36,14 @@
 - `scripts/evaluate_external_footprint.py` — audit gate for published external
   observations against evaluator-owned labels. **Not run** — we have no external
   observations to audit yet.
+- **Real per-field coverage from the actual final claims artifact** (not the older
+  proxy scorer above) — see the table in `LIMITATIONS.md`. This is the more relevant
+  number: computed directly from `out/output-contract-envelopes.jsonl`, the exact
+  file that would be submitted. Official-registry fields are ~100%; website 13.9%;
+  workforce size 45.9% (new today, via OCR); social profiles 5.3%; company-owned news
+  1.3%; group structure 7.0%. This tells us *our own* coverage, not how it compares
+  to Builderr's independently-verified collection or the other entrants' pooled
+  findings, which is what the real 35-point coverage score is measured against.
 
 ## What's missing
 
