@@ -1,0 +1,13 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+
+# Large third-party data dumps — regenerate with the commands in README.md
+brreg-enheter.csv
+signalpost-universe.jsonl.gz
+
+# Scratch logs
+out/full-run-stdout.log
