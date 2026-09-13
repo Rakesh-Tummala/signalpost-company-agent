@@ -82,9 +82,20 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     elif len(core) >= 2 and exact_homepage_name:
         score = 0.95
         reasons.append("all normalized legal-name tokens appear together in homepage identity evidence")
-    elif len(core) == 1 and exact_homepage_name and substantive_homepage:
+    elif len(core) == 1 and exact_homepage_name and substantive_homepage and hostname.casefold().endswith(".no"):
         score = 0.95
-        reasons.append("single distinctive legal-name token appears in homepage identity evidence with substantive content")
+        reasons.append("single distinctive legal-name token appears in homepage identity evidence with substantive content, corroborated by a .no domain")
+    elif len(core) == 1 and exact_homepage_name and substantive_homepage:
+        # A single common word matching page text, with no organisation number
+        # (checked above) and no .no domain to at least anchor it to Norway, is too
+        # easy to collide with an unrelated global company of the same name. Found
+        # this the hard way: "SAGO AS" matched a US market-research firm's sago.com,
+        # "SEMBER AS" matched an unrelated person's personal site, and several others
+        # matched .it/.com.au/.org.uk/.ie domains with no Norwegian connection at all
+        # -- all previously scored 0.95/"exact" by this same branch before it required
+        # a .no domain.
+        score = 0.5
+        reasons.append("single distinctive legal-name token matched, but no organisation number or .no domain to corroborate it -- too high a collision risk for a common word to publish")
     elif ratio >= 0.75 and len(overlap) >= 2:
         score = 0.85
         reasons.append("most legal-name tokens appear, but exact identity is incomplete")

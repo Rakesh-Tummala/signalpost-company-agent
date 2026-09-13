@@ -1437,6 +1437,24 @@ class WebsiteIdentityTests(unittest.TestCase):
         row = {"organisation_number": "923609016", "name": "Norsk Fiskeeksport AS", "evidence": {"website": {"status": "available", "value": {"title": "Norsk Fiskeeksport AS"}}}}
         self.assertTrue(assess_website_identity(row)["publishable"])
 
+    def test_single_token_name_on_no_domain_is_publishable(self):
+        row = {"organisation_number": "923609016", "name": "Asperia AS", "evidence": {"website": {"status": "available", "value": {
+            "final_url": "https://asperia.no/", "title": "Asperia", "main_text_excerpt": "Asperia leverer " + "tjenester " * 20,
+        }}}}
+        self.assertTrue(assess_website_identity(row)["publishable"])
+
+    def test_single_token_name_on_foreign_domain_without_org_number_is_quarantined(self):
+        # Real case that slipped through before this branch required a .no domain
+        # (or, via the earlier org-number branch, the organisation number itself):
+        # "SAGO AS" matched sago.com, an unrelated US market-research company.
+        row = {"organisation_number": "991918019", "name": "Sago AS", "evidence": {"website": {"status": "available", "value": {
+            "final_url": "https://sago.com/en/company/offices/", "title": "Global Offices & Marketing Research Facilities | Sago",
+            "main_text_excerpt": "Corporate Offices " + "USA Headquarters " * 20,
+        }}}}
+        assessment = assess_website_identity(row)
+        self.assertFalse(assessment["publishable"])
+        self.assertLess(assessment["score"], 0.9)
+
     def test_parent_brand_without_legal_name_is_quarantined(self):
         row = {"organisation_number": "988412406", "name": "Tevlingveien 23 Invest AS", "evidence": {"website": {"status": "available", "value": {"title": "Ragde Eiendom"}}}}
         self.assertFalse(assess_website_identity(row)["publishable"])
