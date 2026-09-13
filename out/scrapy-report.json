@@ -1,0 +1,87 @@
+{
+  "input_sha256": "f16bffb1ffbcc19206b8aa1374dd9bdf478dc3d5b087ce2082c39bcf5fa19619",
+  "profiles": 159,
+  "website_seeds_selected": 159,
+  "profiles_with_events": 159,
+  "unique_events": 447,
+  "events_added": 447,
+  "events_present_before_run": 0,
+  "synthetic_terminal_events": 6,
+  "website_statuses": {
+    "available": 139,
+    "source_error": 20
+  },
+  "identity_statuses": {
+    "exact": 90,
+    "related_or_uncertain": 39,
+    "review": 10
+  },
+  "published_social_profiles": 107,
+  "elapsed_seconds": 129.749,
+  "run_started_at": "2026-09-13T18:48:14.168641Z",
+  "run_finished_at": "2026-09-13T18:50:23.917208Z",
+  "events_per_second": 3.445,
+  "requests": 752,
+  "responses": 737,
+  "response_bytes": 20178447,
+  "retries": 10,
+  "robots_forbidden": 4,
+  "request_wall_latency_including_queue": {
+    "n": 752,
+    "p50_ms": 719.261,
+    "p95_ms": 2602.575,
+    "max_ms": 10532.772
+  },
+  "response_download_latency": {
+    "n": 737,
+    "p50_ms": 551.41,
+    "p95_ms": 1966.047,
+    "max_ms": 8191.404
+  },
+  "failure_attempt_wall_latency": {
+    "n": 15,
+    "p50_ms": 452.663,
+    "p95_ms": 10532.812,
+    "max_ms": 10532.812
+  },
+  "company_completion_latency": {
+    "n": 159,
+    "p50_ms": 60385.9,
+    "p95_ms": 118172.174,
+    "max_ms": 129748.542
+  },
+  "company_completion_synthetic_upper_bounds": 6,
+  "request_domain_fairness": {
+    "domains": 192,
+    "p50_requests": 4.0,
+    "p95_requests": 7.0,
+    "max_requests": 10
+  },
+  "response_statuses": {
+    "200": 596,
+    "301": 86,
+    "302": 13,
+    "307": 6,
+    "308": 4,
+    "403": 5,
+    "404": 18,
+    "500": 8,
+    "503": 1
+  },
+  "error_buckets": {
+    "DownloadFailedError": 9,
+    "DownloadTimeoutError": 6,
+    "IgnoreRequest": 10
+  },
+  "request_amplification_per_seed": 4.73,
+  "terminal_coverage": 1.0,
+  "crawl_complete": true,
+  "peak_rss_bytes": 0,
+  "output_sha256": "8be39f2dd16cd670173a14610457209ba2ff35958280ec47c70367a0f8b083a4",
+  "finish_reason": "finished",
+  "resume_noop": false,
+  "concurrency": 8,
+  "per_domain": 2,
+  "jobdir": "out\\scrapy-jobdir",
+  "events_path": "out\\scrapy-events.jsonl"
+}

@@ -82,6 +82,27 @@ class Emitter:
         })
         return eid
 
+    def observation_claim(self, field: str, value: Any, observation: dict[str, Any]) -> None:
+        # Unlike module evidence (one fetch, possibly many claims from it), each
+        # observation already carries its own distinct source fetch -- no need to
+        # dedupe/cache an evidence id per organisation the way evidence_id() does.
+        eid = f"ev-{observation['id']}"
+        self.evidence.append({
+            "id": eid,
+            "source_url": observation.get("source_url"),
+            "source_class": observation.get("source_class"),
+            "retrieved_at": observation.get("retrieved_at"),
+            "content_sha256": observation.get("content_sha256"),
+            "claim_span": observation.get("evidence_span"),
+        })
+        self.claims.append({
+            "field": field,
+            "value": value,
+            "availability": "available",
+            "confidence": 1.0 if observation.get("rights_status") == "approved" and observation.get("exact_entity") else 0.9,
+            "evidence_ids": [eid],
+        })
+
     def claim(self, field: str, value: Any, record: dict[str, Any], *, module: str) -> None:
         eid = self.evidence_id(module, record)
         self.claims.append({
@@ -204,7 +225,7 @@ def emit_social_links(emitter: Emitter, evidence: dict[str, Any]) -> None:
             emitter.claim(f"social_profile.{platform}", url, record, module=module)
 
 
-def summarize_profile(evidence: dict[str, Any]) -> dict[str, Any]:
+def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """Build a grounded, template-based summary -- every sentence traces to a claim
     we already published above. No model invents or infers anything here; this is
     string formatting over facts that already passed the identity/evidence gates.
@@ -266,7 +287,13 @@ def summarize_profile(evidence: dict[str, Any]) -> dict[str, Any]:
 
     if (evidence.get("group") or {}).get("status") != "available" or not ((evidence.get("group") or {}).get("value") or {}).get("companies"):
         unknowns.append("group/ownership structure")
-    unknowns.append("hiring activity and dated public activity (no rights-cleared source integrated yet)")
+
+    news_items = [o for o in (observations or []) if o.get("signal_type") == "public_post"]
+    if news_items:
+        sentences.append(f"{len(news_items)} dated item(s) of company-owned public activity (news/press pages) were found.")
+    else:
+        unknowns.append("dated public activity (news/press)")
+    unknowns.append("hiring activity (no rights-cleared jobs source integrated yet)")
 
     if unknowns:
         sentences.append("Not yet determined: " + "; ".join(unknowns) + ".")
@@ -278,7 +305,21 @@ def summarize_profile(evidence: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, completed_at: str) -> dict[str, Any]:
+def emit_external_observations(emitter: Emitter, observations: list[dict[str, Any]]) -> None:
+    # Company-owned activity/news pages, already independently verified by the same
+    # identity gate used everywhere else (exact_entity + identity_proof), already
+    # rights-cleared (acquisition_mode "permitted_public_page", rights_status
+    # "approved") -- see scripts/extract_company_site_activity.py and
+    # scripts/extract_company_site_news.py.
+    for index, observation in enumerate(observations):
+        signal_type = observation.get("signal_type")
+        if signal_type == "profile_metrics":
+            emitter.observation_claim("site_activity_metrics", observation.get("metrics"), observation)
+        elif signal_type == "public_post":
+            emitter.observation_claim(f"site_news.{index}", {"url": observation.get("source_url"), "title": observation.get("evidence_span")}, observation)
+
+
+def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, completed_at: str, observations: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     evidence = profile.get("evidence") or {}
     emitter = Emitter()
     emit_registry_claims(emitter, evidence)
@@ -289,6 +330,7 @@ def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, com
     emit_group(emitter, evidence)
     emit_website(emitter, evidence)
     emit_social_links(emitter, evidence)
+    emit_external_observations(emitter, observations or [])
 
     metrics = profile.get("run_metrics") or {}
     errors = [
@@ -306,7 +348,7 @@ def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, com
         },
         "claims": emitter.claims,
         "evidence": emitter.evidence,
-        "summary": summarize_profile(evidence),
+        "summary": summarize_profile(evidence, observations),
         "changes": [],
         "errors": errors,
         "operations": {
@@ -324,10 +366,20 @@ def main() -> None:
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--started-at", required=True)
     parser.add_argument("--completed-at", required=True)
+    parser.add_argument("--observations", action="append", default=[], help="Optional JSONL file(s) of external observations (e.g. site activity/news); repeatable")
     args = parser.parse_args()
 
     profiles = read_jsonl(Path(args.profiles))
-    envelopes = [build_envelope(profile, run_id=args.run_id, started_at=args.started_at, completed_at=args.completed_at) for profile in profiles]
+    observations_by_org: dict[str, list[dict[str, Any]]] = {}
+    for observations_path in args.observations:
+        for observation in read_jsonl(Path(observations_path)):
+            org = str(observation.get("organisation_number"))
+            observations_by_org.setdefault(org, []).append(observation)
+
+    envelopes = [
+        build_envelope(profile, run_id=args.run_id, started_at=args.started_at, completed_at=args.completed_at, observations=observations_by_org.get(str(profile["organisation_number"])))
+        for profile in profiles
+    ]
     write_jsonl(Path(args.output), envelopes)
     total_claims = sum(len(e["claims"]) for e in envelopes)
     print(json.dumps({
