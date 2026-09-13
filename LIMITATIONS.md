@@ -15,11 +15,16 @@ these are silently hidden: every gap below shows up as an honest `not_available`
 | **Workforce size** (OCR'd from official annual reports) | 459 | 45.9% |
 | Registered workplaces (subunit detail) | 255 | 25.5% |
 | Registry-reported employee count | 144 | 14.4% |
-| Verified official website | 139 | 13.9% |
-| Company-site activity metrics | 90 | 9.0% |
+| Verified official website | 115 | 11.5% |
 | Group/ownership structure | 70 | 7.0% |
-| Verified social profiles | 53 | 5.3% |
-| Dated company-owned news/press items | 13 | 1.3% |
+| Company-site activity metrics | 66 | 6.6% |
+| Verified social profiles | 32 | 3.2% |
+| Dated company-owned news/press items | 10 | 1.0% |
+
+Website (and the activity/news/social claims that depend on a verified site) dropped
+from an earlier 139/1,000 after a precision fix caught 24 wrong-company matches (see
+"identity-gate precision fix" below) — the corrected numbers above are what's
+actually safe to publish, not what was technically discovered.
 
 The official-registry fields (top of the table) are near-100% because BRREG's bulk
 snapshot and live API are comprehensive and always attempted. Everything below that
@@ -48,14 +53,48 @@ which is why coverage tapers off rather than reflecting a bug.
 
 ## Partial coverage, with real numbers now
 
-- **Website discovery.** 139 of 1,000 have a verified official website: 71 from the
-  BRREG registry field, 52 from Tavily/Exa search-based discovery, 21 more confirmed
-  by the deeper multi-page crawl (`run_scrapy_websites.py`) after the single-page
-  fetch had missed them. The remaining ~861 were queried and abstained — some
-  genuinely have no independent web presence (housing co-operatives, holding
+- **Website discovery.** 115 of 1,000 have a verified official website after the
+  identity-gate precision fix below (up from an original 71 registry-provided +
+  52 search-discovered + 21 deep-crawl-confirmed = 139 before 24 wrong-company
+  matches were caught and demoted). The remaining ~885 were queried and abstained —
+  some genuinely have no independent web presence (housing co-operatives, holding
   companies confirmed by manual spot-check), others may be findable with more search
   budget (Tavily's free tier was exhausted mid-run; Exa's 20k/month is barely
   touched) or a different provider.
+
+### Identity-gate precision fix (found by manually spot-checking discovered sites)
+
+Before trusting the discovered-website numbers, a manual spot-check of ~8 of the 62
+search-discovered matches found several that looked wrong on inspection: "SAGO AS"
+matched `sago.com` (an unrelated US market-research firm with a global office list
+and zero Norway presence), "BLUE BAY AS" matched an Italian resort site, "SEMBER AS"
+matched what looks like a personal website. Tracing the cause: `identity.py`'s
+`assess_website_identity` had a branch that scored a match 0.95/"exact" whenever a
+company's legal name reduced to a *single* distinctive word (common for short
+Norwegian company names) and that word merely appeared on the candidate page — with
+no requirement that the page have anything to do with Norway. 25 of the 62 published
+discovered-website matches (40%) relied on exactly this branch.
+
+Fixed to also require the candidate's hostname end in `.no`, or the organisation
+number appear on the page (already handled by a separate, higher-priority branch).
+Re-ran the identity gate against every already-published site using the cached page
+content (no new network requests): 42 evidence entries across 24 organisation numbers
+demoted, including `brandsuite.com.au`, `procuro.ie` (German-language content),
+`ciol.org.uk`, `solaas.it`, and a `readthedocs.io` page for unrelated open-source
+software matched to "OVS AS". The 24 activity observations and 3 news observations
+that had been extracted from those same wrong pages were filtered out too, since they
+would otherwise have described the wrong company.
+
+Known cost of this fix: it will also reject a genuine Norwegian company that happens
+to use a `.com`/`.io`/etc. domain instead of `.no` (e.g. Zivid AS, a well-known
+Norwegian company, was demoted this way in our data despite likely being a real
+match). This trades recall for precision deliberately — the source policy states "a
+material wrong-company match... blocks qualification" as the more severe failure
+mode, and "it is better to miss some information than publish it under the wrong
+company." A stronger fix would corroborate via detected Norwegian-language content
+on the page as an alternative to the `.no` domain requirement, which would rescue
+cases like Zivid without reopening the collision risk — not implemented here for lack
+of time to validate it against real data before this submission.
 - **Workforce size.** 459/1,000 (45.9%) via official annual-report OCR -- see the
   table above. 856 companies were eligible (BRREG's own registry field was blank for
   them); of those, 395 had no matching Norwegian employee-count phrase found by the

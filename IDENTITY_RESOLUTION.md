@@ -36,6 +36,26 @@ crawled page's structured data identified it as "Wyssen Avalanche Control AG" (t
 Swiss parent) — the identity gate correctly rejected this as `quarantined` rather
 than publish a parent-company page under the subsidiary's profile.
 
+## Single-word company names need a country signal, not just a word match
+
+A short legal name (e.g. "SAGO AS" reduces to the single distinctive token "sago"
+once the legal-form suffix is stripped) is common for small Norwegian companies, but
+a single common word matching a page's title/description is a real global-collision
+risk. `assess_website_identity` requires that case to *also* have the candidate's
+hostname end in `.no`, or the organisation number appear on the page (checked by a
+separate, higher-priority branch) — a bare single-token match with neither signal
+scores 0.5 ("related_or_uncertain", not published) instead of 0.95 ("exact").
+
+Found the hard way, by spot-checking discovered sites before trusting them: "SAGO AS"
+had matched `sago.com`, an unrelated US market-research firm with offices worldwide
+and none in Norway; other real cases included an Italian resort, a UK domain, and a
+`readthedocs.io` page for unrelated open-source software. 25 of 62 published
+discovered-website matches (40%) relied on the unguarded version of this branch
+before the fix — see `LIMITATIONS.md` for the full accounting and the known
+recall cost (a genuine Norwegian company on a non-`.no` domain, like Zivid AS, gets
+quarantined by this same rule; a lower-risk fix would additionally accept detected
+Norwegian-language page content as corroboration, not implemented yet).
+
 ## When uncertain
 
 If a candidate fails the gate, or no candidate exists, the profile gets a
