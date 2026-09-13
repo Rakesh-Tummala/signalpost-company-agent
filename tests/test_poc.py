@@ -1449,30 +1449,30 @@ class VerifiedSiteSeedTests(unittest.TestCase):
             seeds = root / "seeds.json"
             output = root / "output.jsonl"
             report = root / "report.json"
-            profiles.write_text(json.dumps({"organisation_number": "123456789", "name": "Example AS"}) + "\n")
+            profiles.write_text(json.dumps({"organisation_number": "123456789", "name": "Example AS"}) + "\n", encoding="utf-8")
             seeds.write_text(json.dumps([{
                 "organisation_number": "123456789",
                 "website": "https://example.no/",
                 "proof_url": "https://source.example/proof",
                 "proof": "Exact name and organisation number",
-            }]))
+            }]), encoding="utf-8")
             command = [
                 sys.executable, str(ROOT / "scripts" / "apply_verified_site_seeds.py"),
                 "--profiles", str(profiles), "--seeds", str(seeds),
                 "--output", str(output), "--report", str(report),
             ]
-            subprocess.run(command, check=True, capture_output=True, text=True)
-            row = json.loads(output.read_text().strip())
+            subprocess.run(command, check=True, capture_output=True, text=True, encoding="utf-8")
+            row = json.loads(output.read_text(encoding="utf-8").strip())
             self.assertEqual(row["website"], "https://example.no/")
             self.assertEqual(row["website_seed_source"], "independently_verified_exact_entity")
-            self.assertEqual(json.loads(report.read_text())["applied"], 1)
+            self.assertEqual(json.loads(report.read_text(encoding="utf-8"))["applied"], 1)
 
             seeds.write_text(json.dumps([{
                 "organisation_number": "987654321",
                 "website": "https://unknown.no/",
                 "proof_url": "https://source.example/proof",
-            }]))
-            failed = subprocess.run(command, capture_output=True, text=True)
+            }]), encoding="utf-8")
+            failed = subprocess.run(command, capture_output=True, text=True, encoding="utf-8")
             self.assertNotEqual(failed.returncode, 0)
             self.assertIn("unknown organisations", failed.stderr)
 
