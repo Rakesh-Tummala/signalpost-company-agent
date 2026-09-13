@@ -1,14 +1,31 @@
 #!/usr/bin/env python3
-"""Single evaluator entrypoint: registry pipeline -> website discovery -> claims envelope.
+"""Single evaluator entrypoint for the full Signalpost agent pipeline.
 
-Chains the pipeline's existing, independently-tested stages into one command, as
-required by the "reproducible setup ... one evaluator command" hard gate. Each stage
-is a proven script; this just sequences them and threads output paths between them.
+Chains every stage of the pipeline into one command, as required by the
+"reproducible setup ... one evaluator command" hard gate:
 
-Discovery only runs if TAVILY_API_KEY and/or EXA_API_KEY is set in the environment
-(server-side secrets, per the locked evaluator budget's own requirement). Without
-either key, the agent still produces a complete, valid submission -- just without
-search-based website discovery for companies BRREG has no site on file for.
+  1. registry batch (identity, financials, financial_history, roles, group,
+     locations, single-page website fetch) -- required, no optional deps.
+  2. website discovery (Tavily, then Exa) for companies still missing a site --
+     runs only if TAVILY_API_KEY / EXA_API_KEY is set (server-side secret, per
+     the locked evaluator budget's own requirement).
+  3. deep multi-page site crawl (scrapy) for every company with a website
+     candidate -- best-effort: skipped cleanly if the `scrapy` package isn't
+     installed in this environment, rather than failing the whole run.
+  4. company-owned activity/news extraction from the crawl -- pure-Python,
+     no optional dependency, always attempted.
+  5. official annual-report OCR workforce extraction -- best-effort per
+     company already (see run_annual_report_workforce_connector.py's own
+     broad except); still guarded here so a totally missing tesseract/poppler
+     install degrades to "no workforce data" rather than noisy per-company
+     errors for the whole batch.
+  6. claims/evidence envelope conversion, folding in every observation file
+     collected above.
+
+Every optional stage is best-effort: a failure is logged and the pipeline
+moves on rather than losing everything already collected. The registry batch
+(step 1) and the final conversion (step 6) are the only required stages --
+without them there is no submission at all.
 """
 from __future__ import annotations
 
@@ -23,28 +40,77 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 
 
-def run(cmd: list[str]) -> None:
+def run(cmd: list[str], *, optional: bool = False) -> bool:
     print("+ " + " ".join(cmd), file=sys.stderr)
-    subprocess.run(cmd, check=True)
+    try:
+        subprocess.run(cmd, check=True)
+        return True
+    except subprocess.CalledProcessError as exc:
+        if not optional:
+            raise
+        print(f"  (optional stage failed, continuing: {exc})", file=sys.stderr)
+        return False
+
+
+def read_jsonl(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def write_jsonl(path: Path, rows: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as handle:
+        for row in rows:
+            handle.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
+
+
+def merge_profiles(base: list[dict], updated: list[dict], *, only_if_has: str | None = None) -> int:
+    """Merge updated rows into base by organisation_number. Returns count merged."""
+    updated_by_org = {row["organisation_number"]: row for row in updated}
+    merged = 0
+    for index, row in enumerate(base):
+        candidate = updated_by_org.get(row["organisation_number"])
+        if not candidate:
+            continue
+        if only_if_has and not (candidate.get("evidence") or {}).get(only_if_has):
+            continue
+        base[index] = candidate
+        merged += 1
+    return merged
+
+
+def backfill_top_level_website(profiles: list[dict]) -> None:
+    for row in profiles:
+        if row.get("website"):
+            continue
+        web = row.get("evidence", {}).get("website") or {}
+        if web.get("status") == "available":
+            value = web.get("value") or {}
+            row["website"] = value.get("final_url") or web.get("source_url")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the full Signalpost agent: registry batch, discovery, claims envelope.")
+    parser = argparse.ArgumentParser(description="Run the full Signalpost agent end to end.")
     parser.add_argument("--organisations", required=True, help="JSONL/JSON/text list of organisation numbers")
     parser.add_argument("--bulk", required=True, help="Frozen Brreg bulk entity snapshot (gzip)")
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--expected-count", type=int, required=True)
     parser.add_argument("--discovery-limit", type=int, default=None, help="Cap discovery queries; default is expected-count")
+    parser.add_argument("--skip-deep-crawl", action="store_true", help="Skip the scrapy multi-page crawl stage")
+    parser.add_argument("--skip-workforce-ocr", action="store_true", help="Skip the annual-report OCR workforce stage")
     parser.add_argument("--python", default=sys.executable)
     args = parser.parse_args()
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     discovery_limit = args.discovery_limit or args.expected_count
-
     started_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    stages_run: list[str] = []
 
+    # 1. Registry batch: identity, financials, financial_history, roles, group,
+    # locations, single-page website. Required.
     profiles_path = output_dir / "profiles.jsonl"
     run([
         args.python, str(ROOT / "run_competition_batch.py"),
@@ -55,51 +121,115 @@ def main() -> None:
         "--report", str(output_dir / "registry-report.json"),
         "--run-id", args.run_id,
         "--expected-count", str(args.expected_count),
+        "--modules", "registry,accounting_obligation,registry_live,financials,financial_history,roles,group,locations,website",
     ])
+    stages_run.append("registry_batch")
 
-    discovery_stages = []
-    if os.environ.get("TAVILY_API_KEY", "").strip():
-        discovery_stages.append(("tavily", "run_tavily_discovery.py", "TAVILY_API_KEY"))
-    if os.environ.get("EXA_API_KEY", "").strip():
-        discovery_stages.append(("exa", "run_exa_discovery.py", "EXA_API_KEY"))
-
-    for name, script, _env_var in discovery_stages:
+    # 2. Website discovery: Tavily, then Exa, for whatever's still missing.
+    for name, script, env_var in (("tavily", "run_tavily_discovery.py", "TAVILY_API_KEY"), ("exa", "run_exa_discovery.py", "EXA_API_KEY")):
+        if not os.environ.get(env_var, "").strip():
+            print(f"No {env_var} set -- skipping {name} discovery.", file=sys.stderr)
+            continue
         discovered_path = output_dir / f"profiles-with-{name}.jsonl"
-        run([
+        ok = run([
             args.python, str(ROOT / script),
             "--input", str(profiles_path),
             "--output", str(discovered_path),
             "--report", str(output_dir / f"{name}-discovery-report.json"),
             "--limit", str(discovery_limit),
             "--promote-verified",
-        ])
-        profiles_path = discovered_path
+        ], optional=True)
+        if ok:
+            profiles_path = discovered_path
+            stages_run.append(f"{name}_discovery")
 
-    if not discovery_stages:
-        print("No TAVILY_API_KEY or EXA_API_KEY set -- skipping website discovery.", file=sys.stderr)
+    profiles = read_jsonl(profiles_path)
+    backfill_top_level_website(profiles)
+    write_jsonl(output_dir / "profiles.jsonl", profiles)
+    profiles_path = output_dir / "profiles.jsonl"
+
+    # 3. Deep multi-page crawl (scrapy) of every company with a website
+    # candidate. Best-effort: scrapy may not be installed everywhere.
+    activity_obs_path = output_dir / "activity-observations.jsonl"
+    news_obs_path = output_dir / "news-observations.jsonl"
+    has_scrapy = False
+    if not args.skip_deep_crawl:
+        try:
+            import scrapy  # noqa: F401
+            has_scrapy = True
+        except ImportError:
+            has_scrapy = False
+
+    if has_scrapy:
+        crawl_input = output_dir / "crawl-input.jsonl"
+        write_jsonl(crawl_input, [row for row in profiles if row.get("website")])
+        crawled_path = output_dir / "profiles-crawled.jsonl"
+        ok = run([
+            args.python, str(ROOT / "run_scrapy_websites.py"),
+            "--input", str(crawl_input),
+            "--output", str(crawled_path),
+            "--events", str(output_dir / "crawl-events.jsonl"),
+            "--jobdir", str(output_dir / "crawl-jobdir"),
+            "--report", str(output_dir / "crawl-report.json"),
+        ], optional=True)
+        if ok:
+            crawled = read_jsonl(crawled_path)
+            merge_profiles(profiles, crawled)
+            write_jsonl(profiles_path, profiles)
+            stages_run.append("deep_crawl")
+
+            # 4. Activity/news extraction from the deepened crawl. Pure Python,
+            # always attempted once there's a crawl to extract from.
+            run([args.python, str(ROOT / "extract_company_site_activity.py"), "--profiles", str(profiles_path), "--output", str(activity_obs_path), "--report", str(output_dir / "activity-report.json")], optional=True)
+            run([args.python, str(ROOT / "extract_company_site_news.py"), "--profiles", str(profiles_path), "--output", str(news_obs_path), "--report", str(output_dir / "news-report.json")], optional=True)
+            if activity_obs_path.exists():
+                stages_run.append("site_activity")
+            if news_obs_path.exists():
+                stages_run.append("site_news")
+    else:
+        print("scrapy not installed -- skipping deep crawl and activity/news extraction.", file=sys.stderr)
+
+    # 5. Official annual-report OCR workforce extraction. Already degrades
+    # per-company internally; skip the whole stage only if asked to.
+    workforce_obs_path = output_dir / "workforce-observations.jsonl"
+    if not args.skip_workforce_ocr:
+        orgs_path = output_dir / "all-orgs.txt"
+        orgs_path.write_text("\n".join(row["organisation_number"] for row in profiles), encoding="utf-8")
+        ok = run([
+            args.python, str(ROOT / "run_annual_report_workforce_connector.py"),
+            "--profiles", str(profiles_path),
+            "--organisations", str(orgs_path),
+            "--output", str(workforce_obs_path),
+            "--cache", str(output_dir / "workforce-cache"),
+            "--report", str(output_dir / "workforce-report.json"),
+        ], optional=True)
+        if ok:
+            stages_run.append("workforce_ocr")
 
     completed_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
-    final_profiles_path = output_dir / "profiles.jsonl"
-    if profiles_path != final_profiles_path:
-        final_profiles_path.write_text(profiles_path.read_text(encoding="utf-8"), encoding="utf-8")
-
+    # 6. Claims/evidence conversion, folding in every observation file collected.
     envelopes_path = output_dir / "envelopes.jsonl"
-    run([
+    convert_cmd = [
         args.python, str(ROOT / "build_output_contract.py"),
-        "--profiles", str(final_profiles_path),
+        "--profiles", str(profiles_path),
         "--output", str(envelopes_path),
         "--run-id", args.run_id,
         "--started-at", started_at,
         "--completed-at", completed_at,
-    ])
+    ]
+    for obs_path in (activity_obs_path, news_obs_path, workforce_obs_path):
+        if obs_path.exists():
+            convert_cmd += ["--observations", str(obs_path)]
+    run(convert_cmd)
+    stages_run.append("claims_conversion")
 
     summary = {
         "run_id": args.run_id,
         "started_at": started_at,
         "completed_at": completed_at,
-        "discovery_stages_run": [name for name, _, _ in discovery_stages],
-        "profiles": str(final_profiles_path),
+        "stages_run": stages_run,
+        "profiles": str(profiles_path),
         "envelopes": str(envelopes_path),
     }
     (output_dir / "run-summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
