@@ -898,6 +898,23 @@ class OutputContractTests(unittest.TestCase):
         summary = summarize_profile(self._profile()["evidence"])
         self.assertIn("is an AS", summary["text"])
 
+    def test_workforce_observation_becomes_claim_and_summary_sentence(self):
+        observations = [{
+            "organisation_number": "923609016", "signal_type": "workforce_snapshot", "id": "wf-1",
+            "source_url": "https://example.test/report.pdf", "retrieved_at": "2026-01-01T00:00:00Z",
+            "content_sha256": "f" * 64, "exact_entity": True, "rights_status": "approved",
+            "acquisition_mode": "official_api", "source_class": "official_annual_account_copy",
+            "evidence_span": "Antall arsverk er 4.", "effective_at": "2024",
+            "metrics": {"workforce_value": 4, "measure": "full_time_equivalents", "year": "2024"},
+        }]
+        envelope = build_envelope(self._profile(), run_id="r1", started_at="2026-01-01T00:00:00Z", completed_at="2026-01-01T00:01:00Z", observations=observations)
+        workforce_claims = [c for c in envelope["claims"] if c["field"] == "workforce_value.2024"]
+        self.assertEqual(len(workforce_claims), 1)
+        self.assertEqual(workforce_claims[0]["value"], 4)
+        self.assertEqual(workforce_claims[0]["confidence"], 1.0)
+        self.assertIn("4 full-time equivalents (2024)", envelope["summary"]["text"])
+        self.assertNotIn("hiring/workforce size", " ".join(envelope["summary"]["unknown_fields"]))
+
     def test_summary_never_fabricates_missing_sections(self):
         thin_profile = {"evidence": {"registry": evidence("registry", "not_found", "official_registry_bulk", "https://example.test")}}
         summary = summarize_profile(thin_profile["evidence"])

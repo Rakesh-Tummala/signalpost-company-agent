@@ -306,7 +306,15 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
         sentences.append(f"{len(news_items)} dated item(s) of company-owned public activity (news/press pages) were found.")
     else:
         unknowns.append("dated public activity (news/press)")
-    unknowns.append("hiring activity (no rights-cleared jobs source integrated yet)")
+
+    workforce_items = [o for o in (observations or []) if o.get("signal_type") == "workforce_snapshot"]
+    if workforce_items:
+        latest = max(workforce_items, key=lambda o: (o.get("metrics") or {}).get("year") or "")
+        metrics = latest.get("metrics") or {}
+        measure = "full-time equivalents" if metrics.get("measure") == "full_time_equivalents" else "employees"
+        sentences.append(f"Its official annual report states {metrics.get('workforce_value')} {measure} ({metrics.get('year')}).")
+    else:
+        unknowns.append("hiring/workforce size (no jobs-posting source integrated yet; official annual-report headcount attempted but not found or not applicable for this company)")
 
     if unknowns:
         sentences.append("Not yet determined: " + "; ".join(unknowns) + ".")
@@ -330,6 +338,13 @@ def emit_external_observations(emitter: Emitter, observations: list[dict[str, An
             emitter.observation_claim("site_activity_metrics", observation.get("metrics"), observation)
         elif signal_type == "public_post":
             emitter.observation_claim(f"site_news.{index}", {"url": observation.get("source_url"), "title": observation.get("evidence_span")}, observation)
+        elif signal_type == "workforce_snapshot":
+            # scripts/run_annual_report_workforce_connector.py: OCR'd (or, when the
+            # PDF has a machine-readable text layer, directly extracted) headcount
+            # from the company's own official annual-report filing.
+            metrics = observation.get("metrics") or {}
+            year = metrics.get("year") or observation.get("effective_at") or "unknown"
+            emitter.observation_claim(f"workforce_value.{year}", metrics.get("workforce_value"), observation)
 
 
 def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, completed_at: str, observations: list[dict[str, Any]] | None = None) -> dict[str, Any]:
