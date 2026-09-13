@@ -39,9 +39,10 @@
 - **Real per-field coverage from the actual final claims artifact** (not the older
   proxy scorer above) — see the table in `LIMITATIONS.md`. This is the more relevant
   number: computed directly from `out/output-contract-envelopes.jsonl`, the exact
-  file that would be submitted. Official-registry fields are ~100%; website 13.9%;
-  workforce size 45.9% (new today, via OCR); social profiles 5.3%; company-owned news
-  1.3%; group structure 7.0%. This tells us *our own* coverage, not how it compares
+  file that would be submitted, and after the identity-gate precision fix demoted 24
+  wrong-company matches (also in `LIMITATIONS.md`). Official-registry fields are
+  ~100%; website 11.5%; workforce size 45.9% (new today, via OCR); social profiles
+  3.2%; company-owned news 1.0%; group structure 7.0%. This tells us *our own* coverage, not how it compares
   to Builderr's independently-verified collection or the other entrants' pooled
   findings, which is what the real 35-point coverage score is measured against.
 
@@ -61,7 +62,16 @@ actually receive.
    field with real false-positive risk (registry-derived fields are inherently
    correct — they're sourced straight from the government record).
 2. ~~Run `scripts/score_company_completeness.py`~~ — done, see above.
-3. Track precision informally: of the 26+26 Tavily/Exa-discovered websites promoted
-   into `evidence.website`, spot-check a sample against the actual company to
-   confirm the identity gate's decisions hold up to a human check, not just its own
-   internal logic.
+3. ~~Track precision informally~~ — done, and it found a real bug: spot-checking ~8
+   of the 62 discovered-website matches by hand caught several clear wrong-company
+   matches (a US market-research firm, an Italian resort, a personal website). Traced
+   to a specific over-permissive branch in `assess_website_identity`, fixed, and
+   re-applied retroactively — see `LIMITATIONS.md`'s "identity-gate precision fix"
+   section for the full accounting (24 organisation numbers demoted). This is the
+   single most valuable check in this list; item 1 below would have caught the same
+   issue with a larger, more systematic sample.
+4. Item 1 (hand-labelling 20-50 companies) is still worth doing before the actual
+   submission, now specifically to check whether the `.no`-domain requirement from
+   the fix above is too strict (rejecting real companies on non-`.no` domains) or
+   still too loose (any remaining false positives the small ad-hoc spot-check above
+   didn't happen to sample).
