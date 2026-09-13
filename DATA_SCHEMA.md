@@ -15,6 +15,7 @@ from the pipeline's internal profile format. This matches `OUTPUT_CONTRACT.md`:
   "evidence": [
     {"id": "ev-registry_live", "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016", "source_class": "official_registry_live", "retrieved_at": "...", "content_sha256": "...", "claim_span": null}
   ],
+  "summary": {"text": "Example AS is an AS...", "unknown_fields": ["group/ownership structure"], "grounded_in_claims": true},
   "changes": [],
   "errors": [],
   "operations": {"requests": 5, "runtime_ms": null, "third_party_cost_usd": 0}
@@ -22,13 +23,29 @@ from the pipeline's internal profile format. This matches `OUTPUT_CONTRACT.md`:
 ```
 
 `availability` is one of `available`, `not_available`, `blocked`, `not_applicable`,
-`ambiguous`, `failed` — never silently replaced with a zero or empty value.
+`ambiguous`, `failed` — never silently replaced with a zero or empty value. `summary`
+is additive beyond OUTPUT_CONTRACT.md's minimal example — see AGENT.md for how it's
+built (template over already-published claims, never a model's own synthesis).
 
-Claim fields currently emitted: `legal_name`, `legal_form`, `employees`, `bankrupt`,
-`liquidating`, `business_address`, `industry`, `latest_submitted_accounts`,
-`accounting_obligation`, `annual_accounts.<year>` (one per filed year),
-`role.<index>` (one per active role), `location.<index>` (one per registered
-subunit), `group_structure`, `official_website`.
+Claim fields currently emitted:
+- From the official registry pipeline: `legal_name`, `legal_form`, `employees`,
+  `bankrupt`, `liquidating`, `business_address`, `industry`,
+  `latest_submitted_accounts`, `accounting_obligation`, `annual_accounts.<year>`
+  (one per filed year the `financials` module actually returned figures for --
+  typically just the latest; see `annual_accounts_years_on_file` below for the
+  fuller list), `annual_accounts_years_on_file` (every year with a filing on
+  record, from `financial_history` -- a list of years, not full figures for each),
+  `role.<index>` (one per active role), `location.<index>` (one per registered
+  subunit), `group_structure`.
+- From website discovery/crawl: `official_website`, `social_profile.<platform>`
+  (one per verified social link found on the crawled site).
+- From the deep-crawl-derived observation files (`--observations`, wired in by
+  `run_agent.py`): `site_activity_metrics` (one per company, from
+  `extract_company_site_activity.py`), `site_news.<index>` (one per dated
+  company-owned press/news item, from `extract_company_site_news.py`),
+  `workforce_value.<year>` (from the OCR annual-report connector -- see
+  `CRAWLERS.md`). These claims each carry their own evidence entry (a real,
+  independently-verified source fetch) rather than sharing one per module.
 
 ## Internal pipeline profile (`out/profiles.jsonl`)
 

@@ -4,24 +4,26 @@
 
 | Stage | Script | Source | Budget/throttle |
 |---|---|---|---|
-| Registry identity + financials + roles + locations + group | `scripts/run_competition_batch.py` | Official BRREG bulk snapshot + live per-org API | 8 parallel workers, checkpoints every 25 |
+| Registry identity + financials + financial_history + roles + locations + group | `scripts/run_competition_batch.py` | Official BRREG bulk snapshot + live per-org API | 8 parallel workers, checkpoints every 25. `financial_history` is rate-limited server-side to ~30 request-starts/minute (`_reserve_history_slot` in `official.py`) |
 | Website discovery (fallback 1) | `scripts/run_tavily_discovery.py` | Tavily Search API, transient query only | 0.3s min interval, checkpoints every 25, only runs if `TAVILY_API_KEY` is set |
 | Website discovery (fallback 2) | `scripts/run_exa_discovery.py` | Exa Search API, transient query only | 0.3s min interval, checkpoints every 25, only runs if `EXA_API_KEY` is set |
-| Claims/evidence conversion | `scripts/build_output_contract.py` | (reshapes existing evidence, no new fetches) | — |
+| Deep multi-page site crawl | `scripts/run_scrapy_websites.py` | Registry-linked or discovered company website | 8 concurrent requests, 2/domain; best-effort -- skipped cleanly if `scrapy` isn't installed |
+| Company-owned activity extraction | `scripts/extract_company_site_activity.py` | Pages already fetched by the deep crawl above (no new requests) | — |
+| Company-owned news extraction | `scripts/extract_company_site_news.py` | Pages already fetched by the deep crawl above (no new requests) | — |
+| OCR workforce extraction | `scripts/run_annual_report_workforce_connector.py` | Official BRREG annual-report PDF copies | 4 workers; needs `tesseract` (language pack `nor`, not the default `eng`) + `poppler` (`pdftoppm`) on PATH; degrades per-company to an error status (not a pipeline failure) if either binary is missing |
+| Claims/evidence conversion | `scripts/build_output_contract.py` | (reshapes existing evidence + observation files, no new fetches) | — |
 
-Both discovery connectors follow the same rule: the search query and its raw results
+Discovery connectors follow the same rule: the search query and its raw results
 (titles, snippets, ranks) are held in memory only and never written to disk or
 published. Only an independently re-fetched and identity-gated page becomes evidence
-for a claim. Neither connector is required — the agent produces a complete,
-schema-valid submission with zero website-discovery claims if no API key is set,
-just with lower coverage on that field.
+for a claim. Every stage after the registry batch is best-effort in `run_agent.py` --
+a missing API key, a missing `scrapy` install, or missing OCR binaries each skip only
+that stage rather than failing the whole run. The agent always produces a complete,
+schema-valid submission; what varies is how much external coverage it can add on top
+of the official-registry foundation.
 
 ## Not wired in (see LIMITATIONS.md for why)
 
-- `scripts/run_scrapy_websites.py` — deeper multi-page company-site crawl; needs the
-  `scrapy` package.
-- `scripts/run_annual_report_workforce_connector.py` — OCR'd workforce counts from
-  official annual-report PDFs; needs `tesseract` + `poppler` binaries.
 - `scripts/run_linkedin_guest_jobs_connector.py`,
   `scripts/discover_linkedin_company_profiles.py`,
   `scripts/run_linkedin_guest_experiment.py` — unofficial LinkedIn endpoints, self-tagged
