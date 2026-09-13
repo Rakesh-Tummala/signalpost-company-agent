@@ -123,6 +123,46 @@ def profiles_from_bulk(path: str | Path, organisation_numbers: Iterable[str]) ->
     }
 
 
+def backfill_from_registry_live(profile: dict[str, Any]) -> dict[str, Any]:
+    """Fill null top-level registry fields from a successful registry_live lookup.
+
+    profiles_from_bulk() placeholders organisation numbers absent from the bulk
+    snapshot with null top-level fields and an evidence.registry entry marked
+    "not_found". The live per-org Brreg API (evidence.registry_live) can still
+    independently recover that same data -- for example when the organisation
+    was registered after the bulk snapshot was generated. Without this, the
+    top-level convenience fields stay null forever even though the data is
+    sitting one level down in evidence.registry_live.value, which breaks any
+    caller that reads profile.get("name") etc. directly instead of walking the
+    evidence tree. This only fills fields that are still missing; it never
+    overwrites a value already present, and it never touches evidence.registry
+    itself, which keeps reporting the bulk-snapshot outcome.
+    """
+    live_record = (profile.get("evidence") or {}).get("registry_live") or {}
+    if live_record.get("status") != "available":
+        return profile
+    live = live_record.get("value") or {}
+    business_address = live.get("business_address") or {}
+    industry = live.get("industry") or {}
+    backfill = {
+        "name": live.get("name"),
+        "legal_form": live.get("legal_form"),
+        "employees": live.get("employees"),
+        "bankrupt": live.get("bankrupt"),
+        "liquidating": live.get("liquidating"),
+        "website": live.get("website"),
+        "latest_submitted_accounts": live.get("latest_submitted_accounts"),
+        "municipality": business_address.get("kommune"),
+        "municipality_number": business_address.get("kommunenummer"),
+        "industry_code": industry.get("kode"),
+        "industry_label": industry.get("beskrivelse"),
+    }
+    for field, value in backfill.items():
+        if profile.get(field) in (None, "") and value not in (None, ""):
+            profile[field] = value
+    return profile
+
+
 def evidence_terminal_state(record: dict[str, Any] | None) -> str:
     if not record:
         return "submission_error"

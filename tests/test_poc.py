@@ -28,7 +28,7 @@ from norway_company_agent.external_tasks import plan_external_tasks  # noqa: E40
 from norway_company_agent.external_control import development_score, run_company_control, strategy_order  # noqa: E402
 from norway_company_agent.identity import apply_website_identity_gate, assess_social_identity, assess_website_identity  # noqa: E402
 from norway_company_agent.website import _extraction_state, _priority_links, _social_links, assert_public_url, normalize_homepage, normalize_social_url, structured_social_links  # noqa: E402
-from norway_company_agent.batch import evidence_terminal_state, profile_complete_for_modules, profiles_from_bulk, read_organisation_inputs, terminal_envelope, validate_envelopes  # noqa: E402
+from norway_company_agent.batch import backfill_from_registry_live, evidence_terminal_state, profile_complete_for_modules, profiles_from_bulk, read_organisation_inputs, terminal_envelope, validate_envelopes  # noqa: E402
 from norway_company_agent.snapshots import SnapshotFetcher  # noqa: E402
 from bs4 import BeautifulSoup  # noqa: E402
 from scripts.build_prototype import compact as compact_prototype, qualification_copy  # noqa: E402
@@ -745,6 +745,61 @@ class OperationsTests(unittest.TestCase):
         self.assertTrue(missing_profile["evidence"]["registry"]["note"])
         self.assertIn("999999999", registry_metadata["missing_from_bulk"])
         self.assertNotIn("923609016", registry_metadata["missing_from_bulk"])
+
+    def test_backfill_from_registry_live_fills_null_top_level_fields(self):
+        fields = ["organisasjonsnummer", "navn", "organisasjonsform.kode", "sisteInnsendteAarsregnskap", "konkurs", "underAvvikling"]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "registry.csv.gz"
+            with gzip.open(path, "wt", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=fields, delimiter=";")
+                writer.writeheader()
+            profiles, _ = profiles_from_bulk(path, ["928987728"])
+        placeholder = profiles[0]
+        self.assertEqual(placeholder["evidence"]["registry"]["status"], "not_found")
+        placeholder["evidence"]["registry_live"] = evidence(
+            "registry_live", "available", "official_registry_live", "https://data.brreg.no/enhetsregisteret/api/enheter/928987728",
+            value={
+                "organisation_number": "928987728",
+                "name": "SVANHOLMEN 23 AS",
+                "legal_form": "AS",
+                "employees": 0,
+                "bankrupt": False,
+                "liquidating": False,
+                "website": None,
+                "industry": {"kode": "68.209", "beskrivelse": "Utleie av egen eller leid fast eiendom ellers"},
+                "business_address": {"kommune": "SOLA", "kommunenummer": "1124"},
+                "latest_submitted_accounts": None,
+            },
+        )
+        backfilled = backfill_from_registry_live(placeholder)
+        self.assertIs(backfilled, placeholder)
+        self.assertEqual(placeholder["name"], "SVANHOLMEN 23 AS")
+        self.assertEqual(placeholder["legal_form"], "AS")
+        self.assertEqual(placeholder["employees"], 0)
+        self.assertEqual(placeholder["bankrupt"], False)
+        self.assertEqual(placeholder["liquidating"], False)
+        self.assertEqual(placeholder["municipality"], "SOLA")
+        self.assertEqual(placeholder["municipality_number"], "1124")
+        self.assertEqual(placeholder["industry_code"], "68.209")
+        self.assertEqual(placeholder["industry_label"], "Utleie av egen eller leid fast eiendom ellers")
+        # evidence.registry keeps reporting the bulk-snapshot outcome untouched.
+        self.assertEqual(placeholder["evidence"]["registry"]["status"], "not_found")
+
+    def test_backfill_from_registry_live_does_not_overwrite_existing_values_or_run_without_success(self):
+        found = {"organisation_number": "923609016", "name": "Example AS", "legal_form": "AS", "evidence": {
+            "registry": evidence("registry", "available", "official_registry_bulk", "https://example.test", value={}),
+            "registry_live": evidence("registry_live", "available", "official_registry_live", "https://example.test", value={"name": "Different Name AS", "legal_form": "ENK"}),
+        }}
+        backfill_from_registry_live(found)
+        self.assertEqual(found["name"], "Example AS")
+        self.assertEqual(found["legal_form"], "AS")
+
+        still_missing = {"organisation_number": "999999999", "name": None, "evidence": {
+            "registry": evidence("registry", "not_found", "official_registry_bulk", "https://example.test"),
+            "registry_live": evidence("registry_live", "not_found", "official_registry_live", "https://example.test"),
+        }}
+        backfill_from_registry_live(still_missing)
+        self.assertIsNone(still_missing["name"])
 
     def test_batch_contract_emits_exact_terminal_envelopes(self):
         profile = {
