@@ -13,3 +13,4 @@ signalpost-universe.jsonl.gz
 out/full-run-stdout.log
 .env
 .tessdata/
+out/workforce-cache/

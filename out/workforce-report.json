@@ -1,0 +1,6464 @@
+{
+  "connector": "official_annual_report_workforce_v1",
+  "eligible": 856,
+  "accepted": 459,
+  "status_counts": {
+    "no_employee_phrase": 395,
+    "accepted": 459,
+    "conflicting_employee_counts": 2
+  },
+  "claim_boundary": "Latest official PDF, exact organisation number in document, company-scope employee phrase only; group phrases and conflicts abstain.",
+  "company_results": [
+    {
+      "organisation_number": "985589003",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935095190",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 4,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "997830792",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "998487099",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925800023",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "888567232",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926320459",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "982942942",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 7,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "982669251",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936056210",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "995354314",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "924725834",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926311735",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917364907",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930132764",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989202723",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "822532152",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 16,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "977171962",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 4,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "988814415",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932799650",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "988263486",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "816559472",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919455144",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930355496",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935107989",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "916544472",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934438450",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 9,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936514545",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920213561",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935013623",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933460371",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 8,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "834120852",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "914561302",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "977539366",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "990446539",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "999288448",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "988415677",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "993515159",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "914968283",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "890546242",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "899322932",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921704593",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 9,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925606235",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 16,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "891742622",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "896331922",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "913951867",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928238407",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "946686166",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "924920963",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922199477",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 53,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928309371",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927210657",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "980263681",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 7,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929647785",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935780462",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "992458062",
+      "status": "accepted",
+      "workforce_value": 2,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "991918019",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 17,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935845432",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "827340162",
+      "status": "accepted",
+      "workforce_value": 2,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "941305989",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "988573949",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "999111173",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928357007",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "983885748",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "817206662",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933787141",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "991429999",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928996239",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929634691",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930847097",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 19,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989264087",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934549392",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 17,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933989208",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "916804261",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930856916",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 16,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927356783",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "916663242",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "923094377",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "815699912",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 4,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "887325022",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 27,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "987602945",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "958589174",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929346769",
+      "status": "accepted",
+      "workforce_value": 0.6,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "991972889",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 22,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912825124",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932072602",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 10,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "923106308",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936245064",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "986308970",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "914810795",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "983876943",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 10,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "990625204",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "998805112",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933900843",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919287535",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 9,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927238357",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917722897",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929418247",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 17,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921835876",
+      "status": "accepted",
+      "workforce_value": 4,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922605963",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "971310502",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920798446",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "813270862",
+      "status": "accepted",
+      "workforce_value": 2,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932827646",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932862689",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934531930",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912070875",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919578378",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929515293",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920616887",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926801473",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "988974188",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936645410",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "924695013",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912276600",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "918158936",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935727634",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932056046",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920203930",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934010639",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 10,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "980165493",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919820101",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920281486",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922564183",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "991303626",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "991949666",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927101327",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "999238602",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936299989",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "913656636",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 8,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934157761",
+      "status": "conflicting_employee_counts",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927415119",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "835292002",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935263956",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "993550116",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989155911",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936857744",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925283339",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 25,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935833175",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922142955",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 20,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "825148442",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989896091",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936648800",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "943294712",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 21,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934949706",
+      "status": "accepted",
+      "workforce_value": 2,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936662528",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "976898850",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935582423",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929603672",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "984529295",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989004670",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "987743468",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "826714352",
+      "status": "accepted",
+      "workforce_value": 0.5,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920313361",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "990598835",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935174856",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 10,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921373554",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "986947116",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931032445",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935834325",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935112303",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "982983908",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "833074822",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "980623149",
+      "status": "accepted",
+      "workforce_value": 2.5,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934282973",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 8,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917840822",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922662193",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "918570799",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933823369",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "911921340",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 30,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "948516810",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 27,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930675431",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925615765",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "948955628",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927967855",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921320817",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934860926",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929259114",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935828872",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 7,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "990821178",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933593843",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "916811136",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 20,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927631881",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934047575",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "992957077",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "980997146",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "991528008",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "831676752",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925437158",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 26,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "967934895",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "911723344",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 18,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929988396",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989082388",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912344126",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "996973166",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934304454",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921835647",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926735799",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 16,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922847894",
+      "status": "conflicting_employee_counts",
+      "cache_hit": true,
+      "pages": 10,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "924719788",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934481070",
+      "status": "accepted",
+      "workforce_value": 0.5,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "998713501",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931615815",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935120004",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922547165",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 8,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "832681172",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935597447",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922613095",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 17,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "816668352",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989183869",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 8,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "923766545",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "983928234",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 7,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919496401",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931493841",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "832840572",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "817705642",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930154962",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930601594",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912450287",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936534112",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "994870920",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912653277",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "914569389",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "924367555",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "999413706",
+      "status": "accepted",
+      "workforce_value": 2,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932089343",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926861735",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "823344112",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936009883",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 4,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "963970935",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "982215617",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 16,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930081779",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "971089989",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931044419",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "913492986",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936740901",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "827929182",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "879128552",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927297809",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928348695",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932496089",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 10,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "988970042",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "915734448",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 31,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912878716",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917427046",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "998315417",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "894075562",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 7,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930521302",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "966478071",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936629830",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "992577126",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935028000",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "984885520",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 20,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927237539",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "914170125",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922157235",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933157253",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "988522651",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "911617706",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989142585",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935847591",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920660673",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "987788224",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "998600421",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "971170344",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "991108971",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928675998",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919612096",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 25,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "990515433",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "915077773",
+      "status": "accepted",
+      "workforce_value": 2,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "992137851",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "913521080",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "988879479",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912015076",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 16,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926413848",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927969106",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "995677164",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920642675",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "830188932",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "994754602",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "986981659",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "812702432",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917331936",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "918847464",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 10,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929001745",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "833169602",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928987728",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "971376368",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 23,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932342596",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "889210362",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932394685",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 7,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922404550",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919916354",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 23,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "816028612",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917148627",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920226299",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926757253",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "924613351",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 66,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934931084",
+      "status": "accepted",
+      "workforce_value": 0.8,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "915719007",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 33,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "983201725",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "994490478",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926008439",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922575452",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932567318",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989823264",
+      "status": "accepted",
+      "workforce_value": 11,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922212813",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912251888",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929589637",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921259654",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989389173",
+      "status": "accepted",
+      "workforce_value": 0.2,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "985090629",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "924879602",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "914882036",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989311514",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "997808029",
+      "status": "accepted",
+      "workforce_value": 2,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "952049070",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931008161",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "889232552",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": true,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "825238662",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 10,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "823706782",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 16,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "818842422",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933182258",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "866955492",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 18,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "971128399",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934843800",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930052531",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "924579889",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "991435220",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 10,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935114462",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933794083",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "923547592",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "924957670",
+      "status": "accepted",
+      "workforce_value": 3,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "998388759",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "990293988",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "977126231",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "970395822",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 7,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "988242144",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "976252128",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "987856440",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "986417729",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 26,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "998548012",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930501263",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931475622",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 19,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931743058",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989067028",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929474759",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933198332",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "992072415",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "915592163",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 16,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "975809153",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936722709",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 9,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "924825669",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "911004925",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925615579",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932369214",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "918385053",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932241242",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "982170931",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "990869189",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921633785",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935095476",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "998562406",
+      "status": "accepted",
+      "workforce_value": 2,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "923847049",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "998407257",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919863609",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933659429",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "828152602",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912437604",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926838601",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920338313",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917286817",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930349585",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "835428362",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926993429",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934501535",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933098257",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "992512075",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "892088802",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "950011904",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 21,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928081346",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "824367922",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 8,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930905631",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 7,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921647107",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989134914",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "830771832",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "918630058",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 9,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "891785542",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934746716",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928733068",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "983618596",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "888896902",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "889240172",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 21,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925297526",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "916503393",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931667750",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "965126945",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933539431",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930831522",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932750627",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "997766431",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 17,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "817214142",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "830019952",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "979346050",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928987361",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936785913",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "812840622",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919895705",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922899924",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "980365271",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "995464438",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "947751824",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "892053642",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925150266",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "988879428",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "839384262",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935650097",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 8,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920759297",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921117809",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "918813136",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 10,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "985442096",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919994770",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "996687708",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 10,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "914586054",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "924981253",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "913779452",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "918123741",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936010466",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912174050",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "924389257",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "886076622",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917812489",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929570618",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932689758",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922393265",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 24,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931635794",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935728118",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927073242",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928580121",
+      "status": "accepted",
+      "workforce_value": 0.2,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931166107",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925566713",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928488985",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "821199832",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "819895252",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 9,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925878979",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934305396",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926370774",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "829139642",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931031333",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "992569077",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917033714",
+      "status": "accepted",
+      "workforce_value": 4,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919096241",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "867188592",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931650289",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "977047587",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912509613",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "971078758",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 7,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920853439",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 10,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "822324282",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "999321399",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929529227",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "913395379",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917095493",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 28,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926876082",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "987028408",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 18,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "998373034",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 9,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930476269",
+      "status": "accepted",
+      "workforce_value": 2,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931675982",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "998139392",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "997133951",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934385888",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921163274",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919283386",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "941759610",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "915610285",
+      "status": "accepted",
+      "workforce_value": 11,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "983977979",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921765118",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929382315",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925938041",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "998285194",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921130155",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "987693029",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "971081325",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "821026792",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931787985",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 16,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933887588",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "836296222",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "833112112",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925037621",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919916729",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "923732365",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "924926732",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "832827592",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "916166397",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 10,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933182142",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927117118",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "990526095",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929767144",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "997405714",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "911377012",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928272133",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "982170559",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935809207",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912597814",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "924053003",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "923813772",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "952265334",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 39,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917474583",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 10,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933812707",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "950385529",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 28,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "984953267",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 27,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "923559957",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 21,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925361461",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930822442",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "826980052",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 20,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931790994",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912030938",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "918677216",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "893434682",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989052012",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "923691731",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935022770",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "827971332",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919588470",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "997758501",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922711992",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "918195394",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 24,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "916020805",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989794418",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "986905685",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 7,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926626280",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "971184523",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989156780",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "988820989",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "916544219",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925106674",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989307436",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "918267166",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "916482426",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "824825432",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917111065",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 10,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927267543",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "915761585",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "888112812",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "913180984",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 9,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989079999",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933251691",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "916350228",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "980440451",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926317571",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936227503",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "911967863",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931064665",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "923479422",
+      "status": "accepted",
+      "workforce_value": 2,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934998898",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989227734",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925198730",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "991160981",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 7,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921143230",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927667592",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921808518",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 17,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927120844",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "916701632",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "997245237",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "913598814",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920719554",
+      "status": "accepted",
+      "workforce_value": 11,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "988506532",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929029984",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "979162634",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922707596",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 10,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917295344",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927110326",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "990638160",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 7,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922754365",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "996533751",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "944815325",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "986274693",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 17,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917592691",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "829028832",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931319825",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927810255",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925345334",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "988914908",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "918486844",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "915308775",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 19,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "923830979",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929005147",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912785874",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 20,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "998320569",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989256467",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "914509556",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "817630812",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921117817",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 21,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "998096405",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912750132",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989249703",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926826166",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929701577",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "918112189",
+      "status": "accepted",
+      "workforce_value": 2,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930715832",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932574241",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 4,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917968101",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "999276423",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "995097346",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "993903752",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926875493",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912869210",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "816377102",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 27,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "984550316",
+      "status": "accepted",
+      "workforce_value": 3,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933774155",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917102988",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931480936",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 21,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930739324",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921251068",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "914757363",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "991429573",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "980952827",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930808040",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920319033",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "816981522",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "918851682",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "915311806",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "985061750",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917178860",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "997711750",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "991363823",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928552462",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932398222",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "990825971",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "993803308",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917860122",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926609416",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934922824",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919323000",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989057995",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933987574",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "832915432",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932984822",
+      "status": "accepted",
+      "workforce_value": 2,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921412517",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "993225754",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920891438",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931840444",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 9,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930702579",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989121596",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "923361189",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 20,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931143859",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930456632",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917927502",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926768026",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "983766528",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 21,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "997524306",
+      "status": "accepted",
+      "workforce_value": 2,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "983176135",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925776041",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "923420282",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "916885946",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "918560971",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "988752967",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930916803",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "923887873",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920125980",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989067192",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932986868",
+      "status": "accepted",
+      "workforce_value": 2.17,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925747971",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921871813",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 16,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "923054162",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "885893872",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "914772826",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935234298",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934330145",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 16,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "975328503",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "992230436",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "995643200",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912695875",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 22,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "991330259",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "830387102",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "976244273",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 8,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920444040",
+      "status": "accepted",
+      "workforce_value": 2,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "995695111",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 17,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "825298142",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928560562",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 16,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927882817",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989166999",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920324258",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930579459",
+      "status": "accepted",
+      "workforce_value": 0.1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989586432",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933054438",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989206893",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 9,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "827484202",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925219754",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935837286",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "944229264",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919200057",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936075207",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "950016418",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 38,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "997468422",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928978680",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "821666422",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931004328",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 16,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928825566",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989762737",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922202443",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917397341",
+      "status": "accepted",
+      "workforce_value": 2,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "918852662",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "979804385",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 17,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935431689",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "855019892",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 24,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989222899",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "830610782",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "976700457",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "913173333",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "889253002",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919881151",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934577485",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934656830",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "826034122",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933409333",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "976693132",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917493480",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 16,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927097206",
+      "status": "accepted",
+      "workforce_value": 2,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930016322",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "821655552",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927801760",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922750688",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "998718120",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 90,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920396046",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "916708912",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 7,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931699113",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 24,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928761959",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "992329432",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "982349362",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928231356",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "997176472",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "833480332",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "823115512",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "932398621",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 16,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920707661",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "917554579",
+      "status": "accepted",
+      "workforce_value": 1.2,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930801968",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928339319",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 21,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936057985",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "987903953",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919077034",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919224088",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 17,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935856175",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "992102292",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "916554133",
+      "status": "accepted",
+      "workforce_value": 2,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "912410943",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929592719",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 17,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921645198",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "995899728",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "833224972",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 23,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920576338",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "889556692",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 8,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "950704381",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 17,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934539729",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989048694",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919438665",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "913187318",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "987570067",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920951295",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "995358980",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927434067",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936863590",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "948543303",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 19,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "991443320",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 7,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "916774915",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "818751362",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "984500475",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920510132",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 16,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "913419936",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "948189879",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "967447501",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "920440401",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "836071042",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "915537758",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926578286",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "980527476",
+      "status": "accepted",
+      "workforce_value": 2,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933991164",
+      "status": "accepted",
+      "workforce_value": 0.2,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927892359",
+      "status": "no_employee_phrase",
+      "cache_hit": true,
+      "pages": 7,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927629771",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "919284609",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "981213653",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "999594166",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930641618",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "890530982",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921790090",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "960685075",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "833309382",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "916835078",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "980649369",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934474856",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "926627422",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930016098",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "915746950",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 7,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "941561071",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925341606",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "852881372",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 22,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "939250271",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 19,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930463043",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 15,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "821697522",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "916497083",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 8,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989930575",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 6,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929430778",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "913547454",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "997813375",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "918508430",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928892581",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 14,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "987687673",
+      "status": "accepted",
+      "workforce_value": 5,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931883852",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "993400033",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 19,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "913917871",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "993156590",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931319671",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929093046",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "916050852",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "944862927",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "928032280",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 17,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "995929392",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "991303715",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 18,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "924716568",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922646694",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 19,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "927619040",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921829841",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922698864",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "935554144",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 5,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931641204",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 22,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "913698827",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "988797065",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930519456",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936655688",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936213871",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "915314430",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "921464177",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936200028",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "929383818",
+      "status": "accepted",
+      "workforce_value": 0.5,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "815548442",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "889028092",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 33,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "936285589",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "915870996",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "923716831",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "977140013",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "employees",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "930130680",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "913256832",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "948653028",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "934052315",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "923194614",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "933932540",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "925342564",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989186892",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "991724044",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "988526894",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "971248890",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 13,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931009850",
+      "status": "accepted",
+      "workforce_value": 0,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "931147579",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 11,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "922836906",
+      "status": "no_employee_phrase",
+      "cache_hit": false,
+      "pages": 12,
+      "ocr_used": true
+    },
+    {
+      "organisation_number": "989544314",
+      "status": "accepted",
+      "workforce_value": 1,
+      "measure": "full_time_equivalents",
+      "cache_hit": false,
+      "ocr_used": true
+    }
+  ]
+}
