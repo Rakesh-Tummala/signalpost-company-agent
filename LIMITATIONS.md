@@ -20,6 +20,7 @@ these are silently hidden: every gap below shows up as an honest `not_available`
 | Company-site activity metrics | 66 | 6.6% |
 | Verified social profiles | 32 | 3.2% |
 | Dated company-owned news/press items | 10 | 1.0% |
+| Careers/jobs page detected on own site | 4 | 0.4% |
 
 Website (and the activity/news/social claims that depend on a verified site) dropped
 from an earlier 139/1,000 after a precision fix caught 24 wrong-company matches (see
@@ -36,7 +37,9 @@ which is why coverage tapers off rather than reflecting a bug.
 
 - **Independently-sourced job postings and third-party reviews/sentiment.** The
   workforce *size* now has real coverage (see above, via official annual-report OCR),
-  but job *postings* specifically remain uncovered: the only postings connector
+  and a company advertising a careers/jobs page on its own site is now detected
+  (4/1,000 — see `extract_company_site_careers.py`), but individual job *postings*
+  specifically remain uncovered: the only postings connector
   (`scripts/run_linkedin_guest_jobs_connector.py`) hits an unofficial LinkedIn
   endpoint and self-tags its own output `"publishable": false`. Using it for scored
   claims would violate the source policy's rule that unofficial platform access
@@ -44,6 +47,32 @@ which is why coverage tapers off rather than reflecting a bug.
   (`scripts/run_sentiment_model.py`) exists but has never been evaluated against a
   frozen gold corpus (`evaluate_sentiment.py`, which it references, doesn't exist in
   this repo), and nothing currently feeds it real snippets anyway.
+
+  Investigated NAV's own official job-postings sources specifically, since
+  arbeidsplassen.no is Norway's official public employment platform (a government
+  body, the same tier as BRREG) — two real official APIs exist, and neither turned
+  out practical within reasonable time/request budget:
+  - `pam-stilling-feed` (github.com/navikt/pam-stilling-feed) is a genuine official
+    open-data API — keyless public token available instantly, no registration — but
+    it's a pure forward-only change log starting around 2019, with items so dense
+    (1,000 items spanned roughly 10 seconds of original activity in one test fetch)
+    that paging from the start to "now" would take an impractical number of pages.
+    Its only shortcut, `?last=true`, returns just the single newest event with no
+    way to request "the last N days." The job details it does return include the
+    employer's exact `orgnr` — genuinely collision-proof — which is what made this
+    worth the investigation.
+  - `arbeidsplassen.nav.no/stillinger/api/search` is the unauthenticated public
+    endpoint arbeidsplassen.no's own site search uses, and does accept free-text
+    queries — but returned persistent HTTP 429 for our IP even after 45+ seconds of
+    backoff and browser-like headers, which reads as bot detection rather than a
+    simple rate limit worth waiting out. Its results also identify the employer by
+    name only (sometimes with a department suffix, e.g. "SECURITAS AS AVD BERGEN"),
+    not organisation number, so it would have needed the same token-matching
+    discipline as the website identity gate regardless.
+  Neither is included in `run_agent.py`. A registered API consumer (emailing NAV per
+  the feed's own documented process) or a longer soak/backoff test from a different
+  network might make one of these viable later, but that's out of scope for this
+  submission.
 - **Third-party reviews and broader public buzz.** Google News RSS, Fagfolkguiden
   reviews, and YouTube discovery connectors exist
   (`scripts/run_google_news_rss_connector.py`,

@@ -43,9 +43,12 @@ Claim fields currently emitted:
   `run_agent.py`): `site_activity_metrics` (one per company, from
   `extract_company_site_activity.py`), `site_news.<index>` (one per dated
   company-owned press/news item, from `extract_company_site_news.py`),
-  `workforce_value.<year>` (from the OCR annual-report connector -- see
-  `CRAWLERS.md`). These claims each carry their own evidence entry (a real,
-  independently-verified source fetch) rather than sharing one per module.
+  `careers_page` (one per company with a detected careers/jobs page on its own
+  site, from `extract_company_site_careers.py` -- records that the page exists,
+  not individual open positions), `workforce_value.<year>` (from the OCR
+  annual-report connector -- see `CRAWLERS.md`). These claims each carry their own
+  evidence entry (a real, independently-verified source fetch) rather than sharing
+  one per module.
 
 ## Internal pipeline profile (`out/profiles.jsonl`)
 
