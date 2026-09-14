@@ -34,6 +34,7 @@ PRIORITY_TERMS = (
     "om-oss", "om_oss", "about", "kontakt", "contact", "ledelse", "management",
     "team", "people", "locations", "lokasjoner", "avdelinger", "butikker",
     "news", "press", "aktuelt", "nyheter",
+    "careers", "career", "jobs", "job", "karriere", "ledige-stillinger", "stillinger",
 )
 
 

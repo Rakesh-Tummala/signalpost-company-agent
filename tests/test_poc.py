@@ -41,6 +41,7 @@ from scripts.score_company_completeness import score_rows, summarize  # noqa: E4
 from scripts.build_output_contract import build_envelope, build_envelopes_safe, summarize_profile  # noqa: E402
 from scripts.extract_company_site_activity import observation as site_activity_observation  # noqa: E402
 from scripts.extract_company_site_news import observation as site_news_observation  # noqa: E402
+from scripts.extract_company_site_careers import observation as site_careers_observation  # noqa: E402
 from scripts.build_verified_observations import build as build_verified_observations  # noqa: E402
 from scripts.run_google_news_rss_connector import exact_title_match  # noqa: E402
 from scripts.run_linkedin_guest_jobs_connector import canonical_company_url, parse_detail_company_urls, parse_job_cards, parse_typeahead  # noqa: E402
@@ -588,6 +589,23 @@ class CompletenessScoreTests(unittest.TestCase):
         profile["evidence"]["website"]["value"]["pages"][0]["url"] = "https://example.test/contact"
         self.assertIsNone(site_news_observation(profile))
 
+    def test_site_careers_requires_exact_identity_and_a_captured_careers_path(self):
+        profile = {
+            "organisation_number": "923609016",
+            "evidence": {"website": {
+                "status": "available", "retrieved_at": "2026-08-23T00:00:00Z",
+                "value": {
+                    "identity_assessment": {"publishable": True, "score": 1.0},
+                    "pages": [{"url": "https://example.test/karriere", "title": "Ledige stillinger", "content_sha256": "b" * 64}],
+                },
+            }},
+        }
+        item = site_careers_observation(profile)
+        self.assertEqual(item["signal_type"], "careers_page_found")
+        self.assertTrue(publishable_observation(item))
+        profile["evidence"]["website"]["value"]["pages"][0]["url"] = "https://example.test/contact"
+        self.assertIsNone(site_careers_observation(profile))
+
     def test_verified_observations_require_known_org_and_snapshot_hash(self):
         profiles = [{"organisation_number": "923609016", "name": "Example AS"}]
         seed = {"organisation_number": "923609016", "platform": "news", "signal_type": "public_mention", "source_url": "https://example.test/news", "content_sha256": "a" * 64, "evidence_span": "Example AS", "proof": "Exact legal name"}
@@ -914,6 +932,21 @@ class OutputContractTests(unittest.TestCase):
         self.assertEqual(workforce_claims[0]["confidence"], 1.0)
         self.assertIn("4 full-time equivalents (2024)", envelope["summary"]["text"])
         self.assertNotIn("hiring/workforce size", " ".join(envelope["summary"]["unknown_fields"]))
+
+    def test_careers_page_observation_becomes_claim_and_summary_sentence(self):
+        observations = [{
+            "organisation_number": "923609016", "signal_type": "careers_page_found", "id": "careers-1",
+            "source_url": "https://example.no/karriere", "retrieved_at": "2026-01-01T00:00:00Z",
+            "content_sha256": "c" * 64, "exact_entity": True, "rights_status": "approved",
+            "acquisition_mode": "permitted_public_page", "source_class": "company_site",
+            "evidence_span": "Ledige stillinger",
+            "metrics": {"has_careers_page": True},
+        }]
+        envelope = build_envelope(self._profile(), run_id="r1", started_at="2026-01-01T00:00:00Z", completed_at="2026-01-01T00:01:00Z", observations=observations)
+        careers_claims = [c for c in envelope["claims"] if c["field"] == "careers_page"]
+        self.assertEqual(len(careers_claims), 1)
+        self.assertEqual(careers_claims[0]["value"]["url"], "https://example.no/karriere")
+        self.assertIn("careers/jobs page was found", envelope["summary"]["text"])
 
     def test_one_malformed_profile_does_not_drop_the_whole_batch(self):
         good = self._profile()

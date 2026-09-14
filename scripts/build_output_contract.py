@@ -316,6 +316,10 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
     else:
         unknowns.append("hiring/workforce size (no jobs-posting source integrated yet; official annual-report headcount attempted but not found or not applicable for this company)")
 
+    careers_items = [o for o in (observations or []) if o.get("signal_type") == "careers_page_found"]
+    if careers_items:
+        sentences.append(f"A careers/jobs page was found on its own website: {careers_items[0].get('source_url')}.")
+
     if unknowns:
         sentences.append("Not yet determined: " + "; ".join(unknowns) + ".")
 
@@ -338,6 +342,8 @@ def emit_external_observations(emitter: Emitter, observations: list[dict[str, An
             emitter.observation_claim("site_activity_metrics", observation.get("metrics"), observation)
         elif signal_type == "public_post":
             emitter.observation_claim(f"site_news.{index}", {"url": observation.get("source_url"), "title": observation.get("evidence_span")}, observation)
+        elif signal_type == "careers_page_found":
+            emitter.observation_claim("careers_page", {"url": observation.get("source_url"), "title": observation.get("evidence_span")}, observation)
         elif signal_type == "workforce_snapshot":
             # scripts/run_annual_report_workforce_connector.py: OCR'd (or, when the
             # PDF has a machine-readable text layer, directly extracted) headcount

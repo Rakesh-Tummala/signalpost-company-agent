@@ -37,6 +37,7 @@ SIGNAL_TYPES = {
     "review_summary",
     "job_posting",
     "workforce_snapshot",
+    "careers_page_found",
     "public_post",
     "public_mention",
     "buzz_metrics",

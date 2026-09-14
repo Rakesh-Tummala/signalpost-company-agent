@@ -152,6 +152,7 @@ def main() -> None:
     # candidate. Best-effort: scrapy may not be installed everywhere.
     activity_obs_path = output_dir / "activity-observations.jsonl"
     news_obs_path = output_dir / "news-observations.jsonl"
+    careers_obs_path = output_dir / "careers-observations.jsonl"
     has_scrapy = False
     if not args.skip_deep_crawl:
         try:
@@ -182,10 +183,13 @@ def main() -> None:
             # always attempted once there's a crawl to extract from.
             run([args.python, str(ROOT / "extract_company_site_activity.py"), "--profiles", str(profiles_path), "--output", str(activity_obs_path), "--report", str(output_dir / "activity-report.json")], optional=True)
             run([args.python, str(ROOT / "extract_company_site_news.py"), "--profiles", str(profiles_path), "--output", str(news_obs_path), "--report", str(output_dir / "news-report.json")], optional=True)
+            run([args.python, str(ROOT / "extract_company_site_careers.py"), "--profiles", str(profiles_path), "--output", str(careers_obs_path), "--report", str(output_dir / "careers-report.json")], optional=True)
             if activity_obs_path.exists():
                 stages_run.append("site_activity")
             if news_obs_path.exists():
                 stages_run.append("site_news")
+            if careers_obs_path.exists():
+                stages_run.append("site_careers")
     else:
         print("scrapy not installed -- skipping deep crawl and activity/news extraction.", file=sys.stderr)
 
@@ -218,7 +222,7 @@ def main() -> None:
         "--started-at", started_at,
         "--completed-at", completed_at,
     ]
-    for obs_path in (activity_obs_path, news_obs_path, workforce_obs_path):
+    for obs_path in (activity_obs_path, news_obs_path, careers_obs_path, workforce_obs_path):
         if obs_path.exists():
             convert_cmd += ["--observations", str(obs_path)]
     run(convert_cmd)
