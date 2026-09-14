@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-09-14T04:05:06.728777Z",
+  "started_at": "2026-09-14T03:59:38.204744Z",
+  "provider": "Tavily Search API",
+  "provider_endpoint": "https://api.tavily.com/search",
+  "access_mode": "api_key",
+  "input_profiles": 97,
+  "queried_missing_website_profiles": 97,
+  "counts": {
+    "provider_requests": 97,
+    "provider_bytes": 798325,
+    "independent_crawls": 24,
+    "crawl_requests": 115,
+    "quarantined_sites": 15,
+    "abstained_before_crawl": 73,
+    "verified_sites": 9,
+    "promoted_sites": 9
+  },
+  "provider_latency_ms": {
+    "p50": 1873,
+    "p95": 3733
+  },
+  "raw_search_results_persisted": false,
+  "promote_verified_enabled": true,
+  "qualification": "not_evaluated_on_500_org_external_final_corpus"
+}

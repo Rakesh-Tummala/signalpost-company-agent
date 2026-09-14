@@ -1,0 +1,73 @@
+{
+  "input_sha256": "c1425637cb3b1534c15cfc890be3cf815c08a3f97845539a9283731cb3543f30",
+  "profiles": 9,
+  "website_seeds_selected": 9,
+  "profiles_with_events": 9,
+  "unique_events": 24,
+  "events_added": 24,
+  "events_present_before_run": 0,
+  "synthetic_terminal_events": 0,
+  "website_statuses": {
+    "available": 9
+  },
+  "identity_statuses": {
+    "exact": 9
+  },
+  "published_social_profiles": 6,
+  "elapsed_seconds": 6.168,
+  "run_started_at": "2026-09-14T04:05:36.655952Z",
+  "run_finished_at": "2026-09-14T04:05:42.823648Z",
+  "events_per_second": 3.891,
+  "requests": 33,
+  "responses": 33,
+  "response_bytes": 871463,
+  "retries": 0,
+  "robots_forbidden": 0,
+  "request_wall_latency_including_queue": {
+    "n": 33,
+    "p50_ms": 609.731,
+    "p95_ms": 1893.006,
+    "max_ms": 2284.894
+  },
+  "response_download_latency": {
+    "n": 33,
+    "p50_ms": 334.24,
+    "p95_ms": 1430.614,
+    "max_ms": 1454.217
+  },
+  "failure_attempt_wall_latency": {
+    "n": 0,
+    "p50_ms": null,
+    "p95_ms": null,
+    "max_ms": null
+  },
+  "company_completion_latency": {
+    "n": 9,
+    "p50_ms": 1966.968,
+    "p95_ms": 3741.589,
+    "max_ms": 3741.589
+  },
+  "company_completion_synthetic_upper_bounds": 0,
+  "request_domain_fairness": {
+    "domains": 9,
+    "p50_requests": 3.0,
+    "p95_requests": 6.0,
+    "max_requests": 6
+  },
+  "response_statuses": {
+    "200": 32,
+    "404": 1
+  },
+  "error_buckets": {},
+  "request_amplification_per_seed": 3.667,
+  "terminal_coverage": 1.0,
+  "crawl_complete": true,
+  "peak_rss_bytes": 0,
+  "output_sha256": "b3ad14242c573c9f0b8dc8544e046fea8c8af16b584c228ab318b5f48433f29a",
+  "finish_reason": "finished",
+  "resume_noop": false,
+  "concurrency": 8,
+  "per_domain": 2,
+  "jobdir": "out\\scrapy-jobdir-v3",
+  "events_path": "out\\scrapy-events-v3.jsonl"
+}

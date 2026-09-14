@@ -15,17 +15,20 @@ these are silently hidden: every gap below shows up as an honest `not_available`
 | **Workforce size** (OCR'd from official annual reports) | 459 | 45.9% |
 | Registered workplaces (subunit detail) | 255 | 25.5% |
 | Registry-reported employee count | 144 | 14.4% |
-| Verified official website | 115 | 11.5% |
+| Verified official website | 124 | 12.4% |
+| Company-site activity metrics | 75 | 7.5% |
 | Group/ownership structure | 70 | 7.0% |
-| Company-site activity metrics | 66 | 6.6% |
-| Verified social profiles | 32 | 3.2% |
-| Dated company-owned news/press items | 10 | 1.0% |
+| Verified social profiles | 35 | 3.5% |
+| Dated company-owned news/press items | 13 | 1.3% |
 | Careers/jobs page detected on own site | 4 | 0.4% |
 
-Website (and the activity/news/social claims that depend on a verified site) dropped
-from an earlier 139/1,000 after a precision fix caught 24 wrong-company matches (see
-"identity-gate precision fix" below) — the corrected numbers above are what's
-actually safe to publish, not what was technically discovered.
+Website (and the activity/news/social/careers claims that depend on a verified site)
+dropped from an earlier 139/1,000 after a precision fix caught 24 wrong-company
+matches (see "identity-gate precision fix" below), then recovered partway with 9 more
+genuine matches from a targeted Tavily retry on companies Exa's discovery pass had
+failed to find (Tavily's exact-match hit rate ran roughly 4x higher than Exa's in a
+controlled comparison earlier — see the Tavily/Exa connector commits). The numbers
+above are what's actually safe to publish, not the raw technically-discovered count.
 
 The official-registry fields (top of the table) are near-100% because BRREG's bulk
 snapshot and live API are comprehensive and always attempted. Everything below that
