@@ -292,6 +292,21 @@ class ExternalFootprintTests(unittest.TestCase):
         self.assertTrue(needs_ocr("Digital cover text without the employee note"))
         self.assertFalse(needs_ocr("Selskapet har 2 ansatte. " + "Digital report text. " * 8))
 
+    def test_annual_workforce_parser_matches_the_correct_a_ring_spelling(self):
+        # Real cached OCR text (org 926320459) that every pattern silently missed
+        # before this fix: the patterns required the ASCII "regnskapsaret" spelling,
+        # but correctly-OCR'd Norwegian text (with the nor language pack) actually
+        # reads "regnskapsåret" -- with å, not a. This one bug alone was the
+        # difference between 459/856 and 841/856 accepted across the real batch.
+        self.assertEqual(extract_candidate("Antall årsverk sysselsatt i regnskapsåret: 1,71")[0], 1.71)
+        self.assertEqual(extract_candidate("Note\n\nAntall årsverk i regnskapsåret\n\n1.00\n\nNote\n2")[0], 1.0)
+        # Nynorsk "Talet på ... sysselsett i rekneskapsåret" -- also missed before:
+        # "tal" without the definite-form "-et" suffix, and no allowance for
+        # "sysselsett" appearing between "årsverk" and "i rekneskapsåret".
+        self.assertEqual(extract_candidate("Talet på årsverk sysselsett i rekneskapsåret: 3")[0], 3)
+        # Borettslag wasn't in the zero-workforce entity list.
+        self.assertEqual(extract_candidate("Borettslag har ingen ansatte.")[0], 0)
+
     def test_aggregate_keeps_source_metrics_separate_and_abstains_on_thin_sentiment(self):
         items = [
             self.observation(id="a", sentiment_label="positive", sentiment_model_version="m1"),

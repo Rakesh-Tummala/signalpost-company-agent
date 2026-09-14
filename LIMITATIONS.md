@@ -11,8 +11,8 @@ these are silently hidden: every gap below shows up as an honest `not_available`
 | Legal identity, legal form, accounting obligation | 1,000 | 100% |
 | Bankruptcy/liquidation status, industry, latest filed year, roles | 999 | ~100% |
 | Business address, latest annual accounts | 997 | 99.7% |
+| **Workforce size** (OCR'd from official annual reports) | 841 | 84.1% |
 | Registered locations/subunits | 745 | 74.5% |
-| **Workforce size** (OCR'd from official annual reports) | 459 | 45.9% |
 | Registered workplaces (subunit detail) | 255 | 25.5% |
 | Registry-reported employee count | 144 | 14.4% |
 | Verified official website | 124 | 12.4% |
@@ -127,12 +127,23 @@ company." A stronger fix would corroborate via detected Norwegian-language conte
 on the page as an alternative to the `.no` domain requirement, which would rescue
 cases like Zivid without reopening the collision risk — not implemented here for lack
 of time to validate it against real data before this submission.
-- **Workforce size.** 459/1,000 (45.9%) via official annual-report OCR -- see the
+- **Workforce size.** 841/1,000 (84.1%) via official annual-report OCR -- see the
   table above. 856 companies were eligible (BRREG's own registry field was blank for
-  them); of those, 395 had no matching Norwegian employee-count phrase found by the
-  connector's regex patterns (could be phrasing variants not yet covered, or a
-  genuinely OCR-illegible scan) and 2 had conflicting counts across the document and
-  correctly abstained rather than guess.
+  them). This started at 459 (53.6% of eligible); manually inspecting the cached OCR
+  text for "no match" companies (no new downloads or OCR needed -- everything was
+  already on disk) found the real cause: the regex patterns required the ASCII
+  "regnskapsaret" spelling, but correctly-OCR'd Norwegian text (once the language
+  pack was fixed, see the earlier commit) actually reads "regnskapsåret" -- with å.
+  Real cached example that was silently missed: "Antall årsverk sysselsatt i
+  regnskapsåret: 1,71". Fixing that one spelling gap (plus a Nynorsk phrasing
+  variant and adding "borettslag" to the zero-workforce entity list) took accepted
+  matches from 459 to 841 -- pure re-processing of already-cached text, no new
+  network requests. Verified a sample of the newly-matched values against their
+  full surrounding OCR context (financial-note tables linearized by OCR into
+  label-then-value line pairs) before trusting the result. Remaining gap: 5 had no
+  matching phrase at all, 10 had conflicting counts across the document and
+  correctly abstained rather than guess (up from 2 -- the loosened patterns
+  surface more candidates, and the safety net still holds them to agreement).
 - **Group structure.** Fetched for every company but only 70/1,000 have a non-empty
   result — most Norwegian small businesses in the sample are standalone entities, so
   this is expected, not a bug.

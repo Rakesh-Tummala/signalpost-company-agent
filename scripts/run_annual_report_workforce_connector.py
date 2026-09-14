@@ -18,13 +18,22 @@ from pypdf import PdfReader
 
 UA = "SignalpostResearchPOC/1.0 (+https://builderr.ai)"
 OCR_NUMBER = r"(?-i:\b[0-9O][0-9O .,-]{0,8})"
+# Bokmål "regnskapsåret" / Nynorsk "rekneskapsåret" -- the correct spelling always
+# has "å", which is what correctly-OCR'd text (Norwegian language pack) actually
+# produces. Earlier versions of these patterns only allowed the ASCII "aret" form,
+# which meant a straightforwardly correct OCR read never matched at all. Confirmed
+# on real cached OCR output: "Antall årsverk sysselsatt i regnskapsåret: 1,71" was
+# being silently missed by every pattern that ended in "...i regnskapsaret".
+YEAR_NOUN = r"(?:regnskaps[aå]ret|rekneskaps[aå]ret)"
+ARSVERK = r"(?:aarsverk|arsverk|årsverk)"
 PATTERNS = (
-    (0, "full_time_equivalents", re.compile(rf"(?i)(?:antall|tal\s+p[aå])\s+(?:aarsverk|arsverk|årsverk)\s+i\s+(?:regnskapsaret|rekneskapsaret)\s*(?:er|:|=)?\s*({OCR_NUMBER})")),
-    (0, "full_time_equivalents", re.compile(rf"(?i)antall\s+(?:aarsverk|arsverk|årsverk)(?:\s+sysselsatt\s+i\s+regnskapsaret)?\s*(?:er|:|=)?\s*({OCR_NUMBER})")),
-    (0, "full_time_equivalents", re.compile(rf"(?i)selskapet\s+har(?:\s+[i1]\s+\d{{4}})?\s+sysselsatt\s+({OCR_NUMBER})\s+(?:aarsverk|arsverk|årsverk)")),
-    (0, "full_time_equivalents", re.compile(rf"(?i)selskapet\s+har\s+({OCR_NUMBER})\s+(?:aarsverk|arsverk|årsverk)")),
-    (0, "full_time_equivalents", re.compile(rf"(?i)antall\s+(?:aarsverk|arsverk|årsverk)\s+(?:sysselsatt|syssetsatt)\s+i\s+regnskapsaret\s*(?:er|:|=)?\s*({OCR_NUMBER})")),
-    (1, "employees", re.compile(rf"(?i)gjennomsnittlig(?:e)?\s+antall\s+ansatte(?:\s+i\s+regnskapsaret)?\s*(?:er|:|=)?\s*({OCR_NUMBER})")),
+    (0, "full_time_equivalents", re.compile(rf"(?i)(?:antall|tal(?:et)?\s+p[aå])\s+{ARSVERK}\s+i\s+{YEAR_NOUN}\s*(?:er|:|=)?\s*({OCR_NUMBER})")),
+    (0, "full_time_equivalents", re.compile(rf"(?i)antall\s+{ARSVERK}(?:\s+sysselsatt\s+i\s+{YEAR_NOUN})?\s*(?:er|:|=)?\s*({OCR_NUMBER})")),
+    (0, "full_time_equivalents", re.compile(rf"(?i)selskapet\s+har(?:\s+[i1]\s+\d{{4}})?\s+sysselsatt\s+({OCR_NUMBER})\s+{ARSVERK}")),
+    (0, "full_time_equivalents", re.compile(rf"(?i)selskapet\s+har\s+({OCR_NUMBER})\s+{ARSVERK}")),
+    (0, "full_time_equivalents", re.compile(rf"(?i)antall\s+{ARSVERK}\s+(?:sysselsatt|syssetsatt)\s+i\s+{YEAR_NOUN}\s*(?:er|:|=)?\s*({OCR_NUMBER})")),
+    (0, "full_time_equivalents", re.compile(rf"(?i)tal(?:et)?\s+p[aå]\s+{ARSVERK}\s+sysselsett\s+i\s+{YEAR_NOUN}\s*(?:er|:|=)?\s*({OCR_NUMBER})")),
+    (1, "employees", re.compile(rf"(?i)gjennomsnittlig(?:e)?\s+antall\s+ansatte(?:\s+i\s+{YEAR_NOUN})?\s*(?:er|:|=)?\s*({OCR_NUMBER})")),
     (1, "employees", re.compile(rf"(?i)antall\s+ansatte\s*(?:er|:|=)?\s*({OCR_NUMBER})")),
     (2, "employees", re.compile(rf"(?i)({OCR_NUMBER})\s+(?:heltids)?ansatte\b")),
 )
@@ -33,8 +42,8 @@ WORD_EMPLOYEE_PATTERN = re.compile(
     r"(?i)\b(?:det\s+er|selskapet\s+har)\s+(ingen|en|ett|to|tre|fire|fem)\s+ansatte\b"
 )
 ZERO_WORKFORCE_PATTERN = re.compile(
-    r"(?i)\b(?:selskapet|stiftelsen|legatet|sameiet|det)\s+"
-    r"(?:har\s+ingen\s+(ansatte|(?:aarsverk|arsverk|årsverk))|"
+    rf"(?i)\b(?:selskapet|stiftelsen|legatet|sameiet|borettslaget|borettslag|det)\s+"
+    rf"(?:har\s+ingen\s+(ansatte|{ARSVERK})|"
     r"har\s+ikke\s+hatt\s+(?:noen\s+)?ansatte|"
     r"hadde\s+ingen\s+ansatte|"
     r"ikke\s+har\s+ansatte)\b"
