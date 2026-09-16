@@ -16,7 +16,7 @@ import re
 from pathlib import Path
 from urllib.parse import urlparse
 
-CAREERS_PATH = re.compile(r"/(?:careers?|jobs?|karriere|ledige-stillinger|stillinger)(?:/|$)", re.I)
+CAREERS_PATH = re.compile(r"(?:^|[-/])(?:careers?|jobs?|karriere|ledige-stillinger|stillinger)(?:[-/]|$)", re.I)
 
 
 def observation(profile: dict) -> dict | None:

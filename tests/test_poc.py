@@ -621,6 +621,24 @@ class CompletenessScoreTests(unittest.TestCase):
         profile["evidence"]["website"]["value"]["pages"][0]["url"] = "https://example.test/contact"
         self.assertIsNone(site_careers_observation(profile))
 
+    def test_site_careers_matches_a_hyphenated_compound_path_segment(self):
+        # Real miss found by inspecting captured crawl data: TBG Holding's
+        # "/tbg-careers/" page passed the identity gate (0.95, publishable) and
+        # was in evidence.website.value.pages, but the old CAREERS_PATH pattern
+        # required "careers" right after a "/" -- "tbg-careers" is one hyphenated
+        # segment, not "tbg" then "/careers", so it never matched.
+        profile = {
+            "organisation_number": "923609016",
+            "evidence": {"website": {
+                "status": "available", "retrieved_at": "2026-08-23T00:00:00Z",
+                "value": {
+                    "identity_assessment": {"publishable": True, "score": 0.95},
+                    "pages": [{"url": "https://tbgholding.com/tbg-careers/", "title": "TBG Careers", "content_sha256": "d" * 64}],
+                },
+            }},
+        }
+        self.assertIsNotNone(site_careers_observation(profile))
+
     def test_verified_observations_require_known_org_and_snapshot_hash(self):
         profiles = [{"organisation_number": "923609016", "name": "Example AS"}]
         seed = {"organisation_number": "923609016", "platform": "news", "signal_type": "public_mention", "source_url": "https://example.test/news", "content_sha256": "a" * 64, "evidence_span": "Example AS", "proof": "Exact legal name"}

@@ -20,7 +20,7 @@ these are silently hidden: every gap below shows up as an honest `not_available`
 | Group/ownership structure | 70 | 7.0% |
 | Verified social profiles | 35 | 3.5% |
 | Dated company-owned news/press items | 16 | 1.6% |
-| Careers/jobs page detected on own site | 4 | 0.4% |
+| Careers/jobs page detected on own site | 6 | 0.6% |
 
 Website (and the activity/news/social/careers claims that depend on a verified site)
 dropped from an earlier 139/1,000 after a precision fix caught 24 wrong-company
@@ -174,6 +174,17 @@ Two follow-ups from that feedback:
   jobs section above): 20 consecutive pages (20,000 events) covered only 58 seconds
   of real calendar time on 2023-06-14. Reaching the present from there would need
   roughly 35 million pages -- not a rough estimate anymore, a confirmed dead end.
+- **Fixed a real gap in careers-page detection**: inspecting the actual crawled page
+  data directly (not just the connector's own output count) found genuine careers
+  pages the extractor was silently missing -- e.g. TBG Holding's `/tbg-careers/`
+  page had passed the identity gate (0.95, publishable) and was sitting right there
+  in the crawl data, but the old path pattern only matched "careers" immediately
+  after a `/`, not hyphenated into a compound segment like "tbg-careers". Loosened
+  the boundary; careers-page detection went 4 -> 6. Also checked whether any of
+  those pages have specific, extractable job-title content (which would be a
+  genuinely stronger "jobs" signal than just "a careers page exists") -- all 6 are
+  generic "join our team" marketing copy with no individual role information, so
+  there was nothing further to extract from this particular signal right now.
 
 ## Not yet run against real data
 
