@@ -1,0 +1,8 @@
+{
+  "connector": "prior_year_financials_v1",
+  "profiles": 1000,
+  "eligible": 854,
+  "accepted": 823,
+  "observations": 823,
+  "claim_boundary": "Only fields where the known current-year value was found as an exact prefix of the OCR'd digit sequence; the remainder is trusted as the prior year. Abstains rather than guesses a split point."
+}

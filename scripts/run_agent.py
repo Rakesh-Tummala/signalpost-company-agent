@@ -210,6 +210,22 @@ def main() -> None:
         if ok:
             stages_run.append("workforce_ocr")
 
+    # 5b. Prior-year comparative financial figures, recovered from the same
+    # annual-report OCR cache the workforce stage just populated -- no new
+    # downloads or OCR, so this only runs if that cache exists.
+    prior_year_obs_path = output_dir / "prior-year-financials-observations.jsonl"
+    workforce_cache_dir = output_dir / "workforce-cache"
+    if not args.skip_workforce_ocr and workforce_cache_dir.exists():
+        ok = run([
+            args.python, str(ROOT / "extract_prior_year_financials.py"),
+            "--profiles", str(profiles_path),
+            "--cache", str(workforce_cache_dir),
+            "--output", str(prior_year_obs_path),
+            "--report", str(output_dir / "prior-year-financials-report.json"),
+        ], optional=True)
+        if ok:
+            stages_run.append("prior_year_financials")
+
     completed_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
     # 6. Claims/evidence conversion, folding in every observation file collected.
@@ -222,7 +238,7 @@ def main() -> None:
         "--started-at", started_at,
         "--completed-at", completed_at,
     ]
-    for obs_path in (activity_obs_path, news_obs_path, careers_obs_path, workforce_obs_path):
+    for obs_path in (activity_obs_path, news_obs_path, careers_obs_path, workforce_obs_path, prior_year_obs_path):
         if obs_path.exists():
             convert_cmd += ["--observations", str(obs_path)]
     run(convert_cmd)

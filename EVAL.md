@@ -11,13 +11,14 @@
 - `scripts/build_output_contract.py`'s own validation (run manually, not yet
   automated into a test): every claim's `evidence_ids` resolves, every
   `availability` value is one of the six allowed states. Passes on all 1,000
-  profiles, 17,897 claims, zero violations, zero per-profile conversion failures
+  profiles, 19,048 claims, zero violations, zero per-profile conversion failures
   (the last one guarded by `build_envelopes_safe`, see its own commit).
-- `tests/test_poc.py` — 114 unit tests, 5 subtests, covering identity-gate edge
+- `tests/test_poc.py` — 125 unit tests, 5 subtests, covering identity-gate edge
   cases (parent/subsidiary confusion, generic name collisions, parked domains),
   the missing-from-bulk-registry path, the registry_live backfill, the
-  claims/evidence conversion (shape, grounding, malformed-profile isolation), and
-  the workforce-observation-to-claim path.
+  claims/evidence conversion (shape, grounding, malformed-profile isolation), the
+  workforce-observation-to-claim path, and the prior-year-financials recovery
+  logic (verified against a real cached OCR example, org 933787141).
 - `scripts/score_company_completeness.py` — run against our real 1,000-company batch
   with zero external-connector observations (`out/self-score-report.json`). Result:
   foundation (official-registry-derived fields) mean 29.98/30 — essentially maxed,
@@ -41,10 +42,12 @@
   number: computed directly from `out/output-contract-envelopes.jsonl`, the exact
   file that would be submitted, and after the identity-gate precision fix demoted 24
   wrong-company matches (also in `LIMITATIONS.md`). Official-registry fields are
-  ~100%; website 11.5%; workforce size 45.9% (new today, via OCR); social profiles
-  3.2%; company-owned news 1.0%; group structure 7.0%. This tells us *our own* coverage, not how it compares
-  to Builderr's independently-verified collection or the other entrants' pooled
-  findings, which is what the real 35-point coverage score is measured against.
+  ~100%; website 12.3%; workforce size 84.1% (via OCR); prior-year annual accounts
+  82.3% (also via OCR, recovered from the same cached report text -- no new
+  fetches); social profiles 3.5%; company-owned news 1.6%; group structure 7.0%.
+  This tells us *our own* coverage, not how it compares to Builderr's
+  independently-verified collection or the other entrants' pooled findings, which is
+  what the real 35-point coverage score is measured against.
 
 ## What's missing
 

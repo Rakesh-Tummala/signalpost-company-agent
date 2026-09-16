@@ -351,6 +351,18 @@ def emit_external_observations(emitter: Emitter, observations: list[dict[str, An
             metrics = observation.get("metrics") or {}
             year = metrics.get("year") or observation.get("effective_at") or "unknown"
             emitter.observation_claim(f"workforce_value.{year}", metrics.get("workforce_value"), observation)
+        elif signal_type == "prior_year_financials":
+            # scripts/extract_prior_year_financials.py: the prior-year comparative
+            # figures Norwegian annual reports print alongside the current year,
+            # recovered from the same official annual-report copy already used for
+            # workforce OCR above. Same claim-field convention as emit_financials
+            # ("annual_accounts.<year>") since this is the same kind of fact --
+            # filed annual accounts for a given year -- just for a year the
+            # financials API call itself didn't return.
+            metrics = observation.get("metrics") or {}
+            year = metrics.get("year") or observation.get("effective_at") or "unknown"
+            figures = {key: value for key, value in metrics.items() if key != "year"}
+            emitter.observation_claim(f"annual_accounts.{year}", figures, observation)
 
 
 def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, completed_at: str, observations: list[dict[str, Any]] | None = None) -> dict[str, Any]:

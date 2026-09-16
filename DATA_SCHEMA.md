@@ -46,9 +46,14 @@ Claim fields currently emitted:
   `careers_page` (one per company with a detected careers/jobs page on its own
   site, from `extract_company_site_careers.py` -- records that the page exists,
   not individual open positions), `workforce_value.<year>` (from the OCR
-  annual-report connector -- see `CRAWLERS.md`). These claims each carry their own
-  evidence entry (a real, independently-verified source fetch) rather than sharing
-  one per module.
+  annual-report connector -- see `CRAWLERS.md`), `annual_accounts.<year>` for a
+  *prior* filed year (from `extract_prior_year_financials.py` -- see
+  `CRAWLERS.md`; reuses the same claim-field convention as the structured
+  `financials` module above since it's the same kind of fact, just recovered from
+  the comparative figures printed alongside the current year in the same official
+  annual-report copy rather than returned by the API call). These claims each
+  carry their own evidence entry (a real, independently-verified source fetch)
+  rather than sharing one per module.
 
 ## Internal pipeline profile (`out/profiles.jsonl`)
 

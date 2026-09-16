@@ -42,6 +42,7 @@ from scripts.build_output_contract import build_envelope, build_envelopes_safe, 
 from scripts.extract_company_site_activity import observation as site_activity_observation  # noqa: E402
 from scripts.extract_company_site_news import observation as site_news_observation  # noqa: E402
 from scripts.extract_company_site_careers import observation as site_careers_observation  # noqa: E402
+from scripts.extract_prior_year_financials import extract_prior_year, find_prior_year_value, prior_year_label  # noqa: E402
 from scripts.build_verified_observations import build as build_verified_observations  # noqa: E402
 from scripts.run_google_news_rss_connector import exact_title_match  # noqa: E402
 from scripts.run_linkedin_guest_jobs_connector import canonical_company_url, parse_detail_company_urls, parse_job_cards, parse_typeahead  # noqa: E402
@@ -981,6 +982,22 @@ class OutputContractTests(unittest.TestCase):
         self.assertEqual(careers_claims[0]["value"]["url"], "https://example.no/karriere")
         self.assertIn("careers/jobs page was found", envelope["summary"]["text"])
 
+    def test_prior_year_financials_observation_becomes_annual_accounts_claim(self):
+        observations = [{
+            "organisation_number": "923609016", "signal_type": "prior_year_financials", "id": "pyf-1",
+            "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/923609016",
+            "retrieved_at": "2026-01-01T00:00:00Z", "content_sha256": "a" * 64, "exact_entity": True,
+            "rights_status": "approved", "acquisition_mode": "official_api", "source_class": "official_annual_account_copy",
+            "evidence_span": "Prior-year (2022) figures cross-checked against the known current-year value on the same line.",
+            "effective_at": "2022",
+            "metrics": {"revenue": 923400.0, "operating_result": 406303.0, "annual_result": 316760.0, "assets": 687338.0, "equity": 346760.0, "debt": 340578.0, "year": "2022"},
+        }]
+        envelope = build_envelope(self._profile(), run_id="r1", started_at="2026-01-01T00:00:00Z", completed_at="2026-01-01T00:01:00Z", observations=observations)
+        prior_year_claims = [c for c in envelope["claims"] if c["field"] == "annual_accounts.2022"]
+        self.assertEqual(len(prior_year_claims), 1)
+        self.assertEqual(prior_year_claims[0]["value"], {"revenue": 923400.0, "operating_result": 406303.0, "annual_result": 316760.0, "assets": 687338.0, "equity": 346760.0, "debt": 340578.0})
+        self.assertEqual(prior_year_claims[0]["confidence"], 1.0)
+
     def test_one_malformed_profile_does_not_drop_the_whole_batch(self):
         good = self._profile()
         malformed = {"evidence": {}}  # no organisation_number key -> KeyError in build_envelope
@@ -1593,6 +1610,44 @@ class VerifiedSiteSeedTests(unittest.TestCase):
             failed = subprocess.run(command, capture_output=True, text=True, encoding="utf-8")
             self.assertNotEqual(failed.returncode, 0)
             self.assertIn("unknown organisations", failed.stderr)
+
+
+class PriorYearFinancialsTests(unittest.TestCase):
+    # Real cached OCR text for organisation 933787141's annual report (already on
+    # disk from the workforce OCR pass) -- current year then prior year (2023) on
+    # each line, hand-verified against that same PDF before trusting this test.
+    REAL_OCR_TEXT = (
+        "Sum driftsinntekter 658 000 923 400\n"
+        "Driftsresultat -286 688 406 303\n"
+        "Årsresultat -280 600 316 760\n"
+        "SUM EIENDELER 84 980 687 338\n"
+        "Sum egenkapital 66 160 346 760\n"
+        "Sum gjeld 18 820 340 578\n"
+    )
+    KNOWN_CURRENT_YEAR_RECORD = {
+        "period": {"tilDato": "2024-12-31"},
+        "revenue": 658000.0, "operating_result": -286688.0, "annual_result": -280600.0,
+        "assets": 84980.0, "equity": 66160.0, "debt": 18820.0,
+    }
+
+    def test_recovers_all_six_prior_year_figures_from_real_report_text(self):
+        found = extract_prior_year(self.REAL_OCR_TEXT, self.KNOWN_CURRENT_YEAR_RECORD)
+        self.assertEqual(found, {
+            "revenue": 923400.0, "operating_result": 406303.0, "annual_result": 316760.0,
+            "assets": 687338.0, "equity": 346760.0, "debt": 340578.0,
+        })
+
+    def test_prior_year_label_is_one_less_than_filed_year(self):
+        self.assertEqual(prior_year_label(self.KNOWN_CURRENT_YEAR_RECORD), "2023")
+
+    def test_abstains_when_known_value_is_not_a_clean_prefix(self):
+        # "SUM EIENDELER 84 980 687 338" but the known current-year figure we're
+        # told to anchor on doesn't match the digits actually in the span --
+        # must abstain rather than guess a split point.
+        self.assertIsNone(find_prior_year_value("84 980 687 338", "99999"))
+
+    def test_abstains_when_span_is_exactly_the_known_value_with_nothing_left_over(self):
+        self.assertIsNone(find_prior_year_value("84980", "84980"))
 
 
 if __name__ == "__main__":

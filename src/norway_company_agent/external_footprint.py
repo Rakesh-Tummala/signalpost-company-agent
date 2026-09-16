@@ -38,6 +38,7 @@ SIGNAL_TYPES = {
     "job_posting",
     "workforce_snapshot",
     "careers_page_found",
+    "prior_year_financials",
     "public_post",
     "public_mention",
     "buzz_metrics",

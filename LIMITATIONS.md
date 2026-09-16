@@ -12,6 +12,7 @@ these are silently hidden: every gap below shows up as an honest `not_available`
 | Bankruptcy/liquidation status, industry, latest filed year, roles | 999 | ~100% |
 | Business address, latest annual accounts | 997 | 99.7% |
 | **Workforce size** (OCR'd from official annual reports) | 841 | 84.1% |
+| **Prior-year annual accounts** (recovered from the same official annual-report OCR) | 823 | 82.3% |
 | Registered locations/subunits | 745 | 74.5% |
 | Registered workplaces (subunit detail) | 255 | 25.5% |
 | Registry-reported employee count | 144 | 14.4% |
@@ -185,6 +186,35 @@ Two follow-ups from that feedback:
   genuinely stronger "jobs" signal than just "a careers page exists") -- all 6 are
   generic "join our team" marketing copy with no individual role information, so
   there was nothing further to extract from this particular signal right now.
+- **Recovered prior-year financial figures from data we already had on disk**
+  (`scripts/extract_prior_year_financials.py`), aimed at broader company coverage
+  more generally rather than any one of the three named feedback areas. The
+  `financials` module only returns the most recently filed year's figures per
+  official-API call, but Norwegian annual-report notes conventionally print the
+  prior year's comparative figures right next to the current year's on the same
+  line -- e.g. `Sum driftsinntekter 658 000 923 400` is (current year) then (prior
+  year). We already had the current year's correct value from the official API and
+  already had the report's OCR text cached from the workforce stage, so this is a
+  pure re-read of existing cached text: no new downloads, no new OCR, no new
+  third-party requests. Safety design: OCR'd digit groups separated by spaces are
+  ambiguous on their own (is `4 182 614 4 678 118` one four-part number or two
+  three/four-part numbers?), so rather than guess a split point, the script anchors
+  on the current-year value already known correct from the API, requires it appear
+  as an exact prefix of the space-stripped digit sequence on that line, and only
+  trusts whatever's left over as the prior year -- if the known value isn't found
+  as a clean prefix, it abstains for that field instead of guessing. Ran against
+  all 1,000 companies: 854 were eligible (had both a usable `financials` record and
+  cached OCR text), and 823 (96.4% of eligible, 82.3% of all 1,000) had at least one
+  field recovered this way; field-level yield within that set was uneven (assets
+  780, debt 761, operating_result 749, annual_result 618, equity 561, revenue 337 --
+  revenue's label, "Sum driftsinntekter", sits lower on the page and more often
+  fell outside what OCR captured cleanly). Verified a random sample plus one company
+  with all six fields recovered (933787141) against the underlying raw OCR text
+  directly, line by line, before trusting the result -- every value matched
+  exactly. Feeds `annual_accounts.<year>` claims for the prior year, reusing the
+  same claim-field convention the structured `financials` module already uses for
+  the current year, since from a consumer's point of view it's the same kind of
+  fact just recovered a different way.
 
 ## Not yet run against real data
 

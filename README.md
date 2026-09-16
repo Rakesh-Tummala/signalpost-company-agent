@@ -85,9 +85,9 @@ Increase `--count` and `--expected-count` together if you want to publish more t
 `run_competition_batch.py` above is just the official-registry stage. **The actual
 one-command evaluator entrypoint is `scripts/run_agent.py`** (see the next section):
 it chains that registry stage together with website discovery, a deeper site crawl,
-company-owned activity/news extraction, and official annual-report OCR workforce
-extraction, then converts everything into the submission's claims/evidence format in
-one call.
+company-owned activity/news extraction, official annual-report OCR workforce
+extraction, and prior-year financials recovery from that same OCR text, then
+converts everything into the submission's claims/evidence format in one call.
 
 ## Running the full agent (one command)
 
