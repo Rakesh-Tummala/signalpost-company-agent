@@ -187,7 +187,11 @@ def normalize_social_url(url: str) -> dict[str, str] | None:
     return {"platform": platform, "url": f"https://{canonical_host}/{'/'.join(parts)}"}
 
 
-def _priority_links(base_url: str, soup: BeautifulSoup, limit: int = 4) -> list[str]:
+def _priority_links(base_url: str, soup: BeautifulSoup, limit: int = 6) -> list[str]:
+    # Was 4; PRIORITY_TERMS grew from 10 to 13 terms when careers/jobs pages were
+    # added, so a 4-link cap on a homepage with contact + news + careers links all
+    # present would silently drop one category rather than just fetching an extra
+    # page or two (crawl concurrency/per-domain limits already bound the real cost).
     base = urllib.parse.urlparse(base_url)
     candidates: dict[str, int] = {}
     for anchor in soup.select("a[href]"):

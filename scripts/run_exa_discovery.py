@@ -93,7 +93,7 @@ def main() -> None:
     parser.add_argument("--report", required=True)
     parser.add_argument("--limit", type=int, default=20, help="Maximum missing-website profiles to query")
     parser.add_argument("--num-results", type=int, default=10, choices=range(1, 21), metavar="1..20")
-    parser.add_argument("--search-type", default="fast", choices=["fast", "auto", "instant"])
+    parser.add_argument("--search-type", default="fast", choices=["fast", "auto", "instant", "deep-lite", "deep"])
     parser.add_argument("--timeout", type=float, default=15.0)
     parser.add_argument("--min-interval", type=float, default=0.3)
     parser.add_argument("--promote-verified", action="store_true", help="Copy exact-entity discovered sites into canonical website evidence")

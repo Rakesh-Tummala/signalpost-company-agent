@@ -15,11 +15,11 @@ these are silently hidden: every gap below shows up as an honest `not_available`
 | Registered locations/subunits | 745 | 74.5% |
 | Registered workplaces (subunit detail) | 255 | 25.5% |
 | Registry-reported employee count | 144 | 14.4% |
-| Verified official website | 124 | 12.4% |
-| Company-site activity metrics | 75 | 7.5% |
+| Verified official website | 123 | 12.3% |
+| Company-site activity metrics | 74 | 7.4% |
 | Group/ownership structure | 70 | 7.0% |
 | Verified social profiles | 35 | 3.5% |
-| Dated company-owned news/press items | 13 | 1.3% |
+| Dated company-owned news/press items | 16 | 1.6% |
 | Careers/jobs page detected on own site | 4 | 0.4% |
 
 Website (and the activity/news/social/careers claims that depend on a verified site)
@@ -147,6 +147,33 @@ of time to validate it against real data before this submission.
 - **Group structure.** Fetched for every company but only 70/1,000 have a non-empty
   result — most Norwegian small businesses in the sample are standalone entities, so
   this is expected, not a bug.
+
+## Follow-up investigation after a real evaluator run
+
+An evaluator ran this agent against a held-out 100-company set and reported 66.92/100,
+meeting the qualification bar, with specific feedback: "the clearest route to a higher
+cumulative score" is broader independently-verified coverage across company sites,
+jobs, and dated activity -- exactly the three thinnest areas already documented above.
+Two follow-ups from that feedback:
+
+- **Tried Exa's `deep` search type** (multi-query-variant synthesis, not a single
+  fast lookup) on a fresh sample of the ~90 remaining "AS with employees" candidates
+  neither Tavily nor Exa's faster modes had found a site for. Zero new matches --
+  same 5 candidates surfaced and correctly quarantined as with `auto`, at roughly
+  4x the cost and 3x the latency. This particular remaining pool looks like a
+  genuine ceiling (companies with no real independent web presence), not a
+  search-quality problem worth paying more for.
+- **Widened the crawl's priority-link limit from 4 to 6** (`_priority_links` in
+  `website.py`) -- PRIORITY_TERMS had grown to 13 terms when careers/jobs pages were
+  added, so a homepage with contact + news + careers links all present would have
+  silently dropped one category under the old cap. Re-crawled all 144
+  website-candidate companies: dated news/activity went 13 -> 16, directly on the
+  "dated activity" feedback, for a handful more requests per site (concurrency and
+  per-domain caps already bound the real cost).
+- **Re-measured the NAV `pam-stilling-feed` pagination problem precisely** (see the
+  jobs section above): 20 consecutive pages (20,000 events) covered only 58 seconds
+  of real calendar time on 2023-06-14. Reaching the present from there would need
+  roughly 35 million pages -- not a rough estimate anymore, a confirmed dead end.
 
 ## Not yet run against real data
 
