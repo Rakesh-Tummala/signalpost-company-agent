@@ -43,6 +43,8 @@ from scripts.extract_company_site_activity import observation as site_activity_o
 from scripts.extract_company_site_news import observation as site_news_observation  # noqa: E402
 from scripts.extract_company_site_careers import observation as site_careers_observation  # noqa: E402
 from scripts.extract_prior_year_financials import extract_prior_year, find_prior_year_value, prior_year_label  # noqa: E402
+from scripts.validate_refresh_at_scale import build_previous_snapshot, inject_known_changes  # noqa: E402
+from scripts.build_viewer import flatten_envelope  # noqa: E402
 from scripts.build_verified_observations import build as build_verified_observations  # noqa: E402
 from scripts.run_google_news_rss_connector import exact_title_match  # noqa: E402
 from scripts.run_linkedin_guest_jobs_connector import canonical_company_url, parse_detail_company_urls, parse_job_cards, parse_typeahead  # noqa: E402
@@ -950,6 +952,18 @@ class OutputContractTests(unittest.TestCase):
         summary = summarize_profile(self._profile()["evidence"])
         self.assertIn("is an AS", summary["text"])
 
+    def test_summary_narrates_prior_year_revenue_trend(self):
+        observations = [{
+            "organisation_number": "923609016", "signal_type": "prior_year_financials", "id": "pyf-1",
+            "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/923609016",
+            "retrieved_at": "2026-01-01T00:00:00Z", "content_sha256": "a" * 64, "exact_entity": True,
+            "rights_status": "approved", "acquisition_mode": "official_api", "source_class": "official_annual_account_copy",
+            "evidence_span": "Prior-year (2023) figures cross-checked against the known current-year value on the same line.",
+            "metrics": {"revenue": 150.0, "year": "2023"},
+        }]
+        summary = summarize_profile(self._profile()["evidence"], observations)
+        self.assertIn("Revenue grew from 150 NOK (2023) to 200 NOK (2024).", summary["text"])
+
     def test_workforce_observation_becomes_claim_and_summary_sentence(self):
         observations = [{
             "organisation_number": "923609016", "signal_type": "workforce_snapshot", "id": "wf-1",
@@ -1612,6 +1626,48 @@ class VerifiedSiteSeedTests(unittest.TestCase):
             self.assertIn("unknown organisations", failed.stderr)
 
 
+class ViewerTests(unittest.TestCase):
+    def test_flatten_envelope_resolves_evidence_and_serializes_complex_values(self):
+        envelope = {
+            "organisation_number": "923609016",
+            "summary": {"text": "Example AS is an AS.", "unknown_fields": ["group/ownership structure"]},
+            "evidence": [{"id": "ev-registry_live", "source_url": "https://example.test", "retrieved_at": "2026-01-01T00:00:00Z"}],
+            "claims": [
+                {"field": "legal_name", "value": "Example AS", "availability": "available", "confidence": 1.0, "evidence_ids": ["ev-registry_live"]},
+                {"field": "business_address", "value": {"kommune": "OSLO"}, "availability": "available", "confidence": 1.0, "evidence_ids": ["ev-registry_live"]},
+            ],
+        }
+        flat = flatten_envelope(envelope)
+        self.assertEqual(flat["org"], "923609016")
+        self.assertEqual(flat["claim_count"], 2)
+        self.assertEqual(flat["claims"][0]["source_url"], "https://example.test")
+        self.assertIn("OSLO", flat["claims"][1]["value"])  # complex values serialize to a display string, not a raw dict
+
+    def test_build_viewer_produces_a_valid_offline_html_page(self):
+        import subprocess
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            envelopes_path = root / "envelopes.jsonl"
+            output_path = root / "viewer.html"
+            envelopes_path.write_text(json.dumps({
+                "organisation_number": "923609016",
+                "summary": {"text": "Example AS is an AS.", "unknown_fields": []},
+                "evidence": [{"id": "ev-registry_live", "source_url": "https://example.test", "retrieved_at": "2026-01-01T00:00:00Z"}],
+                "claims": [{"field": "legal_name", "value": "Example AS", "availability": "available", "confidence": 1.0, "evidence_ids": ["ev-registry_live"]}],
+            }) + "\n", encoding="utf-8")
+            subprocess.run(
+                [sys.executable, str(ROOT / "scripts" / "build_viewer.py"), "--envelopes", str(envelopes_path), "--output", str(output_path)],
+                check=True, capture_output=True, text=True, encoding="utf-8",
+            )
+            page = output_path.read_text(encoding="utf-8")
+            self.assertIn("<!doctype html>", page.lower())
+            self.assertIn("923609016", page)
+            self.assertIn('viewport-fit=cover', page)
+            self.assertNotIn("__DATA_JSON__", page)  # the placeholder must always be substituted
+
+
 class PriorYearFinancialsTests(unittest.TestCase):
     # Real cached OCR text for organisation 933787141's annual report (already on
     # disk from the workforce OCR pass) -- current year then prior year (2023) on
@@ -1648,6 +1704,66 @@ class PriorYearFinancialsTests(unittest.TestCase):
 
     def test_abstains_when_span_is_exactly_the_known_value_with_nothing_left_over(self):
         self.assertIsNone(find_prior_year_value("84980", "84980"))
+
+    def test_abstains_on_a_four_column_housing_cooperative_report_line(self):
+        # Real cached OCR line for organisation 925800023 (a "sameie" housing
+        # cooperative): "Sum driftsinntekter 1 049 490 949 946 1 045 800 1 107 000".
+        # This line has regnskap/budsjett/prior-year-regnskap/prior-year-budsjett --
+        # four columns, not the usual two. The old implementation blindly
+        # concatenated everything after the known current-year value and produced
+        # a nonsensical ~20-digit "prior year revenue". It must abstain instead.
+        self.assertIsNone(find_prior_year_value("1 049 490 949 946 1 045 800 1 107 000", "1049490"))
+
+
+class RefreshAtScaleTests(unittest.TestCase):
+    def _profile(self, *, bulk_employees, live_employees: int | None, organisation_number: str = "923609016") -> dict:
+        # Shaped like a real profile: bulk employees as csv.DictReader would hand it
+        # back (a string, or "" for a blank cell), live employees as the JSON API's
+        # real int-or-None.
+        return {
+            "organisation_number": organisation_number,
+            "employees": live_employees,
+            "evidence": {
+                "registry": evidence(
+                    "registry", "available", "official_registry_bulk", "https://example.test", content_sha256="a" * 64,
+                    value={"organisasjonsnummer": organisation_number, "antallAnsatte": bulk_employees},
+                ),
+                "registry_live": evidence(
+                    "registry_live", "available", "official_registry_live", "https://example.test", content_sha256="b" * 64,
+                    value={"organisation_number": organisation_number, "employees": live_employees},
+                ),
+            },
+        }
+
+    def test_blank_bulk_cell_does_not_produce_a_false_change(self):
+        # csv.DictReader hands back "" for a blank cell; the live API's "no data" is
+        # a real None. Both mean the same thing and must not look like a change.
+        profiles = [self._profile(bulk_employees="", live_employees=None)]
+        previous = build_previous_snapshot(profiles)
+        self.assertEqual(diff_datasets(previous, profiles), [])
+
+    def test_bulk_employees_as_string_is_coerced_before_comparison(self):
+        # The bulk CSV always hands back numbers as strings ("6"), the live API
+        # returns real ints (6) -- these must compare equal, not look like a change.
+        profiles = [self._profile(bulk_employees="6", live_employees=6)]
+        previous = build_previous_snapshot(profiles)
+        self.assertEqual(diff_datasets(previous, profiles), [])
+
+    def test_genuine_employee_count_drift_between_bulk_and_live_is_detected(self):
+        profiles = [self._profile(bulk_employees="5", live_employees=6)]
+        previous = build_previous_snapshot(profiles)
+        changes = diff_datasets(previous, profiles)
+        self.assertEqual(len(changes), 1)
+        self.assertEqual(changes[0]["field"], "registry.employees")
+        self.assertEqual(changes[0]["old_value"], 5)
+        self.assertEqual(changes[0]["new_value"], 6)
+
+    def test_inject_known_changes_are_exactly_what_diff_datasets_detects(self):
+        profiles = [self._profile(bulk_employees="6", live_employees=6, organisation_number=str(900000000 + i)) for i in range(40)]
+        mutated, expected = inject_known_changes(profiles, every_nth=10)
+        observed = {(c["organisation_number"], c["field"]) for c in diff_datasets(profiles, mutated)}
+        self.assertEqual(expected, observed)
+        self.assertEqual(len(expected), 4)  # every 10th of 40 profiles
 
 
 if __name__ == "__main__":

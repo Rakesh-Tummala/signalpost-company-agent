@@ -14,6 +14,7 @@
 | OCR workforce extraction | `scripts/run_annual_report_workforce_connector.py` | Official BRREG annual-report PDF copies | 4 workers; needs `tesseract` (language pack `nor`, not the default `eng`) + `poppler` (`pdftoppm`) on PATH; degrades per-company to an error status (not a pipeline failure) if either binary is missing |
 | Prior-year financials recovery | `scripts/extract_prior_year_financials.py` | The same official annual-report PDF text already OCR'd for the workforce stage above (no new downloads, no new OCR) | Only runs if the workforce OCR cache exists; skipped cleanly otherwise |
 | Claims/evidence conversion | `scripts/build_output_contract.py` | (reshapes existing evidence + observation files, no new fetches) | — |
+| Offline viewer | `scripts/build_viewer.py` | (reads the finished claims artifact, no new fetches) | Best-effort; never blocks the submission if it fails |
 
 Discovery connectors follow the same rule: the search query and its raw results
 (titles, snippets, ranks) are held in memory only and never written to disk or

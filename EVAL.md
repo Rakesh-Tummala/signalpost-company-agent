@@ -13,12 +13,17 @@
   `availability` value is one of the six allowed states. Passes on all 1,000
   profiles, 19,048 claims, zero violations, zero per-profile conversion failures
   (the last one guarded by `build_envelopes_safe`, see its own commit).
-- `tests/test_poc.py` — 125 unit tests, 5 subtests, covering identity-gate edge
+- `scripts/validate_refresh_at_scale.py` — real-scale refresh validation (not just
+  the offline fixture): zero false positives and zero crashes across all 1,000 real
+  profiles, confirmed idempotency at scale, 50/50 injected changes on real company
+  shapes correctly detected (precision 1.0, recall 1.0). See `REFRESH.md`.
+- `tests/test_poc.py` — 133 unit tests, 5 subtests, covering identity-gate edge
   cases (parent/subsidiary confusion, generic name collisions, parked domains),
   the missing-from-bulk-registry path, the registry_live backfill, the
   claims/evidence conversion (shape, grounding, malformed-profile isolation), the
-  workforce-observation-to-claim path, and the prior-year-financials recovery
-  logic (verified against a real cached OCR example, org 933787141).
+  workforce-observation-to-claim path, the prior-year-financials recovery logic
+  (including the real multi-column housing-cooperative bug found and fixed —
+  see `LIMITATIONS.md`), the real-scale refresh validation, and the offline viewer.
 - `scripts/score_company_completeness.py` — run against our real 1,000-company batch
   with zero external-connector observations (`out/self-score-report.json`). Result:
   foundation (official-registry-derived fields) mean 29.98/30 — essentially maxed,

@@ -60,22 +60,56 @@ def known_value_string(value) -> str | None:
     return None  # non-integer current-year figures aren't expected from this API; skip rather than guess a format
 
 
+def _clean_token(token: str) -> str:
+    return token.replace("O", "0").replace(",", "").replace(".", "")
+
+
 def find_prior_year_value(span: str, known_current: str) -> float | None:
-    # Keep digits, internal spaces (thousands separators) and minus signs in their
-    # original relative order; drop everything else. Then strip spaces only -- a
-    # minus sign is real signal, a thousands-separator space is not.
-    cleaned = re.sub(r"[^0-9O\-]", "", span.replace(" ", ""))
-    cleaned = cleaned.replace("O", "0")
-    if not cleaned.startswith(known_current):
-        # A leading "-" on the whole span belongs to the current year's figure
-        # only if the known value itself is negative; already covered since
-        # known_current carries its own sign.
+    # Work on the OCR'd text's own whitespace-separated groups rather than a single
+    # stripped digit string. Norwegian annual reports print numbers in
+    # space-delimited thousands groups (e.g. "1 049 490"); some report templates
+    # (notably housing cooperatives -- borettslag/sameie) print more than two
+    # columns on the same line (this year, budget, prior year, prior-year budget),
+    # not just current-then-prior. Blindly concatenating "everything after the
+    # known current-year value" then risks silently absorbing a third/fourth
+    # column into one huge, meaningless number. Instead: find the known current
+    # value as an exact run of whole tokens, then consume exactly one further
+    # Norwegian-grouped number (a 1-4 digit leading group, optionally negative,
+    # followed only by exact 3-digit continuation groups) from what remains. If
+    # anything is left over after that one number, the line has more columns than
+    # we can safely interpret -- abstain rather than guess which one is "prior year".
+    tokens = [_clean_token(t) for t in span.split()]
+    tokens = [t for t in tokens if t]
+
+    concatenated = ""
+    consumed = 0
+    for token in tokens:
+        concatenated += token
+        consumed += 1
+        if concatenated == known_current:
+            break
+        if len(concatenated) >= len(known_current):
+            return None  # overshot the known value without an exact token-boundary match
+    else:
+        return None  # ran out of tokens without matching the known current-year value
+
+    remaining = tokens[consumed:]
+    if not remaining:
         return None
-    remainder = cleaned[len(known_current):]
-    if not remainder or remainder in {"-"}:
+
+    first = remaining[0]
+    if not re.fullmatch(r"-?\d{1,4}", first):
         return None
+    digits = [first]
+    index = 1
+    while index < len(remaining) and re.fullmatch(r"\d{3}", remaining[index]):
+        digits.append(remaining[index])
+        index += 1
+    if index != len(remaining):
+        return None  # a further column follows -- ambiguous, abstain
+
     try:
-        return float(remainder)
+        return float("".join(digits))
     except ValueError:
         return None
 

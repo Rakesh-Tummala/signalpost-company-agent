@@ -87,3 +87,13 @@ count, unique organisation numbers, all entity/module states terminal, zero sile
 drops. This is not the submission format — it's what
 `scripts/run_competition_batch.py` uses to self-check a batch before handing off to
 `build_output_contract.py`.
+
+## Offline viewer (`out/viewer.html`)
+
+`scripts/build_viewer.py` reads `output-contract-envelopes.jsonl` and produces a
+single, self-contained HTML file — no build step, no external dependencies, no
+local server required (it opens directly from disk). Each company's claims,
+evidence source links, and grounded summary are searchable by organisation number
+or name. This exists purely to make the submitted data browsable and verifiable by
+a person, not to add or change any fact — it reads the final artifact, it doesn't
+produce one.

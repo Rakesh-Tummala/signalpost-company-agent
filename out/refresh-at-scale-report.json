@@ -1,0 +1,20 @@
+{
+  "validator": "validate_refresh_at_scale_v1",
+  "method": "diff real bulk-snapshot-derived state vs real registry_live-refreshed state, both from out/profiles.jsonl, through the production diff_datasets path",
+  "total_profiles": 1000,
+  "eligible_profiles": 1000,
+  "detected_changes": 0,
+  "changes_by_field": {},
+  "evidence_incomplete_changes": 0,
+  "idempotent_rerun_changes": 0,
+  "idempotent": true,
+  "single_profile_crash_count": 0,
+  "runtime_seconds_for_full_diff": 0.016,
+  "injected_change_test": {
+    "description": "Real profile shapes (not the offline fixture's 2 companies) with a known, deliberately injected employees change every 20th company -- tests true-positive detection at scale, since the real bulk-vs-live comparison above found no genuine drift to detect.",
+    "injected_count": 50,
+    "detected_count": 50,
+    "precision": 1.0,
+    "recall": 1.0
+  }
+}

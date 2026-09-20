@@ -244,6 +244,17 @@ def main() -> None:
     run(convert_cmd)
     stages_run.append("claims_conversion")
 
+    # 7. Offline HTML viewer -- best-effort, never blocks the submission artifact.
+    viewer_path = output_dir / "viewer.html"
+    ok = run([
+        args.python, str(ROOT / "build_viewer.py"),
+        "--envelopes", str(envelopes_path),
+        "--profiles", str(profiles_path),
+        "--output", str(viewer_path),
+    ], optional=True)
+    if ok:
+        stages_run.append("viewer")
+
     summary = {
         "run_id": args.run_id,
         "started_at": started_at,

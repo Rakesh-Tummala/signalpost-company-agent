@@ -274,6 +274,23 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
         result = latest.get("annual_result")
         if revenue is not None:
             sentences.append(f"Its most recently filed accounts ({year}) report revenue of {revenue:,.0f} NOK" + (f" and a result of {result:,.0f} NOK." if result is not None else "."))
+
+        prior_year_items = [o for o in (observations or []) if o.get("signal_type") == "prior_year_financials"]
+        if prior_year_items:
+            prior = max(prior_year_items, key=lambda o: (o.get("metrics") or {}).get("year") or "")
+            prior_metrics = prior.get("metrics") or {}
+            prior_year = prior_metrics.get("year")
+            prior_revenue = prior_metrics.get("revenue")
+            if revenue is not None and prior_revenue is not None and prior_year:
+                if revenue > prior_revenue:
+                    trend = "grew"
+                elif revenue < prior_revenue:
+                    trend = "fell"
+                else:
+                    trend = "held steady"
+                sentences.append(f"Revenue {trend} from {prior_revenue:,.0f} NOK ({prior_year}) to {revenue:,.0f} NOK ({year}).")
+            elif prior_year:
+                sentences.append(f"Additional filed figures for {prior_year} are also on file, recovered from the same official annual report.")
     else:
         unknowns.append("financial results")
 

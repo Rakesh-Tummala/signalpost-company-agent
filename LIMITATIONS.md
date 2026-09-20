@@ -216,12 +216,66 @@ Two follow-ups from that feedback:
   the current year, since from a consumer's point of view it's the same kind of
   fact just recovered a different way.
 
+  **A follow-up validation pass on this connector caught a real fabricated-value
+  bug before submission**, not after: adding the prior-year figure to the
+  per-company summary sentence (see "Decision-useful synthesis" below) surfaced an
+  absurd ~20-digit "revenue" for organisation 925800023 (a housing cooperative,
+  `SAMEIET LENSMANNSTUNET 1`). Root cause: that company's annual report prints
+  **four** columns on the revenue line (`Sum driftsinntekter 1 049 490 949 946 1
+  045 800 1 107 000` -- this year's actual, this year's budget, last year's
+  actual, last year's budget), not the usual two. The original implementation
+  found the known current-year value as a prefix of the line's digits and blindly
+  trusted "everything left over" as the prior year -- which silently absorbed the
+  third and fourth columns into one nonsensical number instead of stopping at the
+  first one. Housing-cooperative report templates (`borettslag`/`sameie`) commonly
+  add budget columns that ordinary company accounts don't have.
+
+  Fixed by rewriting the parser to work token-by-token on the OCR'd line's own
+  whitespace-separated number groups instead of one concatenated digit string:
+  after the known current-year value, it consumes exactly one further
+  Norwegian-grouped number (a 1-4 digit leading group followed only by exact
+  3-digit continuation groups) and **abstains if anything is left over** -- i.e.
+  if a third or fourth column is present, since we can no longer be sure which
+  one is genuinely "prior year". Re-ran the full batch: the garbage value is gone
+  (that company still correctly keeps its other five recovered fields, which
+  don't share the ambiguous line), the accepted-company count is unchanged (823),
+  and a scan of every recovered figure across all 823 companies for implausible
+  magnitudes (>100 billion NOK) found zero more. This is exactly the "it is
+  better to miss some information than publish it under the wrong company" (or
+  wrong value) principle already applied to the website identity gate, now
+  applied here too -- see `tests/test_poc.py::PriorYearFinancialsTests` for the
+  regression test built from this exact real case.
+
+## Validated against real data since the last evaluator run
+
+- **Refresh/update correctness** now has a real-scale validation pass, not just the
+  offline fixture. See `REFRESH.md` for the full result: zero false positives, zero
+  crashes across all 1,000 real profiles, confirmed idempotency at scale, and 50/50
+  injected changes correctly detected (precision 1.0, recall 1.0) once real
+  company shapes were used instead of only the fixture's two hand-crafted ones.
+  Notably, building that validation is what surfaced the fabricated-value bug
+  above -- a useful reminder that a bigger, more varied test corpus finds bugs a
+  small hand-crafted fixture can't.
+- **Offline viewer added** (`scripts/build_viewer.py`, wired into `run_agent.py`).
+  Previously there was no way to browse the submitted claims/evidence at all
+  except reading raw JSONL -- addresses "is it easy to find, compare and verify
+  company information on desktop and mobile" directly. Single self-contained HTML
+  file, no external dependencies or server required, searchable by organisation
+  number or company name, shows every claim's value, availability, confidence and
+  evidence source link.
+- **Checked whether Fagfolkguiden's reviews connector could be promoted out of
+  `rights_review_experiment`.** `robots.txt` explicitly allows crawling `/bedrift/`
+  pages (only `/admin/`, `/api/`, `/logg-inn`, `/tilbud/`, `/portal/` are
+  disallowed), and no terms-of-service page prohibiting automated access was found
+  (only a privacy policy, which governs their own visitor data collection, not
+  third-party scraping of business listings) -- a meaningfully different rights
+  posture than LinkedIn's. Left as experimental regardless: "no prohibition found"
+  during a short check is not the same as confirmed permission, and promoting a
+  connector's acquisition mode to scored/publishable status deserves more
+  certainty than that before it touches real claims.
+
 ## Not yet run against real data
 
-- **Refresh/update correctness** is implemented and passes its offline fixture test
-  (`scripts/run_refresh_replay.py`, precision 1.0 / recall 1.0), but has not yet been
-  run as a second pass over the real 1,000-company batch to confirm change detection
-  works at that scale.
 - **No held-out gold-set evaluation.** `scripts/score_company_completeness.py` was run
   against our data (see `EVAL.md`) but reads a different, older observation pipeline
   than the claims/evidence format actually submitted -- it does not reflect today's

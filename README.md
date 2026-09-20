@@ -86,8 +86,9 @@ Increase `--count` and `--expected-count` together if you want to publish more t
 one-command evaluator entrypoint is `scripts/run_agent.py`** (see the next section):
 it chains that registry stage together with website discovery, a deeper site crawl,
 company-owned activity/news extraction, official annual-report OCR workforce
-extraction, and prior-year financials recovery from that same OCR text, then
-converts everything into the submission's claims/evidence format in one call.
+extraction, prior-year financials recovery from that same OCR text, and a
+self-contained offline HTML viewer, then converts everything into the submission's
+claims/evidence format in one call.
 
 ## Running the full agent (one command)
 
@@ -113,6 +114,8 @@ depends on it), and missing `tesseract`/`poppler` binaries degrade the OCR workf
 stage to "no workforce data" rather than failing the run. `out/agent-run/envelopes.jsonl`
 is the final submission artifact — see `DATA_SCHEMA.md` for its exact shape, and
 `CRAWLERS.md` for what each stage needs and how it degrades.
+`out/agent-run/viewer.html` is a self-contained offline page for browsing it —
+open it directly, no server required.
 
 ## The improvement loop
 
