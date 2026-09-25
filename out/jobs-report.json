@@ -1,0 +1,10 @@
+{
+  "connector": "exact_company_site_jobs_v1",
+  "profiles": 1000,
+  "companies_with_hiring_facts": 1,
+  "observations": 1,
+  "by_evidence_kind": {
+    "role_card": 1
+  },
+  "claim_boundary": "Only real roles (JobPosting, role card linking to an individual posting, or explicit apply action) on an identity-verified company site; a generic careers page is not a hiring fact."
+}

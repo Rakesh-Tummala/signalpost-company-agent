@@ -32,6 +32,51 @@ def _structured_names(value: Any) -> list[str]:
     return names
 
 
+def _host(value: Any) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    parsed = urllib.parse.urlparse(text if "://" in text else "https://" + text)
+    return (parsed.hostname or "").casefold().removeprefix("www.")
+
+
+def registry_lists_site(profile: dict[str, Any], hostname: str) -> bool:
+    """True when the registry itself (bulk or live) lists this site for the entity.
+
+    The company told Brreg this is its website, which is a stronger anchor than any
+    text match, so registry-listed sites are not held to the extra corroboration that
+    search-discovered sites need.
+    """
+    evidence = profile.get("evidence") or {}
+    listed = {
+        _host((evidence.get("registry") or {}).get("value", {}).get("hjemmeside")),
+        _host((evidence.get("registry_live") or {}).get("value", {}).get("website")),
+    } - {""}
+    host = hostname.casefold().removeprefix("www.")
+    return any(host == item or host.endswith("." + item) or item.endswith("." + host) for item in listed)
+
+
+def registered_place_on_page(profile: dict[str, Any], core: list[str], candidate_tokens: set[str], candidate_text: str) -> bool:
+    """The page ties itself to the entity's registered place in Norway.
+
+    Either the registered postal code and town both appear, or the registered town
+    appears together with an explicit mention of Norway. A town that is already part
+    of the company name ("This Is Narvik") proves nothing beyond the name, so it does
+    not count on its own.
+    """
+    evidence = profile.get("evidence") or {}
+    live = ((evidence.get("registry_live") or {}).get("value") or {}).get("business_address") or {}
+    bulk = (evidence.get("registry") or {}).get("value") or {}
+    postcode = str(live.get("postnummer") or bulk.get("forretningsadresse.postnummer") or "").strip()
+    town = str(live.get("poststed") or bulk.get("forretningsadresse.poststed") or "").strip()
+    town_tokens = set(_tokens(town))
+    if not town_tokens or not town_tokens <= candidate_tokens:
+        return False
+    if re.fullmatch(r"\d{4}", postcode) and re.search(r"(?<!\d)" + postcode + r"(?!\d)", candidate_text):
+        return True
+    return bool(town_tokens - set(core)) and bool(re.search(r"\b(norway|norge|noreg)\b", candidate_text, re.I))
+
+
 def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     website = profile.get("evidence", {}).get("website", {})
     value = website.get("value") or {}
@@ -79,9 +124,21 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     elif org_digits and org_digits in compact_homepage_candidate:
         score = 1.0
         reasons.append("exact organisation number appears in homepage identity evidence")
-    elif len(core) >= 2 and exact_homepage_name:
+    elif len(core) >= 2 and exact_homepage_name and (
+        registry_lists_site(profile, hostname)
+        or hostname.casefold().endswith(".no")
+        or registered_place_on_page(profile, core, candidate_tokens, candidate_text)
+    ):
         score = 0.95
-        reasons.append("all normalized legal-name tokens appear together in homepage identity evidence")
+        reasons.append("all normalized legal-name tokens appear together in homepage identity evidence, anchored to Norway by a registry-listed site, a .no domain or the registered place on the page")
+    elif len(core) >= 2 and exact_homepage_name:
+        # Two or more common words that merely co-occur on a page ("Blue Bay" on an
+        # Italian resort site, "Soft One" on a Qatari one) are not evidence of the
+        # Norwegian entity. A site found by search, with no organisation number, no
+        # .no domain and no registered address on the page, is too easy to mistake
+        # for an unrelated company of the same name.
+        score = 0.5
+        reasons.append("legal-name tokens appear together, but nothing on the page ties the site to this Norwegian entity (no organisation number, .no domain, registry listing or registered place) -- too high a collision risk to publish")
     elif len(core) == 1 and exact_homepage_name and substantive_homepage and hostname.casefold().endswith(".no"):
         score = 0.95
         reasons.append("single distinctive legal-name token appears in homepage identity evidence with substantive content, corroborated by a .no domain")
@@ -159,7 +216,7 @@ def apply_website_identity_gate(profile: dict[str, Any], website: dict[str, Any]
     social_assessments = [assess_social_identity(profile, link) for link in original]
     value["social_link_assessments"] = social_assessments
     value["social_links"] = [
-        {"platform": item["platform"], "url": item["url"]}
+        {key: item[key] for key in ("platform", "url", "source", "found_on", "span") if key in item}
         for item in social_assessments
         if assessment["publishable"] and item["publishable"]
     ]

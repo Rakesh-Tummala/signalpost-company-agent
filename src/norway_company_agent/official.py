@@ -5,7 +5,9 @@ import time
 from typing import Any, Callable
 
 from .evidence import evidence
+from .evidence_spans import module_spans
 from .http import FetchResult, fetch_json
+from .snapshot_store import save_snapshot
 
 ACCOUNTING_OBLIGATION_SOURCE = "https://www.brreg.no/en/submission-of-annual-accounts/reporting-obligations-to-the-register-of-company-accounts/who-has-an-accounting-obligation/"
 ACCOUNTING_RULESET_VERSION = "brreg_accounting_obligation_rules_2024-08-09_v1"
@@ -172,7 +174,13 @@ def normalize_entity(body: Any) -> dict[str, Any]:
 
 def _classified(field: str, source_type: str, result: FetchResult, value: Any = None) -> dict[str, Any]:
     if result.status == 200:
-        return evidence(field, "available", source_type, result.url, value=result.body if value is None else value, content_sha256=result.content_sha256, retrieved_at=result.retrieved_at, effective_at=result.effective_at)
+        return evidence(
+            field, "available", source_type, result.url, value=result.body if value is None else value,
+            content_sha256=result.content_sha256, retrieved_at=result.retrieved_at, effective_at=result.effective_at,
+            snapshot_path=save_snapshot(result.raw, "json") if result.raw else None,
+            spans=module_spans(field, result.raw, result.body),
+            extraction_method="official_api_json",
+        )
     if result.status in {404, 410}:
         return evidence(field, "not_found", source_type, result.url, note=result.error, content_sha256=result.content_sha256, retrieved_at=result.retrieved_at, effective_at=result.effective_at)
     return evidence(field, "source_error", source_type, result.url, note=result.error, content_sha256=result.content_sha256, retrieved_at=result.retrieved_at, effective_at=result.effective_at)

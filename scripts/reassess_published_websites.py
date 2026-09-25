@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Re-run the identity gate over already-published website evidence.
 
-Used once, after tightening assess_website_identity's single-token-name branch
-(see identity.py's commit) to require a .no domain or organisation number instead
-of accepting any page merely containing the one distinctive word from the legal
-name. Re-uses the already-crawled page content cached in evidence.website /
+Run after every tightening of assess_website_identity (first the single-token-name
+branch, then the multi-word-name branch: "Blue Bay" on an Italian resort site).
+Re-uses the already-crawled page content cached in evidence.website /
 evidence.website_discovered -- no new network requests, no new API spend.
 
 Applied uniformly regardless of whether the URL originally came from the BRREG
@@ -36,9 +35,8 @@ def write_jsonl(path: Path, rows: list[dict]) -> None:
             handle.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
 
 
-def was_single_token_pass(record: dict) -> bool:
-    reasons = ((record.get("value") or {}).get("identity_assessment") or {}).get("reasons") or []
-    return any("single distinctive legal-name token" in reason and "corroborated" not in reason for reason in reasons)
+def was_published(record: dict) -> bool:
+    return bool(((record.get("value") or {}).get("identity_assessment") or {}).get("publishable"))
 
 
 def main() -> None:
@@ -53,7 +51,7 @@ def main() -> None:
         evidence = profile.setdefault("evidence", {})
         for module in ("website", "website_discovered"):
             record = evidence.get(module)
-            if not record or record.get("status") != "available" or not was_single_token_pass(record):
+            if not record or record.get("status") != "available" or not was_published(record):
                 continue
             gated = apply_website_identity_gate(profile, dict(record))
             assessment = gated["assessment"]
@@ -68,7 +66,7 @@ def main() -> None:
             })
             demoted_record = dict(record)
             demoted_record["status"] = "not_found"
-            demoted_record["note"] = "Demoted on identity-gate re-assessment: single-token name match without .no domain or organisation-number corroboration."
+            demoted_record["note"] = "Demoted on identity-gate re-assessment: " + "; ".join((assessment or {}).get("reasons") or ["no longer publishable"])
             evidence[module] = demoted_record
             if module == "website":
                 profile["website"] = ""

@@ -25,7 +25,12 @@ import glob
 import hashlib
 import json
 import re
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from norway_company_agent.official import BRREG_ACCOUNT_PDF  # noqa: E402
+from norway_company_agent.snapshot_store import save_snapshot  # noqa: E402
 
 FIELD_LABELS = (
     ("revenue", re.compile(r"(?i)sum\s+driftsinntekter\s+([-0-9O ,.]+)")),
@@ -35,6 +40,9 @@ FIELD_LABELS = (
     ("equity", re.compile(r"(?i)sum\s+egenkapital\s+([-0-9O ,.]+)")),
     ("debt", re.compile(r"(?i)sum\s+gjeld\s+([-0-9O ,.]+)")),
 )
+
+
+FIELD_ORDER = [field for field, _ in FIELD_LABELS]
 
 
 def read_jsonl(path: Path) -> list[dict]:
@@ -114,8 +122,10 @@ def find_prior_year_value(span: str, known_current: str) -> float | None:
         return None
 
 
-def extract_prior_year(text: str, known_record: dict) -> dict:
+def extract_prior_year_with_lines(text: str, known_record: dict) -> tuple[dict, dict]:
+    """Recovered figures plus, per field, the exact report line they came from."""
     found: dict[str, float] = {}
+    lines: dict[str, str] = {}
     for field, pattern in FIELD_LABELS:
         known = known_value_string(known_record.get(field))
         if known is None:
@@ -126,7 +136,12 @@ def extract_prior_year(text: str, known_record: dict) -> dict:
         value = find_prior_year_value(match.group(1), known)
         if value is not None:
             found[field] = value
-    return found
+            lines[field] = " ".join(match.group(0).split())
+    return found, lines
+
+
+def extract_prior_year(text: str, known_record: dict) -> dict:
+    return extract_prior_year_with_lines(text, known_record)[0]
 
 
 def prior_year_label(record: dict) -> str | None:
@@ -167,24 +182,33 @@ def main() -> None:
         if text_path is None:
             continue  # digital-text-only PDFs weren't cached as .txt; out of scope for this cache-reuse pass
         text = text_path.read_text(encoding="utf-8", errors="replace")
-        found = extract_prior_year(text, current_record)
+        found, matched_lines = extract_prior_year_with_lines(text, current_record)
         if not found:
             continue
+        # The source is the annual-report PDF these lines were read from (the OCR
+        # text is derived from it), so cite and hash the PDF, not the OCR text.
+        pdf_year = text_path.name.split("-")[1]
+        pdf_path = Path(args.cache) / f"{org}-{pdf_year}.pdf"
+        if not pdf_path.exists():
+            continue
+        pdf_bytes = pdf_path.read_bytes()
         accepted += 1
         observations.append({
             "id": "prior-year-financials-" + hashlib.sha256(f"{org}|{label}".encode()).hexdigest()[:24],
             "organisation_number": org,
             "platform": "brreg",
             "signal_type": "prior_year_financials",
-            "source_url": financials.get("source_url") or f"https://data.brreg.no/regnskapsregisteret/regnskap/{org}",
+            "source_url": BRREG_ACCOUNT_PDF.format(org=org, year=pdf_year),
             "retrieved_at": financials.get("retrieved_at"),
-            "content_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+            "content_sha256": hashlib.sha256(pdf_bytes).hexdigest(),
+            "snapshot_path": save_snapshot(pdf_bytes, "pdf"),
+            "extraction_method": "annual_report_prior_year_cross_check",
             "exact_entity": True,
             "identity_proof": [{"type": "official_report_url_organisation_number", "value": org}],
             "acquisition_mode": "official_api",
             "rights_status": "approved",
             "source_class": "official_annual_account_copy",
-            "evidence_span": f"Prior-year ({label}) figures cross-checked against the known current-year value on the same line.",
+            "evidence_span": matched_lines[next(field for field in FIELD_ORDER if field in matched_lines)],
             "effective_at": label,
             "metrics": {**found, "year": label},
             "strategy": "prior_year_financials_cross_check",

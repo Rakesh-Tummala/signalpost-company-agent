@@ -11,14 +11,22 @@
 - `scripts/build_output_contract.py`'s own validation (run manually, not yet
   automated into a test): every claim's `evidence_ids` resolves, every
   `availability` value is one of the six allowed states. Passes on all 1,000
-  profiles, 19,048 claims, zero violations, zero per-profile conversion failures
+  profiles, 19,046 claims, zero violations, zero per-profile conversion failures
   (the last one guarded by `build_envelopes_safe`, see its own commit).
+- `scripts/audit_evidence.py` — checks that every claim is backed by an exact saved
+  source (`out/audit-report.json`, run on the artifact from a fresh full one-command run):
+  17,169 available claims point at a saved snapshot whose SHA-256 equals the evidence
+  `content_sha256`; 15,503 excerpts are literal slices of their snapshot; 1,664 excerpts come
+  from annual-report PDFs (reported separately: a PDF's bytes can't be searched for that
+  text); 2 claims have no excerpt; **0 failures**. Exits non-zero on any mismatch.
 - `scripts/validate_refresh_at_scale.py` — real-scale refresh validation (not just
   the offline fixture): zero false positives and zero crashes across all 1,000 real
   profiles, confirmed idempotency at scale, 50/50 injected changes on real company
   shapes correctly detected (precision 1.0, recall 1.0). See `REFRESH.md`.
-- `tests/test_poc.py` — 133 unit tests, 5 subtests, covering identity-gate edge
-  cases (parent/subsidiary confusion, generic name collisions, parked domains),
+- `tests/` — 174 unit tests, 5 subtests (`test_poc.py` and `test_evidence_signals.py`), covering identity-gate edge
+  cases (parent/subsidiary confusion, generic name collisions, parked domains, multi-word names on
+  foreign sites), the exact-excerpt and snapshot machinery, job/news extraction (including the false
+  positives found on real pages), the ambiguous-not-available rule for unverified sites,
   the missing-from-bulk-registry path, the registry_live backfill, the
   claims/evidence conversion (shape, grounding, malformed-profile isolation), the
   workforce-observation-to-claim path, the prior-year-financials recovery logic
@@ -47,9 +55,10 @@
   number: computed directly from `out/output-contract-envelopes.jsonl`, the exact
   file that would be submitted, and after the identity-gate precision fix demoted 24
   wrong-company matches (also in `LIMITATIONS.md`). Official-registry fields are
-  ~100%; website 12.3%; workforce size 84.1% (via OCR); prior-year annual accounts
-  82.3% (also via OCR, recovered from the same cached report text -- no new
-  fetches); social profiles 3.5%; company-owned news 1.6%; group structure 7.0%.
+  ~100%; workforce size 84.1% (via OCR); prior-year annual accounts 82.3% (also via OCR,
+  recovered from the same cached report text -- no new fetches); group structure 7.0%;
+  verified website 5.8% (55 more listed but published `ambiguous`); social profiles 2.8%;
+  dated company news 1.9% (19 companies, 120 items); real job postings 0.1% (1 company).
   This tells us *our own* coverage, not how it compares to Builderr's
   independently-verified collection or the other entrants' pooled findings, which is
   what the real 35-point coverage score is measured against.

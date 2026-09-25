@@ -32,6 +32,9 @@ class Evidence:
     content_sha256: str | None = None
     source_row_key: str | None = None
     effective_at: str | None = None
+    snapshot_path: str | None = None
+    spans: Any = None
+    extraction_method: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -50,6 +53,9 @@ def evidence(
     content_sha256: str | None = None,
     source_row_key: str | None = None,
     effective_at: str | None = None,
+    snapshot_path: str | None = None,
+    spans: Any = None,
+    extraction_method: str | None = None,
 ) -> dict[str, Any]:
     return Evidence(
         field=field,
@@ -64,4 +70,7 @@ def evidence(
         content_sha256=content_sha256,
         source_row_key=source_row_key,
         effective_at=effective_at,
+        snapshot_path=snapshot_path,
+        spans=spans,
+        extraction_method=extraction_method,
     ).to_dict()

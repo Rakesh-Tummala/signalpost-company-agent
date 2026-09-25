@@ -1,7 +1,7 @@
 {
-  "run_id": "local-001",
-  "started_at": "2026-09-13T14:29:38.714634Z",
-  "completed_at": "2026-09-13T14:39:41.125744Z",
+  "run_id": "v4-full-001",
+  "started_at": "2026-09-25T16:36:19.225183Z",
+  "completed_at": "2026-09-25T17:11:51.053566Z",
   "expected_count": 1000,
   "emitted_envelopes": 1000,
   "resumed_profiles": 0,
@@ -11,6 +11,7 @@
     "accounting_obligation",
     "registry_live",
     "financials",
+    "financial_history",
     "roles",
     "group",
     "locations",
@@ -26,10 +27,10 @@
     ]
   },
   "operations": {
-    "requests": 5565,
-    "bytes": 56255539,
-    "p50_ms": 715,
-    "p95_ms": 1708
+    "requests": 6756,
+    "bytes": 70640350,
+    "p50_ms": 713,
+    "p95_ms": 1036
   },
   "validation": {
     "passed": true,

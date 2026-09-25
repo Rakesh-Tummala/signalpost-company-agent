@@ -8,13 +8,26 @@
 | Website discovery (fallback 1) | `scripts/run_tavily_discovery.py` | Tavily Search API, transient query only | 0.3s min interval, checkpoints every 25, only runs if `TAVILY_API_KEY` is set |
 | Website discovery (fallback 2) | `scripts/run_exa_discovery.py` | Exa Search API, transient query only | 0.3s min interval, checkpoints every 25, only runs if `EXA_API_KEY` is set |
 | Deep multi-page site crawl | `scripts/run_scrapy_websites.py` | Registry-linked or discovered company website | 8 concurrent requests, 2/domain; best-effort -- skipped cleanly if `scrapy` isn't installed |
-| Company-owned activity extraction | `scripts/extract_company_site_activity.py` | Pages already fetched by the deep crawl above (no new requests) | — |
-| Company-owned news extraction | `scripts/extract_company_site_news.py` | Pages already fetched by the deep crawl above (no new requests) | — |
-| Careers/jobs page detection | `scripts/extract_company_site_careers.py` | Pages already fetched by the deep crawl above (no new requests) | — |
+| Dated company news | `scripts/extract_company_site_news.py` | Page signals and RSS/Atom feeds already fetched by the crawl (no new requests): JSON-LD `NewsArticle`/`BlogPosting`, `<time datetime>` cards, the site's own feed items. Only items with a parseable date | — |
+| Real job postings | `scripts/extract_company_site_jobs.py` | Page signals already fetched by the crawl (no new requests): JSON-LD `JobPosting`, role cards linking to an individual posting, explicit apply actions. A generic "Careers" page is **not** a hiring fact | — |
 | OCR workforce extraction | `scripts/run_annual_report_workforce_connector.py` | Official BRREG annual-report PDF copies | 4 workers; needs `tesseract` (language pack `nor`, not the default `eng`) + `poppler` (`pdftoppm`) on PATH; degrades per-company to an error status (not a pipeline failure) if either binary is missing |
 | Prior-year financials recovery | `scripts/extract_prior_year_financials.py` | The same official annual-report PDF text already OCR'd for the workforce stage above (no new downloads, no new OCR) | Only runs if the workforce OCR cache exists; skipped cleanly otherwise |
 | Claims/evidence conversion | `scripts/build_output_contract.py` | (reshapes existing evidence + observation files, no new fetches) | — |
 | Offline viewer | `scripts/build_viewer.py` | (reads the finished claims artifact, no new fetches) | Best-effort; never blocks the submission if it fails |
+
+Both site crawlers (the single-pass `urllib` crawl in the registry stage and the deep
+scrapy crawl) record the same per-page signals (`src/norway_company_agent/page_signals.py`)
+and fetch up to two same-domain RSS/Atom feeds (comment feeds excluded), so the dated-news
+and job extraction gives the same result whether or not the optional `scrapy` extra is
+installed. The `urllib` crawler verifies TLS against the `certifi` bundle so results do not
+depend on the operating system's trust store.
+
+Every stage saves the raw bodies behind its claims (official API responses, crawled pages,
+feeds, annual-report PDFs) into a content-addressed store, `<output-dir>/snapshots/<sha256>.<ext>`
+(`src/norway_company_agent/snapshot_store.py`, configured by `SIGNALPOST_SNAPSHOT_DIR`, which
+`run_agent.py` sets). `scripts/audit_evidence.py` re-checks any claims artifact against that
+store: snapshot present, SHA-256 equals the evidence `content_sha256`, and each `claim_span` a
+literal slice of the snapshot.
 
 Discovery connectors follow the same rule: the search query and its raw results
 (titles, snippets, ranks) are held in memory only and never written to disk or

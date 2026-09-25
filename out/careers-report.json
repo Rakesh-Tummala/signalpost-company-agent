@@ -1,7 +1,0 @@
-{
-  "connector": "exact_company_site_careers_v1",
-  "profiles": 1000,
-  "companies_with_careers_page": 6,
-  "observations": 6,
-  "claim_boundary": "Records that a careers/jobs page exists on the company's own verified site; does not enumerate individual open positions the way a jobs-board API would."
-}

@@ -13,7 +13,6 @@ setup instructions never mention running a web server.
 from __future__ import annotations
 
 import argparse
-import html
 import json
 from pathlib import Path
 from typing import Any
@@ -38,6 +37,9 @@ def flatten_envelope(envelope: dict[str, Any]) -> dict[str, Any]:
             "confidence": claim.get("confidence"),
             "source_url": first_evidence.get("source_url"),
             "retrieved_at": first_evidence.get("retrieved_at"),
+            "excerpt": first_evidence.get("claim_span"),
+            "method": first_evidence.get("extraction_method"),
+            "snapshot": first_evidence.get("snapshot"),
         })
     summary = envelope.get("summary") or {}
     return {
@@ -47,6 +49,16 @@ def flatten_envelope(envelope: dict[str, Any]) -> dict[str, Any]:
         "claim_count": len(claims),
         "claims": claims,
     }
+
+
+def embed_safe(data_json: str) -> str:
+    """Make JSON safe to inline in a <script> block.
+
+    Excerpts are literal slices of source HTML, so they can contain "</script>" or
+    "<!--", which would end the data block early. "<" is legal as \\u003c inside a JSON
+    string, and U+2028/2029 are escaped for older engines.
+    """
+    return data_json.replace("<", "\\u003c").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
 
 
 PAGE_TEMPLATE = """<!doctype html>
@@ -96,6 +108,9 @@ PAGE_TEMPLATE = """<!doctype html>
   .avail-not_available, .avail-failed, .avail-blocked { color: var(--danger); }
   a { color: var(--accent); }
   .empty { color: var(--muted); padding: 24px; text-align: center; }
+  details summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+  .excerpt { display: block; white-space: pre-wrap; word-break: break-word; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; margin-top: 4px; font-size: 12px; }
+  .meta { color: var(--muted); font-size: 11px; margin-top: 2px; }
   @media (max-width: 720px) {
     .layout { flex-direction: column; }
     #list { max-height: 40vh; }
@@ -156,7 +171,8 @@ function renderDetail(org) {
       <td>${escapeHtml(claim.value)}</td>
       <td class="avail-${escapeHtml(claim.availability)}">${escapeHtml(claim.availability)}</td>
       <td>${claim.confidence == null ? '' : claim.confidence}</td>
-      <td>${claim.source_url ? `<a href="${escapeHtml(claim.source_url)}" target="_blank" rel="noopener">source</a>` : ''}</td>
+      <td>${claim.source_url ? `<a href="${escapeHtml(claim.source_url)}" target="_blank" rel="noopener">source</a>` : ''}
+        ${claim.excerpt ? `<details><summary>exact excerpt</summary><code class="excerpt">${escapeHtml(claim.excerpt)}</code>${claim.method ? `<div class="meta">${escapeHtml(claim.method)}</div>` : ''}${claim.snapshot ? `<div class="meta">saved: ${escapeHtml(claim.snapshot)}</div>` : ''}</details>` : ''}</td>
     </tr>`).join('');
   detailEl.innerHTML = `
     <div class="panel">
@@ -212,7 +228,7 @@ def main() -> None:
         companies.append(flat)
     companies.sort(key=lambda c: c["org"])
 
-    data_json = json.dumps(companies, ensure_ascii=False, separators=(",", ":"))
+    data_json = embed_safe(json.dumps(companies, ensure_ascii=False, separators=(",", ":")))
     page = PAGE_TEMPLATE.replace("__DATA_JSON__", data_json)
     Path(args.output).write_text(page, encoding="utf-8")
     print(json.dumps({"companies": len(companies), "output": args.output, "size_bytes": len(page.encode("utf-8"))}, indent=2))

@@ -109,13 +109,29 @@ uv run python scripts/run_agent.py \
 
 This is the single command referenced in the submission contract below. Every stage
 past the initial registry batch is best-effort: a missing API key skips discovery, a
-missing `scrapy` install skips the deep crawl (and the activity/news extraction that
-depends on it), and missing `tesseract`/`poppler` binaries degrade the OCR workforce
-stage to "no workforce data" rather than failing the run. `out/agent-run/envelopes.jsonl`
-is the final submission artifact — see `DATA_SCHEMA.md` for its exact shape, and
-`CRAWLERS.md` for what each stage needs and how it degrades.
-`out/agent-run/viewer.html` is a self-contained offline page for browsing it —
-open it directly, no server required.
+missing `scrapy` install skips only the deeper crawl (the single-pass site crawl in the
+registry stage records the same page signals, so dated-news and job extraction still run),
+and missing `tesseract`/`poppler` binaries degrade the OCR workforce stage to "no workforce
+data" rather than failing the run. `out/agent-run/envelopes.jsonl` is the final submission
+artifact — see `DATA_SCHEMA.md` for its exact shape, and `CRAWLERS.md` for what each stage
+needs and how it degrades.
+
+Every claim's evidence points at a **saved copy of its source** in
+`out/agent-run/snapshots/` (named by the SHA-256 of the exact bytes) and carries an exact
+excerpt from it. Check that yourself:
+
+```bash
+uv run python scripts/audit_evidence.py --envelopes out/agent-run/envelopes.jsonl --root out/agent-run
+```
+
+It re-hashes every snapshot against the evidence `content_sha256`, confirms each excerpt is a
+literal slice of its snapshot, and exits non-zero on any mismatch.
+`out/agent-run/viewer.html` is a self-contained offline page for browsing it, including each
+claim's excerpt — open it directly, no server required.
+
+To refresh an earlier run, pass `--previous-profiles <earlier profiles.jsonl>`: websites it
+found are re-crawled and pass through the same identity gate again (never trusted as-is) for
+companies the registry lists none for.
 
 ## The improvement loop
 

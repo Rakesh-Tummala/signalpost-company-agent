@@ -12,8 +12,9 @@ Chains every stage of the pipeline into one command, as required by the
   3. deep multi-page site crawl (scrapy) for every company with a website
      candidate -- best-effort: skipped cleanly if the `scrapy` package isn't
      installed in this environment, rather than failing the whole run.
-  4. company-owned activity/news extraction from the crawl -- pure-Python,
-     no optional dependency, always attempted.
+  4. company-owned dated news and real job postings, read from the page signals
+     the crawl stored -- pure-Python, no new requests, and independent of which
+     crawler ran (the single-pass crawl in step 1 records the same signals).
   5. official annual-report OCR workforce extraction -- best-effort per
      company already (see run_annual_report_workforce_connector.py's own
      broad except); still guarded here so a totally missing tesseract/poppler
@@ -100,12 +101,15 @@ def main() -> None:
     parser.add_argument("--discovery-limit", type=int, default=None, help="Cap discovery queries; default is expected-count")
     parser.add_argument("--skip-deep-crawl", action="store_true", help="Skip the scrapy multi-page crawl stage")
     parser.add_argument("--skip-workforce-ocr", action="store_true", help="Skip the annual-report OCR workforce stage")
+    parser.add_argument("--previous-profiles", help="profiles.jsonl from an earlier run: websites it found are re-crawled and re-verified (never trusted as-is) for companies the registry lists none for")
     parser.add_argument("--python", default=sys.executable)
     args = parser.parse_args()
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     discovery_limit = args.discovery_limit or args.expected_count
+    # Every stage saves the raw bodies behind its claims here, content-addressed.
+    os.environ["SIGNALPOST_SNAPSHOT_DIR"] = str(output_dir / "snapshots")
     started_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     stages_run: list[str] = []
 
@@ -145,14 +149,23 @@ def main() -> None:
 
     profiles = read_jsonl(profiles_path)
     backfill_top_level_website(profiles)
+    if args.previous_profiles:
+        previous = {row["organisation_number"]: row for row in read_jsonl(Path(args.previous_profiles))}
+        seeded = 0
+        for row in profiles:
+            site = (previous.get(row["organisation_number"]) or {}).get("website")
+            if not row.get("website") and site:
+                row["website"] = site
+                row["website_seed_source"] = "previous_run"
+                seeded += 1
+        print(f"Seeded {seeded} website(s) from the previous run; they go through the same crawl and identity gate.", file=sys.stderr)
     write_jsonl(output_dir / "profiles.jsonl", profiles)
     profiles_path = output_dir / "profiles.jsonl"
 
     # 3. Deep multi-page crawl (scrapy) of every company with a website
     # candidate. Best-effort: scrapy may not be installed everywhere.
-    activity_obs_path = output_dir / "activity-observations.jsonl"
     news_obs_path = output_dir / "news-observations.jsonl"
-    careers_obs_path = output_dir / "careers-observations.jsonl"
+    jobs_obs_path = output_dir / "jobs-observations.jsonl"
     has_scrapy = False
     if not args.skip_deep_crawl:
         try:
@@ -178,20 +191,17 @@ def main() -> None:
             merge_profiles(profiles, crawled)
             write_jsonl(profiles_path, profiles)
             stages_run.append("deep_crawl")
-
-            # 4. Activity/news extraction from the deepened crawl. Pure Python,
-            # always attempted once there's a crawl to extract from.
-            run([args.python, str(ROOT / "extract_company_site_activity.py"), "--profiles", str(profiles_path), "--output", str(activity_obs_path), "--report", str(output_dir / "activity-report.json")], optional=True)
-            run([args.python, str(ROOT / "extract_company_site_news.py"), "--profiles", str(profiles_path), "--output", str(news_obs_path), "--report", str(output_dir / "news-report.json")], optional=True)
-            run([args.python, str(ROOT / "extract_company_site_careers.py"), "--profiles", str(profiles_path), "--output", str(careers_obs_path), "--report", str(output_dir / "careers-report.json")], optional=True)
-            if activity_obs_path.exists():
-                stages_run.append("site_activity")
-            if news_obs_path.exists():
-                stages_run.append("site_news")
-            if careers_obs_path.exists():
-                stages_run.append("site_careers")
     else:
-        print("scrapy not installed -- skipping deep crawl and activity/news extraction.", file=sys.stderr)
+        print("scrapy not installed -- using the single-pass site crawl from the registry/discovery stages.", file=sys.stderr)
+
+    # 4. Dated news and real job postings from the stored page signals. Pure
+    # Python over data already collected, so it runs whichever crawler produced it.
+    run([args.python, str(ROOT / "extract_company_site_news.py"), "--profiles", str(profiles_path), "--output", str(news_obs_path), "--report", str(output_dir / "news-report.json")], optional=True)
+    run([args.python, str(ROOT / "extract_company_site_jobs.py"), "--profiles", str(profiles_path), "--output", str(jobs_obs_path), "--report", str(output_dir / "jobs-report.json")], optional=True)
+    if news_obs_path.exists():
+        stages_run.append("site_news")
+    if jobs_obs_path.exists():
+        stages_run.append("site_jobs")
 
     # 5. Official annual-report OCR workforce extraction. Already degrades
     # per-company internally; skip the whole stage only if asked to.
@@ -238,7 +248,7 @@ def main() -> None:
         "--started-at", started_at,
         "--completed-at", completed_at,
     ]
-    for obs_path in (activity_obs_path, news_obs_path, careers_obs_path, workforce_obs_path, prior_year_obs_path):
+    for obs_path in (news_obs_path, jobs_obs_path, workforce_obs_path, prior_year_obs_path):
         if obs_path.exists():
             convert_cmd += ["--observations", str(obs_path)]
     run(convert_cmd)

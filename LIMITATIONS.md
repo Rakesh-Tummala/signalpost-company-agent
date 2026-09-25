@@ -9,27 +9,29 @@ these are silently hidden: every gap below shows up as an honest `not_available`
 | Field | Companies | % |
 |---|---|---|
 | Legal identity, legal form, accounting obligation | 1,000 | 100% |
-| Bankruptcy/liquidation status, industry, latest filed year, roles | 999 | ~100% |
-| Business address, latest annual accounts | 997 | 99.7% |
+| Bankruptcy/liquidation status, industry, latest filed year, roles | 998 | ~100% |
+| Latest annual accounts, business address | 997 / 996 | 99.7% / 99.6% |
 | **Workforce size** (OCR'd from official annual reports) | 841 | 84.1% |
 | **Prior-year annual accounts** (recovered from the same official annual-report OCR) | 823 | 82.3% |
 | Registered locations/subunits | 745 | 74.5% |
-| Registered workplaces (subunit detail) | 255 | 25.5% |
-| Registry-reported employee count | 144 | 14.4% |
-| Verified official website | 123 | 12.3% |
-| Company-site activity metrics | 74 | 7.4% |
+| Registry-reported employee count | 142 | 14.2% |
 | Group/ownership structure | 70 | 7.0% |
-| Verified social profiles | 35 | 3.5% |
-| Dated company-owned news/press items | 16 | 1.6% |
-| Careers/jobs page detected on own site | 6 | 0.6% |
+| Verified official website (a further 55 listed sites are published as `ambiguous`) | 58 | 5.8% |
+| Verified social profiles | 28 | 2.8% |
+| **Dated** company-owned news items (120 items) | 19 | 1.9% |
+| **Real job postings** on the company's own site | 1 | 0.1% |
 
-Website (and the activity/news/social/careers claims that depend on a verified site)
-dropped from an earlier 139/1,000 after a precision fix caught 24 wrong-company
-matches (see "identity-gate precision fix" below), then recovered partway with 9 more
-genuine matches from a targeted Tavily retry on companies Exa's discovery pass had
-failed to find (Tavily's exact-match hit rate ran roughly 4x higher than Exa's in a
-controlled comparison earlier — see the Tavily/Exa connector commits). The numbers
-above are what's actually safe to publish, not the raw technically-discovered count.
+Checked-and-empty results (no registered subunits: 255 companies) are published as an
+explicit empty list cited to the response's own `"totalElements":0`, not counted above.
+
+Four rows changed meaning or fell in this revision, on purpose, and the change is
+toward precision (see "After the 700-company diagnostic" below): the website row now
+counts only sites the identity gate verified (before, 49 sites it had *not* verified
+were published as `available` at low confidence); social profiles depend on a verified
+site; "dated news" replaced 16 undated `/news/`-path pages with 120 items that each
+carry a publication date; and "real job postings" replaced a careers-page detector that
+counted a page merely existing. The numbers above are what is safe to publish, not the
+raw technically-discovered count.
 
 The official-registry fields (top of the table) are near-100% because BRREG's bulk
 snapshot and live API are comprehensive and always attempted. Everything below that
@@ -41,9 +43,9 @@ which is why coverage tapers off rather than reflecting a bug.
 
 - **Independently-sourced job postings and third-party reviews/sentiment.** The
   workforce *size* now has real coverage (see above, via official annual-report OCR),
-  and a company advertising a careers/jobs page on its own site is now detected
-  (4/1,000 — see `extract_company_site_careers.py`), but individual job *postings*
-  specifically remain uncovered: the only postings connector
+  and real roles on a company's own site are extracted (1/1,000 -- see
+  `extract_company_site_jobs.py` and the section below), but third-party job postings
+  remain uncovered: the only postings connector
   (`scripts/run_linkedin_guest_jobs_connector.py`) hits an unofficial LinkedIn
   endpoint and self-tags its own output `"publishable": false`. Using it for scored
   claims would violate the source policy's rule that unofficial platform access
@@ -150,6 +152,10 @@ of time to validate it against real data before this submission.
   this is expected, not a bug.
 
 ## Follow-up investigation after a real evaluator run
+
+> Historical record of that round. Its careers-page and undated-news numbers are superseded by
+> "After the 700-company diagnostic" below, which retires both signals; the website-discovery
+> ceiling and the NAV findings here still stand.
 
 An evaluator ran this agent against a held-out 100-company set and reported 66.92/100,
 meeting the qualification bar, with specific feedback: "the clearest route to a higher
@@ -273,6 +279,77 @@ Two follow-ups from that feedback:
   during a short check is not the same as confirmed permission, and promoting a
   connector's acquisition mode to scored/publishable status deserves more
   certainty than that before it touches real claims.
+
+## After the 700-company diagnostic
+
+Builderr later ran a private diagnostic on a stricter ruler (700 companies, scored from the
+sources captured in the first run, with the shared reference collection now including any fact
+verifiable from *any* participant's captured source). It scored this agent 56.37/100 -- not
+comparable to the earlier 66.92, and explicitly not an official result -- and named the main
+gap: no validated news or hiring recovery. Its concrete asks were: retain the first-party
+responses, extract social links from markup and structured data, attach the exact saved source
+to every claim, and add structured dated articles plus role cards / job feeds; "a generic careers
+page is not enough".
+
+What changed, with the real numbers from a fresh one-command run over all 1,000 submitted
+companies (`out/run-summary.json`; every stage, 3h12m, 6,756 registry requests):
+
+- **Every claim now has its own evidence entry, a saved copy of its source, and an exact
+  excerpt.** Raw API responses, crawled pages, feeds and annual-report PDFs are stored under
+  `snapshots/<sha256>`; `scripts/audit_evidence.py` re-checks the artifact. Result on the
+  regenerated artifact (`out/audit-report.json`): 19,046 claims; 17,169 available claims each
+  point at a snapshot whose SHA-256 matches; **15,503 excerpts are literal slices of their
+  snapshot; 0 failures.** 1,664 excerpts come from annual-report PDFs (a matched OCR/text-layer
+  line) and cannot be searched for in a PDF's compressed bytes, so they are reported as
+  `span_from_pdf` rather than passed; 2 claims carry no excerpt. The snapshot store is not
+  committed (it holds about a gigabyte of PDFs); regenerate it with `run_agent.py`.
+- **Hiring: only real roles count.** The careers-page detector (4 -> 6 companies in the previous
+  round) is retired -- Builderr's own words are that it does not count. The replacement reads a
+  schema.org `JobPosting`, a role card linking to an individual posting (including links whose
+  *file name* carries the vacancy words, like `/ledig-stilling-servicemarkedsleder-...`),
+  an item in the company's own careers RSS feed, or an explicit apply action, and skips
+  aggregate "Ledige stillinger ..." links and expired postings. **Honest result: 1 real role
+  across the whole batch** (Toyota Sulland). Of the 58 verified sites, only 3 had a careers page
+  in the crawl: one lists real roles, one is generic marketing copy, and one only links out to
+  Jobbnorge (a third-party job board, not fetched). Most small Norwegian companies simply do not
+  post roles on their own site, so this will stay small.
+- **News: only dated articles count.** Previously any page under a `/news/` path counted (16
+  companies, no date on any of them). Now: schema.org `NewsArticle`/`BlogPosting`/`PressRelease`,
+  a plain `Article` or `article:published_time` only on a news-style URL, `<time datetime>`
+  cards, and the site's own RSS/Atom feed (comment feeds excluded). **19 companies, 120 dated
+  items.** Real-data review of the first version found and removed false positives: WordPress
+  marks ordinary contact/about pages as `Article` with a publish date, feeds list password-
+  protected posts and comments, and the same story appears through several markups.
+- **Social links** are also read from JSON-LD `sameAs`, `twitter:site` and `rel="me"`. Because
+  fewer sites now pass the identity gate, the published total is 28 companies (was 35).
+- **Two precision bugs, found by testing on real data, in the submitted artifact:**
+  1. *Wrong-company websites.* "BLUE BAY AS" was published against an Italian resort site because
+     both name words appear on it. The identity gate's multi-word branch now needs a Norway tie
+     (registry-listed site, `.no`, or the registered place on the page); see
+     `IDENTITY_RESOLUTION.md`. Published sites: 74 -> 58.
+  2. *Unverified sites published as available.* 49 sites the gate had **not** verified
+     (confidence 0.3-0.85) were emitted as `official_website` with availability `available`.
+     Builderr's rule is that an uncertain match is `ambiguous`; they are now `ambiguous` (55 in
+     this run) and the summary no longer calls them verified.
+- **Two crawl-path fixes.** Job/news extraction used to run only when the optional `scrapy` extra
+  was installed; both crawlers now record the same page signals, so results do not depend on it.
+  And the plain crawler failed on any site whose certificate chain touches an expired root in the
+  operating system's trust store (sulland.no, nifu.no here); it now verifies against `certifi`.
+
+**The new code on companies it has never seen.** A separate one-command run over 100
+organisation numbers drawn from the full 411,160-company list and *not* in the submitted 1,000
+(the evaluator's batch shape): 100 unique terminal envelopes, none failed, 1,890 claims, evidence
+audit clean (1,528 exact excerpts, 170 from PDFs, 0 failures); 19m12s wall clock against the 45
+minute limit; about 785 outbound requests (658 registry, 38 crawl, roughly 89 annual-report
+downloads) against the 2,000 cap; workforce 86 of 89 eligible, prior-year figures 84 of 88.
+Site-derived facts are sparse there too (10 dated articles from 1 company, no job postings),
+consistent with the 1,000-company rates. No search-API keys were set, so discovery was skipped.
+
+Cost of the stricter gate, stated plainly: a few genuine Norwegian companies on a `.com` (TBG
+Holding, Axess Technologies, Oslo Analytica, Lie Nilsen) are no longer published because their
+captured text carries none of the four accepted Norway signals. Website coverage on the verified
+list fell from 123 to 58 companies; what remains is far less likely to be attributed to the wrong
+company.
 
 ## Not yet run against real data
 

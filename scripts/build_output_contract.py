@@ -13,8 +13,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from norway_company_agent.evidence_spans import module_spans  # noqa: E402
 
 AVAILABILITY_MAP = {
     "available": "available",
@@ -61,40 +65,39 @@ def confidence_for(record: dict[str, Any]) -> float | None:
 
 
 class Emitter:
+    """Collects claims; every claim gets its own evidence entry so it can carry an exact excerpt."""
+
     def __init__(self) -> None:
         self.claims: list[dict[str, Any]] = []
         self.evidence: list[dict[str, Any]] = []
-        self._evidence_ids: dict[str, str] = {}
+        self._counts: dict[str, int] = {}
 
-    def evidence_id(self, module: str, record: dict[str, Any]) -> str:
-        key = module
-        if key in self._evidence_ids:
-            return self._evidence_ids[key]
-        eid = f"ev-{module}"
-        self._evidence_ids[key] = eid
-        self.evidence.append({
+    def _next_id(self, stem: str) -> str:
+        self._counts[stem] = self._counts.get(stem, 0) + 1
+        return f"ev-{stem}-{self._counts[stem]}"
+
+    def _add(self, stem: str, source: dict[str, Any], *, span: str | None, method: str | None) -> str:
+        eid = self._next_id(stem)
+        entry = {
             "id": eid,
-            "source_url": record.get("source_url"),
-            "source_class": record.get("source_class") or record.get("source_type"),
-            "retrieved_at": record.get("retrieved_at"),
-            "content_sha256": record.get("content_sha256"),
-            "claim_span": None,
-        })
+            "source_url": source.get("source_url"),
+            "source_class": source.get("source_class") or source.get("source_type"),
+            "retrieved_at": source.get("retrieved_at"),
+            "content_sha256": source.get("content_sha256"),
+            "claim_span": span,
+        }
+        if source.get("snapshot_path"):
+            entry["snapshot"] = source["snapshot_path"]
+        if method:
+            entry["extraction_method"] = method
+        self.evidence.append(entry)
         return eid
 
     def observation_claim(self, field: str, value: Any, observation: dict[str, Any]) -> None:
-        # Unlike module evidence (one fetch, possibly many claims from it), each
-        # observation already carries its own distinct source fetch -- no need to
-        # dedupe/cache an evidence id per organisation the way evidence_id() does.
-        eid = f"ev-{observation['id']}"
-        self.evidence.append({
-            "id": eid,
-            "source_url": observation.get("source_url"),
-            "source_class": observation.get("source_class"),
-            "retrieved_at": observation.get("retrieved_at"),
-            "content_sha256": observation.get("content_sha256"),
-            "claim_span": observation.get("evidence_span"),
-        })
+        eid = self._add(
+            str(observation["id"]), observation,
+            span=observation.get("evidence_span"), method=observation.get("extraction_method") or observation.get("strategy"),
+        )
         self.claims.append({
             "field": field,
             "value": value,
@@ -103,12 +106,12 @@ class Emitter:
             "evidence_ids": [eid],
         })
 
-    def claim(self, field: str, value: Any, record: dict[str, Any], *, module: str) -> None:
-        eid = self.evidence_id(module, record)
+    def claim(self, field: str, value: Any, record: dict[str, Any], *, module: str, span: str | None = None, method: str | None = None, availability: str | None = None) -> None:
+        eid = self._add(module, record, span=span, method=method or record.get("extraction_method"))
         self.claims.append({
             "field": field,
             "value": value,
-            "availability": availability_for(record.get("status")),
+            "availability": availability or availability_for(record.get("status")),
             "confidence": confidence_for(record),
             "evidence_ids": [eid],
         })
@@ -132,18 +135,34 @@ def emit_registry_claims(emitter: Emitter, evidence: dict[str, Any]) -> None:
         "industry": value.get("industry") or value.get("naeringskode1"),
         "latest_submitted_accounts": value.get("latest_submitted_accounts") or value.get("sisteInnsendteAarsregnskap"),
     }
+    spans = record.get("spans") or {}
+    span_keys = {
+        "legal_name": "navn", "legal_form": "organisasjonsform", "employees": "antallAnsatte", "bankrupt": "konkurs",
+        "liquidating": "underAvvikling", "business_address": "forretningsadresse", "industry": "naeringskode1",
+        "latest_submitted_accounts": "sisteInnsendteAarsregnskap",
+    }
     for field, claim_value in fields.items():
         if claim_value is None:
             continue
-        emitter.claim(field, claim_value, record, module=module)
+        emitter.claim(field, claim_value, record, module=module, span=spans.get(span_keys[field]))
 
 
 def emit_accounting_obligation(emitter: Emitter, evidence: dict[str, Any]) -> None:
     record = evidence.get("accounting_obligation") or {}
     if not record:
         return
-    value = (record.get("value") or {}).get("classification")
-    emitter.claim("accounting_obligation", value, record, module="accounting_obligation")
+    value = record.get("value") or {}
+    # The rule (registry facts -> classification) is ours; the facts it is applied to
+    # come from the registry response, so that response is the cited source.
+    module = "registry_live" if (evidence.get("registry_live") or {}).get("status") == "available" else "registry"
+    source = evidence.get(module) or {}
+    spans = source.get("spans") or {}
+    if source.get("status") == "available" and spans:
+        key = "sisteInnsendteAarsregnskap" if value.get("classification") == "filing_observed" else "organisasjonsform"
+        emitter.claim("accounting_obligation", value.get("classification"), source, module="accounting_obligation",
+                      span=spans.get(key), method=str(value.get("ruleset_version") or "accounting_obligation_rules"))
+        return
+    emitter.claim("accounting_obligation", value.get("classification"), record, module="accounting_obligation")
 
 
 def emit_financials(emitter: Emitter, evidence: dict[str, Any]) -> None:
@@ -156,10 +175,12 @@ def emit_financials(emitter: Emitter, evidence: dict[str, Any]) -> None:
     if not records:
         emitter.claim("annual_accounts", None, record, module="financials")
         return
-    for item in records:
+    record_spans = (record.get("spans") or {}).get("records") or []
+    for index, item in enumerate(records):
         period = item.get("period") or {}
         year = str(period.get("tilDato") or period.get("fraDato") or item.get("record_id"))[:4]
-        emitter.claim(f"annual_accounts.{year}", item, record, module="financials")
+        entry = record_spans[index] if index < len(record_spans) else {}
+        emitter.claim(f"annual_accounts.{year}", item, record, module="financials", span=entry.get("period") or entry.get("revenue"))
 
 
 def emit_financial_history(emitter: Emitter, evidence: dict[str, Any]) -> None:
@@ -172,7 +193,7 @@ def emit_financial_history(emitter: Emitter, evidence: dict[str, Any]) -> None:
         return
     years = (record.get("value") or {}).get("years") or []
     if years:
-        emitter.claim("annual_accounts_years_on_file", years, record, module="financial_history")
+        emitter.claim("annual_accounts_years_on_file", years, record, module="financial_history", span=(record.get("spans") or {}).get("whole"))
 
 
 def emit_roles(emitter: Emitter, evidence: dict[str, Any]) -> None:
@@ -185,10 +206,11 @@ def emit_roles(emitter: Emitter, evidence: dict[str, Any]) -> None:
     if not roles:
         emitter.claim("leadership", None, record, module="roles")
         return
+    role_spans = (record.get("spans") or {}).get("roles") or []
     for index, role in enumerate(roles):
         if role.get("inactive"):
             continue
-        emitter.claim(f"role.{index}", role, record, module="roles")
+        emitter.claim(f"role.{index}", role, record, module="roles", span=role_spans[index] if index < len(role_spans) else None)
 
 
 def emit_locations(emitter: Emitter, evidence: dict[str, Any]) -> None:
@@ -199,17 +221,20 @@ def emit_locations(emitter: Emitter, evidence: dict[str, Any]) -> None:
         return
     locations = (record.get("value") or {}).get("locations") or []
     if not locations:
-        emitter.claim("registered_workplaces", None, record, module="locations")
+        # Checked, and the registry returned no subunits: an explicit empty list, cited to the
+        # response's own totalElements, is different from "not checked".
+        emitter.claim("registered_workplaces", [], record, module="locations", span=(record.get("spans") or {}).get("none"))
         return
+    location_spans = (record.get("spans") or {}).get("locations") or []
     for index, location in enumerate(locations):
-        emitter.claim(f"location.{index}", location, record, module="locations")
+        emitter.claim(f"location.{index}", location, record, module="locations", span=location_spans[index] if index < len(location_spans) else None)
 
 
 def emit_group(emitter: Emitter, evidence: dict[str, Any]) -> None:
     record = evidence.get("group") or {}
     if not record:
         return
-    emitter.claim("group_structure", record.get("value"), record, module="group")
+    emitter.claim("group_structure", record.get("value"), record, module="group", span=(record.get("spans") or {}).get("whole"))
 
 
 def emit_website(emitter: Emitter, evidence: dict[str, Any]) -> None:
@@ -217,7 +242,14 @@ def emit_website(emitter: Emitter, evidence: dict[str, Any]) -> None:
     # to whatever the registry-listed website module found (may be not_found).
     record = evidence.get("website") or {}
     value = record.get("value") or {}
-    emitter.claim("official_website", value.get("final_url") or value.get("requested_url"), record, module="website")
+    assessment = value.get("identity_assessment")
+    # A fetched site the identity gate could not tie to this exact entity is not published as
+    # the company's website: when the match is uncertain the answer is "ambiguous".
+    unverified = record.get("status") == "available" and assessment is not None and not assessment.get("publishable")
+    emitter.claim(
+        "official_website", value.get("final_url") or value.get("requested_url"), record, module="website",
+        span=value.get("title_span"), availability="ambiguous" if unverified else None,
+    )
 
 
 def emit_social_links(emitter: Emitter, evidence: dict[str, Any]) -> None:
@@ -228,6 +260,7 @@ def emit_social_links(emitter: Emitter, evidence: dict[str, Any]) -> None:
     seen: set[str] = set()
     for module in ("website", "website_discovered"):
         record = evidence.get(module) or {}
+        pages = {page.get("url"): page for page in (record.get("value") or {}).get("pages") or []}
         links = (record.get("value") or {}).get("social_links") or []
         for link in links:
             url = link.get("url")
@@ -235,7 +268,16 @@ def emit_social_links(emitter: Emitter, evidence: dict[str, Any]) -> None:
                 continue
             seen.add(url)
             platform = link.get("platform") or "unknown"
-            emitter.claim(f"social_profile.{platform}", url, record, module=module)
+            # Cite the page the link was actually found on, so its excerpt is a slice of
+            # the snapshot the evidence points at (not always the homepage).
+            page = pages.get(link.get("found_on"))
+            source = record
+            if page and link.get("span") and page.get("content_sha256"):
+                source = {
+                    **record, "source_url": page["url"], "content_sha256": page["content_sha256"],
+                    "snapshot_path": page.get("snapshot_path"), "retrieved_at": page.get("retrieved_at") or record.get("retrieved_at"),
+                }
+            emitter.claim(f"social_profile.{platform}", url, source, module=module, span=link.get("span"))
 
 
 def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any]] | None = None) -> dict[str, Any]:
@@ -305,8 +347,11 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
     website_record = evidence.get("website") or {}
     website_value = (website_record.get("value") or {})
     website_url = website_value.get("final_url") or website_value.get("requested_url")
-    if website_record.get("status") == "available" and website_url:
+    website_verified = (website_value.get("identity_assessment") or {}).get("publishable", True)
+    if website_record.get("status") == "available" and website_url and website_verified:
         sentences.append(f"Its verified official website is {website_url}.")
+    elif website_record.get("status") == "available" and website_url:
+        unknowns.append("official website (a site is listed, but nothing on it ties it to this entity)")
     else:
         unknowns.append("official website")
 
@@ -318,11 +363,15 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
     if (evidence.get("group") or {}).get("status") != "available" or not ((evidence.get("group") or {}).get("value") or {}).get("companies"):
         unknowns.append("group/ownership structure")
 
-    news_items = [o for o in (observations or []) if o.get("signal_type") == "public_post"]
+    news_items = sorted(
+        [o for o in (observations or []) if o.get("signal_type") == "public_post"],
+        key=lambda o: (o.get("metrics") or {}).get("published_at") or "", reverse=True,
+    )
     if news_items:
-        sentences.append(f"{len(news_items)} dated item(s) of company-owned public activity (news/press pages) were found.")
+        latest_news = news_items[0].get("metrics") or {}
+        sentences.append(f"{len(news_items)} dated news item(s) on its own site; the latest, '{latest_news.get('headline')}', is dated {str(latest_news.get('published_at'))[:10]}.")
     else:
-        unknowns.append("dated public activity (news/press)")
+        unknowns.append("dated news/press")
 
     workforce_items = [o for o in (observations or []) if o.get("signal_type") == "workforce_snapshot"]
     if workforce_items:
@@ -331,11 +380,20 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
         measure = "full-time equivalents" if metrics.get("measure") == "full_time_equivalents" else "employees"
         sentences.append(f"Its official annual report states {metrics.get('workforce_value')} {measure} ({metrics.get('year')}).")
     else:
-        unknowns.append("hiring/workforce size (no jobs-posting source integrated yet; official annual-report headcount attempted but not found or not applicable for this company)")
+        unknowns.append("workforce size (official annual-report headcount attempted but not found or not applicable for this company)")
 
-    careers_items = [o for o in (observations or []) if o.get("signal_type") == "careers_page_found"]
-    if careers_items:
-        sentences.append(f"A careers/jobs page was found on its own website: {careers_items[0].get('source_url')}.")
+    job_items = [o for o in (observations or []) if o.get("signal_type") == "job_posting"]
+    if job_items:
+        titles = [
+            str((o.get("metrics") or {}).get("title"))
+            for o in job_items if (o.get("metrics") or {}).get("evidence_kind") != "apply_action"
+        ][:3]
+        if titles:
+            sentences.append(f"{len(job_items)} open role(s) shown on its own site, e.g. {', '.join(titles)}.")
+        else:
+            sentences.append("Its own site shows an apply action for open roles.")
+    else:
+        unknowns.append("open roles (no job posting, role card or apply action found on its own site)")
 
     if unknowns:
         sentences.append("Not yet determined: " + "; ".join(unknowns) + ".")
@@ -348,35 +406,41 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
 
 
 def emit_external_observations(emitter: Emitter, observations: list[dict[str, Any]]) -> None:
-    # Company-owned activity/news pages, already independently verified by the same
-    # identity gate used everywhere else (exact_entity + identity_proof), already
-    # rights-cleared (acquisition_mode "permitted_public_page", rights_status
-    # "approved") -- see scripts/extract_company_site_activity.py and
-    # scripts/extract_company_site_news.py.
-    for index, observation in enumerate(observations):
+    # Observations come from identity-verified company sites and official annual
+    # reports; each already carries its own source, hash, snapshot and exact excerpt.
+    news_index = 0
+    job_index = 0
+    for observation in observations:
         signal_type = observation.get("signal_type")
-        if signal_type == "profile_metrics":
-            emitter.observation_claim("site_activity_metrics", observation.get("metrics"), observation)
-        elif signal_type == "public_post":
-            emitter.observation_claim(f"site_news.{index}", {"url": observation.get("source_url"), "title": observation.get("evidence_span")}, observation)
-        elif signal_type == "careers_page_found":
-            emitter.observation_claim("careers_page", {"url": observation.get("source_url"), "title": observation.get("evidence_span")}, observation)
+        metrics = observation.get("metrics") or {}
+        if signal_type == "public_post":
+            emitter.observation_claim(
+                f"site_news.{news_index}",
+                {"headline": metrics.get("headline"), "published_at": metrics.get("published_at"), "url": metrics.get("url")},
+                observation,
+            )
+            news_index += 1
+        elif signal_type == "job_posting":
+            emitter.observation_claim(
+                f"job_posting.{job_index}",
+                {
+                    "title": metrics.get("title"), "url": metrics.get("posting_url"), "date_posted": metrics.get("date_posted"),
+                    "employment_type": metrics.get("employment_type"), "evidence_kind": metrics.get("evidence_kind"),
+                },
+                observation,
+            )
+            job_index += 1
         elif signal_type == "workforce_snapshot":
             # scripts/run_annual_report_workforce_connector.py: OCR'd (or, when the
             # PDF has a machine-readable text layer, directly extracted) headcount
             # from the company's own official annual-report filing.
-            metrics = observation.get("metrics") or {}
             year = metrics.get("year") or observation.get("effective_at") or "unknown"
             emitter.observation_claim(f"workforce_value.{year}", metrics.get("workforce_value"), observation)
         elif signal_type == "prior_year_financials":
             # scripts/extract_prior_year_financials.py: the prior-year comparative
-            # figures Norwegian annual reports print alongside the current year,
-            # recovered from the same official annual-report copy already used for
-            # workforce OCR above. Same claim-field convention as emit_financials
-            # ("annual_accounts.<year>") since this is the same kind of fact --
-            # filed annual accounts for a given year -- just for a year the
-            # financials API call itself didn't return.
-            metrics = observation.get("metrics") or {}
+            # figures Norwegian annual reports print beside the current year. Same
+            # claim-field convention as emit_financials ("annual_accounts.<year>"):
+            # the same kind of fact, for a year the financials API call didn't return.
             year = metrics.get("year") or observation.get("effective_at") or "unknown"
             figures = {key: value for key, value in metrics.items() if key != "year"}
             emitter.observation_claim(f"annual_accounts.{year}", figures, observation)
@@ -423,6 +487,32 @@ def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, com
     }
 
 
+def derive_spans_from_snapshots(profiles: list[dict[str, Any]], root: Path) -> int:
+    """Recompute each official module's excerpts from its saved response body.
+
+    Spans are a pure function of the saved bytes, so this makes profiles produced before
+    spans existed (or by an older span rule) consistent with the current code, offline.
+    """
+    updated = 0
+    for profile in profiles:
+        for module, record in (profile.get("evidence") or {}).items():
+            path = record.get("snapshot_path")
+            if not path or not str(path).endswith(".json") or record.get("status") != "available":
+                continue
+            file = root / path
+            if not file.exists():
+                continue
+            raw = file.read_bytes()
+            try:
+                spans = module_spans(module, raw, json.loads(raw))
+            except ValueError:
+                continue
+            if spans != record.get("spans"):
+                record["spans"] = spans
+                updated += 1
+    return updated
+
+
 def build_envelopes_safe(
     profiles: list[dict[str, Any]],
     observations_by_org: dict[str, list[dict[str, Any]]],
@@ -464,10 +554,12 @@ def main() -> None:
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--started-at", required=True)
     parser.add_argument("--completed-at", required=True)
-    parser.add_argument("--observations", action="append", default=[], help="Optional JSONL file(s) of external observations (e.g. site activity/news); repeatable")
+    parser.add_argument("--observations", action="append", default=[], help="Optional JSONL file(s) of external observations (e.g. dated news, job postings); repeatable")
+    parser.add_argument("--snapshot-root", help="Directory the profiles' snapshot paths are relative to (default: the profiles file's directory)")
     args = parser.parse_args()
 
     profiles = read_jsonl(Path(args.profiles))
+    derive_spans_from_snapshots(profiles, Path(args.snapshot_root) if args.snapshot_root else Path(args.profiles).parent)
     observations_by_org: dict[str, list[dict[str, Any]]] = {}
     for observations_path in args.observations:
         for observation in read_jsonl(Path(observations_path)):

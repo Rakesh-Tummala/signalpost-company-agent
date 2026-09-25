@@ -13,7 +13,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
+import sys
+
 from pypdf import PdfReader
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from norway_company_agent.snapshot_store import save_snapshot  # noqa: E402
 
 
 UA = "SignalpostResearchPOC/1.0 (+https://builderr.ai)"
@@ -194,6 +199,8 @@ def collect(profile: dict, cache_dir: Path, *, ocr_pages: int, ocr_dpi: int) -> 
             "source_url": url,
             "retrieved_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             "content_sha256": digest,
+            "snapshot_path": save_snapshot(raw, "pdf"),
+            "extraction_method": "annual_report_pdf_text_or_ocr",
             "exact_entity": True,
             "identity_proof": [
                 {"type": "official_report_url_organisation_number", "value": org},

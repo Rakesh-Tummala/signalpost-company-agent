@@ -4,6 +4,7 @@ import json
 import ipaddress
 import re
 import socket
+import ssl
 import time
 import urllib.error
 import urllib.parse
@@ -17,7 +18,9 @@ import extruct
 import tldextract
 import trafilatura
 
-from .evidence import evidence
+from .evidence import evidence, utc_now
+from .page_signals import extract_page_signals, feed_record, looks_like_feed, title_span
+from .snapshot_store import save_snapshot
 
 USER_AGENT = "builderr-signalpost-poc/0.1 (+https://builderr.ai)"
 SOCIAL_HOSTS = {
@@ -34,7 +37,7 @@ PRIORITY_TERMS = (
     "om-oss", "om_oss", "about", "kontakt", "contact", "ledelse", "management",
     "team", "people", "locations", "lokasjoner", "avdelinger", "butikker",
     "news", "press", "aktuelt", "nyheter",
-    "careers", "career", "jobs", "job", "karriere", "ledige-stillinger", "stillinger",
+    "careers", "career", "jobs", "job", "karriere", "ledige-stillinger", "stillinger", "stilling", "vacanc",
 )
 
 
@@ -61,7 +64,18 @@ class SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-SAFE_OPENER = urllib.request.build_opener(SafeRedirectHandler())
+def _tls_context() -> ssl.SSLContext:
+    # Verify against certifi's bundle so results do not depend on whichever CA
+    # certificates (some expired) happen to sit in the operating system's trust store.
+    try:
+        import certifi
+
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        return ssl.create_default_context()
+
+
+SAFE_OPENER = urllib.request.build_opener(SafeRedirectHandler(), urllib.request.HTTPSHandler(context=_tls_context()))
 
 
 def normalize_homepage(value: str | None) -> str | None:
@@ -228,15 +242,38 @@ def _fetch_secondary_page(url: str, *, homepage_domain: str, timeout: float, max
         page_html = raw.decode("utf-8", errors="replace")
         page_soup = BeautifulSoup(page_html, "lxml")
         page_text = trafilatura.extract(page_html, url=final_url, include_links=False, include_tables=False, favor_precision=True) or ""
+        signals = extract_page_signals(page_html, final_url)
         page = {
             "url": final_url,
             "title": page_soup.title.get_text(" ", strip=True)[:500] if page_soup.title else "",
             "main_text_excerpt": page_text[:5000],
             "content_sha256": __import__("hashlib").sha256(raw).hexdigest(),
+            "retrieved_at": utc_now(),
+            "snapshot_path": save_snapshot(raw, "html"),
+            "signals": signals,
         }
-        return page, _social_links(final_url, page_soup), 2, len(raw), elapsed, None
+        return page, signals["social_links"], 2, len(raw), elapsed, None
     except Exception as exc:
         return None, [], 2, 0, int((time.monotonic() - started) * 1000), f"{type(exc).__name__}: {str(exc)[:120]}"
+
+
+def _fetch_feed(url: str, *, timeout: float, max_bytes: int = 1_000_000) -> tuple[dict[str, Any] | None, int, int, int, str | None]:
+    if not _robots_allowed(url, timeout):
+        return None, 1, 0, 0, "robots.txt disallows feed"
+    started = time.monotonic()
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/rss+xml,application/atom+xml,application/xml,text/xml"})
+    try:
+        with SAFE_OPENER.open(request, timeout=timeout) as response:
+            raw = response.read(max_bytes + 1)
+            elapsed = int((time.monotonic() - started) * 1000)
+            final_url = response.geturl()
+        if len(raw) > max_bytes or not looks_like_feed(raw):
+            return None, 2, len(raw), elapsed, "unsupported or oversized feed"
+        if _registered_domain(final_url) != _registered_domain(url):
+            return None, 2, len(raw), elapsed, "feed redirected outside registered domain"
+        return feed_record(final_url, raw, utc_now()), 2, len(raw), elapsed, None
+    except Exception as exc:
+        return None, 2, 0, int((time.monotonic() - started) * 1000), f"{type(exc).__name__}: {str(exc)[:120]}"
 
 
 def _jsonld_organisations(metadata: dict[str, Any]) -> list[dict[str, Any]]:
@@ -294,6 +331,9 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
         title = soup.title.get_text(" ", strip=True) if soup.title else ""
         description_tag = soup.select_one('meta[name="description"], meta[property="og:description"]')
         description = str(description_tag.get("content") or "").strip() if description_tag else ""
+        signals = extract_page_signals(html, final_url)
+        retrieved_at = utc_now()
+        snapshot_path = save_snapshot(raw, "html")
         value = {
             "requested_url": normalized,
             "final_url": final_url,
@@ -301,12 +341,14 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
             "title": title[:500],
             "description": description[:2000],
             "main_text_excerpt": text[:5000],
-            "social_links": _social_links(final_url, soup),
+            "social_links": signals["social_links"],
             "structured_organisations": _jsonld_organisations(structured),
             "content_sha256": __import__("hashlib").sha256(raw).hexdigest(),
             "extraction_state": _extraction_state(text, soup),
+            "snapshot_path": snapshot_path,
+            "title_span": title_span(html),
         }
-        pages = [{"url": final_url, "title": title[:500], "main_text_excerpt": text[:5000], "content_sha256": value["content_sha256"]}]
+        pages = [{"url": final_url, "title": title[:500], "main_text_excerpt": text[:5000], "content_sha256": value["content_sha256"], "retrieved_at": retrieved_at, "snapshot_path": snapshot_path, "signals": signals}]
         social = value["social_links"]
         crawl_errors = []
         requests = 2
@@ -329,10 +371,31 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
                 social.extend(page_social)
             elif page_error:
                 crawl_errors.append({"url": page_url, "error": page_error})
+        feeds: list[dict[str, Any]] = []
+        feed_urls: list[str] = []
+        for page in pages:
+            for feed_url in (page.get("signals") or {}).get("feeds", []):
+                if feed_url not in feed_urls:
+                    feed_urls.append(feed_url)
+        for feed_url in feed_urls[:2]:
+            record, feed_requests, feed_bytes, feed_elapsed, feed_error = _fetch_feed(feed_url, timeout=timeout)
+            requests += feed_requests
+            bytes_received += feed_bytes
+            if feed_elapsed:
+                page_latencies.append(feed_elapsed)
+            if record:
+                feeds.append(record)
+            elif feed_error:
+                crawl_errors.append({"url": feed_url, "error": feed_error})
         value["pages"] = pages
+        value["feeds"] = feeds
         value["social_links"] = list({(item["platform"], item["url"]): item for item in social}.values())
         value["crawl_errors"] = crawl_errors
-        return evidence("website", "available", "registry_linked_company_website", final_url, value=value, note="Company-controlled claim layer; not an official registry fact", content_sha256=value["content_sha256"]), {"requests": requests, "bytes": bytes_received, "latencies_ms": page_latencies}
+        return evidence(
+            "website", "available", "registry_linked_company_website", final_url, value=value,
+            note="Company-controlled claim layer; not an official registry fact", content_sha256=value["content_sha256"],
+            retrieved_at=retrieved_at, snapshot_path=snapshot_path, extraction_method="company_page_html",
+        ), {"requests": requests, "bytes": bytes_received, "latencies_ms": page_latencies}
     except urllib.error.HTTPError as exc:
         elapsed = int((time.monotonic() - started) * 1000)
         status = "not_found" if exc.code in {404, 410} else "source_error"

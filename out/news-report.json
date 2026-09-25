@@ -1,7 +1,12 @@
 {
-  "connector": "exact_company_site_news_activity_v1",
+  "connector": "exact_company_site_dated_articles_v1",
   "profiles": 1000,
-  "companies_with_activity": 16,
-  "observations": 16,
-  "claim_boundary": "Company-owned activity only; never treated as independent sentiment."
+  "companies_with_dated_articles": 19,
+  "observations": 120,
+  "by_evidence_kind": {
+    "feed_item": 104,
+    "json_ld_article": 3,
+    "time_element": 13
+  },
+  "claim_boundary": "Only items with a parseable publication date on an identity-verified company site or its own RSS/Atom feed; an undated news page is not published."
 }

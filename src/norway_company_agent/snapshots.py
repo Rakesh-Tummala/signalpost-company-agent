@@ -36,4 +36,5 @@ class SnapshotFetcher:
             content_sha256=hashlib.sha256(raw).hexdigest(),
             retrieved_at=item.get("retrieved_at") or self.snapshot.get("retrieved_at"),
             effective_at=item.get("effective_at") or self.snapshot.get("effective_at"),
+            raw=raw,
         )

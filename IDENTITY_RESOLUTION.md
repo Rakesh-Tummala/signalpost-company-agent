@@ -56,6 +56,36 @@ recall cost (a genuine Norwegian company on a non-`.no` domain, like Zivid AS, g
 quarantined by this same rule; a lower-risk fix would additionally accept detected
 Norwegian-language page content as corroboration, not implemented yet).
 
+## Multi-word names need a Norway signal too ("Blue Bay" is not enough)
+
+The single-word fix left the same hole one word wider. "BLUE BAY AS" (a Norwegian
+company; the registry lists no website) matched `bluebayresidence.it`, an Italian
+resort, at 0.95/"exact" because both name words appear on that page. Other real
+cases in the submitted batch: "SOFT ONE AS" on a Qatari road-marking site, "GI ENERGY
+AS" on an Australian one, "MK FUTURE AS" on a Polish one. Name words that merely
+co-occur on a page are not evidence of *this* entity.
+
+`assess_website_identity` now publishes a multi-word name match only when the site
+is tied to the Norwegian entity by at least one of:
+
+1. **the registry itself lists that site** (`hjemmeside` / live `website`) -- the
+   company told Brreg it is theirs, which outranks any text match;
+2. **a `.no` domain**;
+3. **the registered place on the page** -- the registered postal code *and* town both
+   appear, or the registered town appears together with an explicit mention of
+   Norway (`norway`/`norge`/`noreg`). A town that is already part of the company
+   name ("This Is Narvik") does not count, since it proves nothing beyond the name;
+4. **the organisation number** on the page (a separate, higher-priority branch).
+
+Without any of those the score is 0.5 ("related_or_uncertain"), not published.
+Re-running the gate over the already-published batch (`scripts/reassess_published_websites.py`,
+cached pages only, no new requests) took published websites from 74 to 59; the 15
+demoted include every clear foreign-site match. The cost is real: a few genuine
+Norwegian companies on a `.com` (TBG Holding, Axess Technologies, Oslo Analytica,
+Lie Nilsen) fall out because their captured text carries none of the four signals.
+That is the intended trade -- "it is better to miss some information than publish it
+under the wrong company."
+
 ## When uncertain
 
 If a candidate fails the gate, or no candidate exists, the profile gets a

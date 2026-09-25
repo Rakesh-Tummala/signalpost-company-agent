@@ -1,6 +1,0 @@
-{
-  "connector": "exact_company_site_activity_v1",
-  "profiles": 1000,
-  "observations": 74,
-  "claim_boundary": "Site-surface completeness only; this is not traffic, engagement, sentiment, or independent buzz."
-}

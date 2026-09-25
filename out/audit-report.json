@@ -1,0 +1,120 @@
+{
+  "summary": {
+    "claims": 19046,
+    "snapshot_hash_ok": 17169,
+    "span_exact": 15503,
+    "not_available_claims": 1877,
+    "span_from_pdf": 1664,
+    "no_span": 2
+  },
+  "by_field_family": {
+    "accounting_obligation": {
+      "claims": 1000,
+      "snapshot_hash_ok": 1000,
+      "span_exact": 999,
+      "no_span": 1
+    },
+    "annual_accounts": {
+      "claims": 1823,
+      "snapshot_hash_ok": 1820,
+      "span_exact": 997,
+      "span_from_pdf": 823
+    },
+    "annual_accounts_years_on_file": {
+      "claims": 1000,
+      "snapshot_hash_ok": 1000,
+      "span_exact": 1000
+    },
+    "bankrupt": {
+      "claims": 998,
+      "snapshot_hash_ok": 998,
+      "span_exact": 998
+    },
+    "business_address": {
+      "claims": 996,
+      "snapshot_hash_ok": 996,
+      "span_exact": 996
+    },
+    "employees": {
+      "claims": 142,
+      "snapshot_hash_ok": 142,
+      "span_exact": 142
+    },
+    "group_structure": {
+      "claims": 1000,
+      "snapshot_hash_ok": 70,
+      "span_exact": 70
+    },
+    "industry": {
+      "claims": 998,
+      "snapshot_hash_ok": 998,
+      "span_exact": 998
+    },
+    "job_posting": {
+      "claims": 1,
+      "snapshot_hash_ok": 1,
+      "span_exact": 1
+    },
+    "latest_submitted_accounts": {
+      "claims": 998,
+      "snapshot_hash_ok": 998,
+      "span_exact": 998
+    },
+    "leadership": {
+      "claims": 2
+    },
+    "legal_form": {
+      "claims": 1000,
+      "snapshot_hash_ok": 1000,
+      "span_exact": 1000
+    },
+    "legal_name": {
+      "claims": 1000,
+      "snapshot_hash_ok": 1000,
+      "span_exact": 1000
+    },
+    "liquidating": {
+      "claims": 998,
+      "snapshot_hash_ok": 998,
+      "span_exact": 998
+    },
+    "location": {
+      "claims": 873,
+      "snapshot_hash_ok": 873,
+      "span_exact": 873
+    },
+    "official_website": {
+      "claims": 1000,
+      "snapshot_hash_ok": 58,
+      "span_exact": 58
+    },
+    "registered_workplaces": {
+      "claims": 255,
+      "snapshot_hash_ok": 255,
+      "span_exact": 255
+    },
+    "role": {
+      "claims": 3956,
+      "snapshot_hash_ok": 3956,
+      "span_exact": 3955,
+      "no_span": 1
+    },
+    "site_news": {
+      "claims": 120,
+      "snapshot_hash_ok": 120,
+      "span_exact": 120
+    },
+    "social_profile": {
+      "claims": 45,
+      "snapshot_hash_ok": 45,
+      "span_exact": 45
+    },
+    "workforce_value": {
+      "claims": 841,
+      "snapshot_hash_ok": 841,
+      "span_from_pdf": 841
+    }
+  },
+  "failures": [],
+  "failure_count": 0
+}

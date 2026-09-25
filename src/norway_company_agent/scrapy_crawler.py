@@ -10,7 +10,7 @@ import scrapy
 from bs4 import BeautifulSoup
 from scrapy.exceptions import IgnoreRequest
 
-from .crawl_events import error_page_event, extract_page_event
+from .crawl_events import error_page_event, extract_feed_event, extract_page_event
 from .website import USER_AGENT, _priority_links, assert_public_url, normalize_homepage
 
 
@@ -103,6 +103,7 @@ class SignalpostWebsiteSpider(scrapy.Spider):
             row for row in rows
             if row.get("website") and (allowed is None or row["organisation_number"] in allowed)
         ][: int(limit) if limit else None]
+        self._feeds_requested: dict[str, set[str]] = {}
 
     def _initial_requests(self):
         for profile in self.profiles:
@@ -137,6 +138,7 @@ class SignalpostWebsiteSpider(scrapy.Spider):
         yield event
         if event.get("status") != "available":
             return
+        yield from self._feed_requests(event, response.meta["organisation_number"])
         soup = BeautifulSoup(response.body.decode(response.encoding or "utf-8", errors="replace"), "lxml")
         for url in _priority_links(response.url, soup):
             yield scrapy.Request(
@@ -152,7 +154,33 @@ class SignalpostWebsiteSpider(scrapy.Spider):
             )
 
     def parse_secondary(self, response):
-        yield self._event(response)
+        event = self._event(response)
+        yield event
+        if event.get("status") == "available":
+            yield from self._feed_requests(event, response.meta["organisation_number"])
+
+    def parse_feed(self, response):
+        yield extract_feed_event(
+            organisation_number=response.meta["organisation_number"],
+            requested_url=response.meta["requested_url"],
+            final_url=response.url,
+            status_code=response.status,
+            content_type=response.headers.get(b"Content-Type", b"").decode("latin-1"),
+            body=bytes(response.body),
+        )
+
+    def _feed_requests(self, event, organisation_number):
+        requested = self._feeds_requested.setdefault(organisation_number, set())
+        for feed_url in (event.get("signals") or {}).get("feeds", []):
+            if feed_url in requested or len(requested) >= 2:
+                continue
+            requested.add(feed_url)
+            yield scrapy.Request(
+                feed_url,
+                callback=self.parse_feed,
+                errback=self.errback_page,
+                meta={"organisation_number": organisation_number, "requested_url": feed_url, "page_kind": "feed", "scheme_supplied": True},
+            )
 
     def _event(self, response):
         return extract_page_event(

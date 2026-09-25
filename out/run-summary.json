@@ -1,0 +1,17 @@
+{
+  "run_id": "v4-full-001",
+  "started_at": "2026-09-25T16:36:17Z",
+  "completed_at": "2026-09-25T19:48:08Z",
+  "stages_run": [
+    "registry_batch",
+    "deep_crawl",
+    "site_news",
+    "site_jobs",
+    "workforce_ocr",
+    "prior_year_financials",
+    "claims_conversion",
+    "viewer"
+  ],
+  "profiles": "out\\agent-run-v4\\profiles.jsonl",
+  "envelopes": "out\\agent-run-v4\\envelopes.jsonl"
+}

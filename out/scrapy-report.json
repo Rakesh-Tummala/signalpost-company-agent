@@ -1,87 +1,87 @@
 {
-  "input_sha256": "579a65662a7300c32da410c3f4da7045b66425c37207bb65063bd78e475b857c",
-  "profiles": 144,
-  "website_seeds_selected": 144,
-  "profiles_with_events": 144,
-  "unique_events": 440,
-  "events_added": 440,
+  "input_sha256": "83680c93f92860940c754265da5e084701e978d5a72838dc164107cf81587fa1",
+  "profiles": 135,
+  "website_seeds_selected": 135,
+  "profiles_with_events": 135,
+  "unique_events": 469,
+  "events_added": 469,
   "events_present_before_run": 0,
   "synthetic_terminal_events": 6,
   "website_statuses": {
-    "available": 123,
-    "source_error": 21
+    "available": 113,
+    "source_error": 22
   },
   "identity_statuses": {
-    "exact": 74,
-    "related_or_uncertain": 38,
+    "exact": 58,
+    "related_or_uncertain": 44,
     "review": 11
   },
-  "published_social_profiles": 58,
-  "elapsed_seconds": 125.881,
-  "run_started_at": "2026-09-16T15:19:33.707274Z",
-  "run_finished_at": "2026-09-16T15:21:39.587978Z",
-  "events_per_second": 3.495,
-  "requests": 716,
-  "responses": 697,
-  "response_bytes": 20129846,
-  "retries": 12,
-  "robots_forbidden": 4,
+  "published_social_profiles": 45,
+  "elapsed_seconds": 94.583,
+  "run_started_at": "2026-09-25T17:11:55.902479Z",
+  "run_finished_at": "2026-09-25T17:13:30.485854Z",
+  "events_per_second": 4.959,
+  "requests": 742,
+  "responses": 723,
+  "response_bytes": 20267285,
+  "retries": 11,
+  "robots_forbidden": 5,
   "request_wall_latency_including_queue": {
-    "n": 716,
-    "p50_ms": 686.319,
-    "p95_ms": 2770.269,
-    "max_ms": 10877.086
+    "n": 742,
+    "p50_ms": 1053.036,
+    "p95_ms": 3065.066,
+    "max_ms": 12192.565
   },
   "response_download_latency": {
-    "n": 697,
-    "p50_ms": 537.591,
-    "p95_ms": 1964.432,
-    "max_ms": 5311.684
+    "n": 723,
+    "p50_ms": 778.998,
+    "p95_ms": 2270.975,
+    "max_ms": 8875.438
   },
   "failure_attempt_wall_latency": {
     "n": 19,
-    "p50_ms": 2292.313,
-    "p95_ms": 10877.139,
-    "max_ms": 10877.139
+    "p50_ms": 10008.707,
+    "p95_ms": 11561.48,
+    "max_ms": 11561.48
   },
   "company_completion_latency": {
-    "n": 144,
-    "p50_ms": 60279.763,
-    "p95_ms": 111671.701,
-    "max_ms": 125880.684
+    "n": 135,
+    "p50_ms": 39059.507,
+    "p95_ms": 91581.255,
+    "max_ms": 94583.352
   },
   "company_completion_synthetic_upper_bounds": 6,
   "request_domain_fairness": {
-    "domains": 173,
+    "domains": 167,
     "p50_requests": 4.0,
-    "p95_requests": 8.0,
-    "max_requests": 11
+    "p95_requests": 9.0,
+    "max_requests": 14
   },
   "response_statuses": {
-    "200": 569,
-    "301": 76,
-    "302": 11,
+    "200": 589,
+    "301": 79,
+    "302": 12,
     "307": 6,
     "308": 4,
     "403": 5,
-    "404": 17,
+    "404": 19,
     "500": 8,
     "503": 1
   },
   "error_buckets": {
-    "DownloadFailedError": 10,
-    "DownloadTimeoutError": 9,
-    "IgnoreRequest": 10
+    "DownloadFailedError": 9,
+    "DownloadTimeoutError": 10,
+    "IgnoreRequest": 11
   },
-  "request_amplification_per_seed": 4.972,
+  "request_amplification_per_seed": 5.496,
   "terminal_coverage": 1.0,
   "crawl_complete": true,
   "peak_rss_bytes": 0,
-  "output_sha256": "4dd265f4cf9b811e8f3be1ea16e4b00cb0236e25a9a4b882d3c45c7c88779d4c",
+  "output_sha256": "43b34e0bbda34b82318972fd4b2ef03c2294f92706f4265ae23d8656900a329a",
   "finish_reason": "finished",
   "resume_noop": false,
-  "concurrency": 8,
+  "concurrency": 16,
   "per_domain": 2,
-  "jobdir": "out\\scrapy-jobdir-v4",
-  "events_path": "out\\scrapy-events-v4.jsonl"
+  "jobdir": "out\\agent-run-v4\\crawl-jobdir",
+  "events_path": "out\\agent-run-v4\\crawl-events.jsonl"
 }

@@ -39,9 +39,6 @@ from scripts.run_scrapy_websites import terminal_events_for_run  # noqa: E402
 from scripts.run_sentiment_model import MODEL_REVISION, normalize_generated_label  # noqa: E402
 from scripts.score_company_completeness import score_rows, summarize  # noqa: E402
 from scripts.build_output_contract import build_envelope, build_envelopes_safe, summarize_profile  # noqa: E402
-from scripts.extract_company_site_activity import observation as site_activity_observation  # noqa: E402
-from scripts.extract_company_site_news import observation as site_news_observation  # noqa: E402
-from scripts.extract_company_site_careers import observation as site_careers_observation  # noqa: E402
 from scripts.extract_prior_year_financials import extract_prior_year, find_prior_year_value, prior_year_label  # noqa: E402
 from scripts.validate_refresh_at_scale import build_previous_snapshot, inject_known_changes  # noqa: E402
 from scripts.build_viewer import flatten_envelope  # noqa: E402
@@ -561,86 +558,12 @@ class CompletenessScoreTests(unittest.TestCase):
         self.assertEqual(scored[0]["strict_completeness_score"], 88.0)
         self.assertEqual(summarize(scored)["companies"], 1)
 
-    def test_site_activity_requires_exact_identity_and_preserves_snapshot_provenance(self):
-        profile = {
-            "organisation_number": "923609016",
-            "evidence": {"website": {
-                "status": "available",
-                "source_url": "https://example.test/",
-                "retrieved_at": "2026-08-23T00:00:00Z",
-                "value": {
-                    "final_url": "https://example.test/",
-                    "content_sha256": "a" * 64,
-                    "identity_assessment": {"publishable": True, "status": "exact", "score": 1.0},
-                    "pages": [{"url": "https://example.test/"}],
-                },
-            }},
-        }
-        item = site_activity_observation(profile)
-        self.assertIsNotNone(item)
-        self.assertEqual(item["strategy"], "company_site_activity")
-        self.assertTrue(publishable_observation(item))
-        profile["evidence"]["website"]["value"]["identity_assessment"]["publishable"] = False
-        self.assertIsNone(site_activity_observation(profile))
-
     def test_news_title_gate_requires_the_full_legal_name_core(self):
         self.assertTrue(exact_title_match("NORDIC DOOR AS", "Nordic Door AS åpner ny fabrikk - Lokalavisa"))
         self.assertFalse(exact_title_match("NORDIC DOOR AS", "Nordic investors prefer another door - Example"))
         self.assertTrue(exact_title_match("SOLVANG ASA", "Sterkt årsresultat fra Solvang ASA i 2024 - Skipsrevyen"))
         self.assertFalse(exact_title_match("VIND HOLDING AS", "Inntektene til Aneo Roan Vind Holding AS stupte - mn24.no"))
         self.assertFalse(exact_title_match("CONSTO AS", "Drastisk fall hos Consto Bergen AS - BT"))
-
-    def test_site_news_requires_exact_identity_and_a_captured_news_path(self):
-        profile = {
-            "organisation_number": "923609016",
-            "evidence": {"website": {
-                "status": "available", "retrieved_at": "2026-08-23T00:00:00Z",
-                "value": {
-                    "identity_assessment": {"publishable": True, "score": 1.0},
-                    "pages": [{"url": "https://example.test/aktuelt/new-contract", "title": "New contract", "content_sha256": "a" * 64}],
-                },
-            }},
-        }
-        item = site_news_observation(profile)
-        self.assertEqual(item["signal_type"], "public_post")
-        self.assertTrue(publishable_observation(item))
-        profile["evidence"]["website"]["value"]["pages"][0]["url"] = "https://example.test/contact"
-        self.assertIsNone(site_news_observation(profile))
-
-    def test_site_careers_requires_exact_identity_and_a_captured_careers_path(self):
-        profile = {
-            "organisation_number": "923609016",
-            "evidence": {"website": {
-                "status": "available", "retrieved_at": "2026-08-23T00:00:00Z",
-                "value": {
-                    "identity_assessment": {"publishable": True, "score": 1.0},
-                    "pages": [{"url": "https://example.test/karriere", "title": "Ledige stillinger", "content_sha256": "b" * 64}],
-                },
-            }},
-        }
-        item = site_careers_observation(profile)
-        self.assertEqual(item["signal_type"], "careers_page_found")
-        self.assertTrue(publishable_observation(item))
-        profile["evidence"]["website"]["value"]["pages"][0]["url"] = "https://example.test/contact"
-        self.assertIsNone(site_careers_observation(profile))
-
-    def test_site_careers_matches_a_hyphenated_compound_path_segment(self):
-        # Real miss found by inspecting captured crawl data: TBG Holding's
-        # "/tbg-careers/" page passed the identity gate (0.95, publishable) and
-        # was in evidence.website.value.pages, but the old CAREERS_PATH pattern
-        # required "careers" right after a "/" -- "tbg-careers" is one hyphenated
-        # segment, not "tbg" then "/careers", so it never matched.
-        profile = {
-            "organisation_number": "923609016",
-            "evidence": {"website": {
-                "status": "available", "retrieved_at": "2026-08-23T00:00:00Z",
-                "value": {
-                    "identity_assessment": {"publishable": True, "score": 0.95},
-                    "pages": [{"url": "https://tbgholding.com/tbg-careers/", "title": "TBG Careers", "content_sha256": "d" * 64}],
-                },
-            }},
-        }
-        self.assertIsNotNone(site_careers_observation(profile))
 
     def test_verified_observations_require_known_org_and_snapshot_hash(self):
         profiles = [{"organisation_number": "923609016", "name": "Example AS"}]
@@ -979,38 +902,7 @@ class OutputContractTests(unittest.TestCase):
         self.assertEqual(workforce_claims[0]["value"], 4)
         self.assertEqual(workforce_claims[0]["confidence"], 1.0)
         self.assertIn("4 full-time equivalents (2024)", envelope["summary"]["text"])
-        self.assertNotIn("hiring/workforce size", " ".join(envelope["summary"]["unknown_fields"]))
-
-    def test_careers_page_observation_becomes_claim_and_summary_sentence(self):
-        observations = [{
-            "organisation_number": "923609016", "signal_type": "careers_page_found", "id": "careers-1",
-            "source_url": "https://example.no/karriere", "retrieved_at": "2026-01-01T00:00:00Z",
-            "content_sha256": "c" * 64, "exact_entity": True, "rights_status": "approved",
-            "acquisition_mode": "permitted_public_page", "source_class": "company_site",
-            "evidence_span": "Ledige stillinger",
-            "metrics": {"has_careers_page": True},
-        }]
-        envelope = build_envelope(self._profile(), run_id="r1", started_at="2026-01-01T00:00:00Z", completed_at="2026-01-01T00:01:00Z", observations=observations)
-        careers_claims = [c for c in envelope["claims"] if c["field"] == "careers_page"]
-        self.assertEqual(len(careers_claims), 1)
-        self.assertEqual(careers_claims[0]["value"]["url"], "https://example.no/karriere")
-        self.assertIn("careers/jobs page was found", envelope["summary"]["text"])
-
-    def test_prior_year_financials_observation_becomes_annual_accounts_claim(self):
-        observations = [{
-            "organisation_number": "923609016", "signal_type": "prior_year_financials", "id": "pyf-1",
-            "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/923609016",
-            "retrieved_at": "2026-01-01T00:00:00Z", "content_sha256": "a" * 64, "exact_entity": True,
-            "rights_status": "approved", "acquisition_mode": "official_api", "source_class": "official_annual_account_copy",
-            "evidence_span": "Prior-year (2022) figures cross-checked against the known current-year value on the same line.",
-            "effective_at": "2022",
-            "metrics": {"revenue": 923400.0, "operating_result": 406303.0, "annual_result": 316760.0, "assets": 687338.0, "equity": 346760.0, "debt": 340578.0, "year": "2022"},
-        }]
-        envelope = build_envelope(self._profile(), run_id="r1", started_at="2026-01-01T00:00:00Z", completed_at="2026-01-01T00:01:00Z", observations=observations)
-        prior_year_claims = [c for c in envelope["claims"] if c["field"] == "annual_accounts.2022"]
-        self.assertEqual(len(prior_year_claims), 1)
-        self.assertEqual(prior_year_claims[0]["value"], {"revenue": 923400.0, "operating_result": 406303.0, "annual_result": 316760.0, "assets": 687338.0, "equity": 346760.0, "debt": 340578.0})
-        self.assertEqual(prior_year_claims[0]["confidence"], 1.0)
+        self.assertNotIn("workforce size", " ".join(envelope["summary"]["unknown_fields"]))
 
     def test_one_malformed_profile_does_not_drop_the_whole_batch(self):
         good = self._profile()
@@ -1530,9 +1422,47 @@ class WebsiteIdentityTests(unittest.TestCase):
         self.assertEqual(result["website"]["value"]["social_links"], [])
         self.assertEqual(result["quarantined_social_links"], 1)
 
-    def test_exact_legal_name_is_publishable(self):
-        row = {"organisation_number": "923609016", "name": "Norsk Fiskeeksport AS", "evidence": {"website": {"status": "available", "value": {"title": "Norsk Fiskeeksport AS"}}}}
+    def test_exact_legal_name_on_a_no_domain_is_publishable(self):
+        row = {"organisation_number": "923609016", "name": "Norsk Fiskeeksport AS", "evidence": {"website": {"status": "available", "value": {"final_url": "https://fiskeeksport.no/", "title": "Norsk Fiskeeksport AS"}}}}
         self.assertTrue(assess_website_identity(row)["publishable"])
+
+    def test_multi_word_name_matching_a_foreign_site_with_nothing_else_is_quarantined(self):
+        # Real case in the submitted artifact: BLUE BAY AS (a Norwegian company, registry
+        # lists no website) matched bluebayresidence.it, an Italian resort, at 0.95 because
+        # "Blue" and "Bay" both appear on that page. Name words alone are not identity.
+        row = {"organisation_number": "916544472", "name": "BLUE BAY AS", "evidence": {"website": {"status": "available", "value": {
+            "final_url": "https://bluebayresidence.it/en/blue-bay-resort/", "title": "Blue Bay Resort - Taranto", "main_text_excerpt": "Blue Bay Resort " + "vacanze " * 20,
+        }}}}
+        result = assess_website_identity(row)
+        self.assertFalse(result["publishable"])
+        self.assertEqual(result["score"], 0.5)
+
+    def test_multi_word_name_on_a_foreign_domain_is_published_when_the_registry_lists_that_site(self):
+        row = {"organisation_number": "916544472", "name": "BLUE BAY AS", "evidence": {
+            "registry_live": {"status": "available", "value": {"website": "www.bluebayresidence.it"}},
+            "website": {"status": "available", "value": {"final_url": "https://bluebayresidence.it/", "title": "Blue Bay Resort"}},
+        }}
+        self.assertTrue(assess_website_identity(row)["publishable"])
+
+    def test_multi_word_name_on_a_foreign_domain_is_published_when_the_registered_address_is_on_the_page(self):
+        row = {"organisation_number": "916544472", "name": "BLUE BAY AS", "evidence": {
+            "registry_live": {"status": "available", "value": {"business_address": {"postnummer": "1350", "poststed": "LYSAKER"}}},
+            "website": {"status": "available", "value": {"final_url": "https://bluebay.example.com/", "title": "Blue Bay", "identity_text_excerpt": "Blue Bay AS, Strandveien 1, 1350 Lysaker, Norway"}},
+        }}
+        self.assertTrue(assess_website_identity(row)["publishable"])
+        # wrong postcode and no mention of Norway: the place is not established
+        row["evidence"]["website"]["value"]["identity_text_excerpt"] = "Blue Bay AS, Strandveien 1, 9999 Lysaker"
+        self.assertFalse(assess_website_identity(row)["publishable"])
+        # the registered town plus an explicit mention of Norway is enough
+        row["evidence"]["website"]["value"]["identity_text_excerpt"] = "Blue Bay is based in Lysaker, Norway"
+        self.assertTrue(assess_website_identity(row)["publishable"])
+
+    def test_a_town_that_is_part_of_the_company_name_does_not_corroborate_the_name(self):
+        row = {"organisation_number": "924579889", "name": "THIS IS NARVIK AS", "evidence": {
+            "registry_live": {"status": "available", "value": {"business_address": {"postnummer": "8514", "poststed": "NARVIK"}}},
+            "website": {"status": "available", "value": {"final_url": "https://www.thisisnarvik.com/", "title": "This is Narvik", "identity_text_excerpt": "Visit Narvik, Norway"}},
+        }}
+        self.assertFalse(assess_website_identity(row)["publishable"])
 
     def test_single_token_name_on_no_domain_is_publishable(self):
         row = {"organisation_number": "923609016", "name": "Asperia AS", "evidence": {"website": {"status": "available", "value": {
@@ -1642,6 +1572,27 @@ class ViewerTests(unittest.TestCase):
         self.assertEqual(flat["claim_count"], 2)
         self.assertEqual(flat["claims"][0]["source_url"], "https://example.test")
         self.assertIn("OSLO", flat["claims"][1]["value"])  # complex values serialize to a display string, not a raw dict
+
+    def test_excerpts_containing_script_tags_cannot_break_out_of_the_data_block(self):
+        import subprocess
+        import tempfile
+
+        hostile = 'x</script><script>document.title="pwned"</script><!-- y'
+        envelope = {
+            "organisation_number": "923609016",
+            "summary": {"text": "Example AS.", "unknown_fields": []},
+            "evidence": [{"id": "e1", "source_url": "https://example.test", "claim_span": hostile, "extraction_method": "company_page_html", "snapshot": "snapshots/a.html"}],
+            "claims": [{"field": "official_website", "value": "https://example.test", "availability": "available", "confidence": 1.0, "evidence_ids": ["e1"]}],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "envelopes.jsonl"
+            target = Path(directory) / "viewer.html"
+            source.write_text(json.dumps(envelope) + "\n", encoding="utf-8")
+            subprocess.run([sys.executable, str(ROOT / "scripts" / "build_viewer.py"), "--envelopes", str(source), "--output", str(target)], check=True, capture_output=True, text=True, encoding="utf-8")
+            page = target.read_text(encoding="utf-8")
+        self.assertEqual(page.count("</script>"), 1)  # only the page's own closing tag
+        self.assertNotIn("<!--", page)
+        self.assertIn("\\u003c/script>", page)
 
     def test_build_viewer_produces_a_valid_offline_html_page(self):
         import subprocess

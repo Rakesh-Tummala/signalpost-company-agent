@@ -8,7 +8,9 @@ import trafilatura
 from bs4 import BeautifulSoup
 
 from .evidence import evidence, utc_now
-from .website import _extraction_state, _jsonld_organisations, _registered_domain, _social_links, normalize_homepage, structured_social_links
+from .page_signals import extract_page_signals, feed_record, looks_like_feed, title_span
+from .snapshot_store import save_snapshot
+from .website import _extraction_state, _jsonld_organisations, _registered_domain, normalize_homepage
 
 
 def extract_page_event(
@@ -49,6 +51,7 @@ def extract_page_event(
     )
     identity_text = " ".join(node.get_text(" ", strip=True) for node in identity_nodes)
     identity_text = " ".join(identity_text.split())[:3000]
+    signals = extract_page_signals(page_html, final_url)
     event = {
         **base,
         "status": "available",
@@ -56,16 +59,44 @@ def extract_page_event(
         "description": description,
         "main_text_excerpt": text[:5000],
         "identity_text_excerpt": identity_text,
-        "social_links": _social_links(final_url, soup),
+        "social_links": signals["social_links"],
+        "signals": signals,
+        "snapshot_path": save_snapshot(body, "html"),
         "extraction_state": _extraction_state(text, soup),
     }
     if page_kind == "homepage":
         structured = extruct.extract(page_html, base_url=final_url, syntaxes=["json-ld", "microdata", "opengraph"])
         event["structured_organisations"] = _jsonld_organisations(structured)
-        combined_social = event["social_links"] + structured_social_links(event["structured_organisations"])
-        event["social_links"] = list({(item["platform"], item["url"]): item for item in combined_social}.values())
         event["registered_domain"] = _registered_domain(final_url)
+        event["title_span"] = title_span(page_html)
     return event
+
+
+def extract_feed_event(
+    *,
+    organisation_number: str,
+    requested_url: str,
+    final_url: str,
+    status_code: int,
+    content_type: str,
+    body: bytes,
+    retrieved_at: str | None = None,
+) -> dict[str, Any]:
+    stamp = retrieved_at or utc_now()
+    base = {
+        "organisation_number": organisation_number,
+        "requested_url": requested_url,
+        "final_url": final_url,
+        "status_code": status_code,
+        "content_type": content_type,
+        "page_kind": "feed",
+        "retrieved_at": stamp,
+        "bytes": len(body),
+        "content_sha256": hashlib.sha256(body).hexdigest(),
+    }
+    if status_code < 200 or status_code >= 300 or not looks_like_feed(body):
+        return {**base, "status": "source_error", "error": f"HTTP {status_code}" if status_code >= 300 or status_code < 200 else "Not an RSS/Atom feed"}
+    return {**base, "status": "available", "feed": feed_record(final_url, body, stamp)}
 
 
 def error_page_event(
@@ -134,13 +165,20 @@ def merge_profile_events(profile: dict[str, Any], events: list[dict[str, Any]]) 
     available = [item for item in events if item.get("status") == "available"]
     unique_pages = {}
     social = {}
+    feeds = []
     for item in sorted(available, key=lambda value: (value.get("page_kind") != "homepage", value.get("final_url") or "")):
+        if item.get("page_kind") == "feed":
+            feeds.append(item["feed"])
+            continue
         page = {
             "url": item.get("final_url"),
             "title": item.get("title") or "",
             "main_text_excerpt": item.get("main_text_excerpt") or "",
             "identity_text_excerpt": item.get("identity_text_excerpt") or "",
             "content_sha256": item.get("content_sha256"),
+            "retrieved_at": item.get("retrieved_at"),
+            "snapshot_path": item.get("snapshot_path"),
+            "signals": item.get("signals") or {},
         }
         unique_pages[item.get("final_url")] = page
         for link in item.get("social_links") or []:
@@ -158,6 +196,9 @@ def merge_profile_events(profile: dict[str, Any], events: list[dict[str, Any]]) 
         "content_sha256": homepage.get("content_sha256"),
         "extraction_state": homepage.get("extraction_state"),
         "pages": list(unique_pages.values()),
+        "feeds": feeds,
+        "snapshot_path": homepage.get("snapshot_path"),
+        "title_span": homepage.get("title_span"),
         "crawl_errors": [
             {"url": item.get("final_url") or item.get("requested_url"), "error": item.get("error")}
             for item in events
@@ -174,4 +215,6 @@ def merge_profile_events(profile: dict[str, Any], events: list[dict[str, Any]]) 
         note="Company-controlled claim layer; not an official registry fact",
         retrieved_at=homepage.get("retrieved_at"),
         content_sha256=homepage.get("content_sha256"),
+        snapshot_path=homepage.get("snapshot_path"),
+        extraction_method="company_page_html",
     )

@@ -10,10 +10,10 @@ from the pipeline's internal profile format. This matches `OUTPUT_CONTRACT.md`:
   "organisation_number": "923609016",
   "run": {"run_id": "...", "started_at": "...", "completed_at": "...", "terminal_status": "completed"},
   "claims": [
-    {"field": "legal_name", "value": "Example AS", "availability": "available", "confidence": 1.0, "evidence_ids": ["ev-registry_live"]}
+    {"field": "legal_name", "value": "Example AS", "availability": "available", "confidence": 1.0, "evidence_ids": ["ev-registry_live-1"]}
   ],
   "evidence": [
-    {"id": "ev-registry_live", "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016", "source_class": "official_registry_live", "retrieved_at": "...", "content_sha256": "...", "claim_span": null}
+    {"id": "ev-registry_live-1", "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016", "source_class": "official_registry_live", "retrieved_at": "...", "content_sha256": "...", "claim_span": "\"navn\":\"Example AS\"", "snapshot": "snapshots/<sha256>.json", "extraction_method": "official_api_json"}
   ],
   "summary": {"text": "Example AS is an AS...", "unknown_fields": ["group/ownership structure"], "grounded_in_claims": true},
   "changes": [],
@@ -39,13 +39,14 @@ Claim fields currently emitted:
   subunit), `group_structure`.
 - From website discovery/crawl: `official_website`, `social_profile.<platform>`
   (one per verified social link found on the crawled site).
-- From the deep-crawl-derived observation files (`--observations`, wired in by
-  `run_agent.py`): `site_activity_metrics` (one per company, from
-  `extract_company_site_activity.py`), `site_news.<index>` (one per dated
-  company-owned press/news item, from `extract_company_site_news.py`),
-  `careers_page` (one per company with a detected careers/jobs page on its own
-  site, from `extract_company_site_careers.py` -- records that the page exists,
-  not individual open positions), `workforce_value.<year>` (from the OCR
+- From the crawl-derived observation files (`--observations`, wired in by
+  `run_agent.py`): `site_news.<index>` (one per **dated** company-owned news item --
+  value `{headline, published_at, url}` -- from `extract_company_site_news.py`; an
+  undated news page is not published), `job_posting.<index>` (one per real role on the
+  company's own site -- value `{title, url, date_posted, employment_type, evidence_kind}`
+  where `evidence_kind` is `json_ld_jobposting`, `role_card` or `apply_action` -- from
+  `extract_company_site_jobs.py`; a generic careers page is not a hiring fact),
+  `workforce_value.<year>` (from the OCR
   annual-report connector -- see `CRAWLERS.md`), `annual_accounts.<year>` for a
   *prior* filed year (from `extract_prior_year_financials.py` -- see
   `CRAWLERS.md`; reuses the same claim-field convention as the structured
@@ -54,6 +55,29 @@ Claim fields currently emitted:
   annual-report copy rather than returned by the API call). These claims each
   carry their own evidence entry (a real, independently-verified source fetch)
   rather than sharing one per module.
+
+## Saved sources and exact excerpts
+
+Every claim gets **its own evidence entry** (`ev-<source>-<n>`), so each can carry the exact
+excerpt that supports it:
+
+- `snapshot` -- path (relative to the output directory) of the saved raw body:
+  `snapshots/<sha256>.<json|html|xml|pdf>`, named by the SHA-256 of its exact bytes, so
+  `content_sha256` always equals the hash of that file.
+- `claim_span` -- a *literal slice* of that saved body, never a paraphrase: the JSON
+  `"key":value` for official API facts, the `<time>`/`<meta>`/anchor element or the
+  JSON-LD pair for company-site facts, the feed `<item>` for feed articles. For annual-report
+  facts read from a PDF (OCR or text layer) it is the matched report line; a PDF's bytes cannot
+  be searched for that text, so the audit reports those separately.
+- `extraction_method` -- how the value was read (`official_api_json`, `company_page_html`,
+  `json_ld_jobposting`, `role_card`, `feed_item`, `annual_report_pdf_text_or_ocr`, ...).
+
+Role-holder excerpts cover only the person's *name object*; the surrounding registry JSON carries
+a date of birth, which this project never stores or republishes. `accounting_obligation`
+is our rule applied to registry facts, so it cites the registry response (the
+`sisteInnsendteAarsregnskap` or `organisasjonsform` field it was applied to) and records the rule
+version as its `extraction_method`. `python scripts/audit_evidence.py --envelopes <file> --root <output-dir>`
+re-checks all of this and exits non-zero on any hash mismatch or non-literal excerpt.
 
 ## Internal pipeline profile (`out/profiles.jsonl`)
 
