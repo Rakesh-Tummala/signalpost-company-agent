@@ -22,3 +22,6 @@ out/eval-*/
 out/agent-run*/
 .tmp_*
 .claude/
+
+# scratch measurement files
+out/_*
