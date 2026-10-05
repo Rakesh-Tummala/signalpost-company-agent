@@ -35,7 +35,10 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import atexit
+import shutil
 import subprocess
+import tempfile
 import sys
 import time
 from pathlib import Path
@@ -142,6 +145,14 @@ def main() -> None:
     discovery_limit = args.discovery_limit or args.expected_count
     # Every stage saves the raw bodies behind its claims here, content-addressed.
     os.environ["SIGNALPOST_SNAPSHOT_DIR"] = str(output_dir / "snapshots")
+    # Scratch files (OCR page images) go under the output folder, not the system temp directory, so the run
+    # leaves nothing outside the folder it was given; removed again when the run ends.
+    scratch = (output_dir / ".tmp").resolve()
+    scratch.mkdir(parents=True, exist_ok=True)
+    for name in ("TMPDIR", "TEMP", "TMP"):
+        os.environ[name] = str(scratch)
+    tempfile.tempdir = str(scratch)
+    atexit.register(shutil.rmtree, scratch, True)
     started_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     run_started = time.time()
     budget_seconds = args.time_budget_minutes * 60 if args.time_budget_minutes else None
@@ -176,6 +187,8 @@ def main() -> None:
             ]
             print("+ (background) " + " ".join(ocr_command), file=sys.stderr)
             ocr_process = subprocess.Popen(ocr_command)
+            # If this run ends early (an error, Ctrl-C), do not leave the OCR running on its own.
+            atexit.register(lambda process=ocr_process: process.poll() is None and process.terminate())
         except Exception as exc:  # noqa: BLE001 -- optional stage: never stop the run
             ocr_process = None
             print(f"  (optional stage failed to start, continuing: {exc})", file=sys.stderr)
