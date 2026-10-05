@@ -10,19 +10,40 @@ PDF snapshots hold compressed page streams, so an excerpt read from a PDF (OCR o
 text-layer extraction) cannot be matched against its bytes; those are counted
 separately as `span_from_pdf` rather than passed or failed.
 
-Exit status is non-zero if any hash mismatches or any excerpt is not a literal
-slice of its (text) snapshot.
+It also enforces that every *available* claim is evidence-complete inside the saved result
+itself, with no need to open another file: a public http(s) `source_url`, a parseable
+`retrieved_at`, a 64-hex `content_sha256`, and non-empty supporting text (`claim_span`).
+
+Exit status is non-zero if any record is incomplete, any hash mismatches, or any excerpt is
+not a literal slice of its (text) snapshot.
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
+import re
 import sys
 from collections import Counter
+from datetime import datetime
 from pathlib import Path
 
 TEXT_SUFFIXES = {".json", ".html", ".xml", ".txt"}
+
+
+def record_problems(item: dict) -> list[str]:
+    problems = []
+    if not re.match(r"^https?://[^/\s]+", str(item.get("source_url") or "")):
+        problems.append("source_url is not a public http(s) URL")
+    try:
+        datetime.fromisoformat(str(item.get("retrieved_at") or "").replace("Z", "+00:00"))
+    except ValueError:
+        problems.append("retrieved_at is missing or not a timestamp")
+    if not re.fullmatch(r"[0-9a-f]{64}", str(item.get("content_sha256") or "")):
+        problems.append("content_sha256 is missing or not a SHA-256")
+    if not str(item.get("claim_span") or "").strip():
+        problems.append("no supporting text (claim_span)")
+    return problems
 
 
 def audit(envelopes: list[dict], root: Path) -> dict:
@@ -55,6 +76,14 @@ def audit(envelopes: list[dict], root: Path) -> dict:
                 failures.append({"org": envelope["organisation_number"], "field": claim["field"], "problem": "evidence id does not resolve"})
                 continue
             item = cited[0]
+            problems = record_problems(item)
+            if problems:
+                counts["incomplete_record"] += 1
+                tally["incomplete_record"] += 1
+                failures.append({"org": envelope["organisation_number"], "field": claim["field"], "problem": "; ".join(problems)})
+            else:
+                counts["evidence_complete_in_result"] += 1
+                tally["evidence_complete_in_result"] += 1
             span, snapshot = item.get("claim_span"), item.get("snapshot")
             if not span:
                 counts["no_span"] += 1

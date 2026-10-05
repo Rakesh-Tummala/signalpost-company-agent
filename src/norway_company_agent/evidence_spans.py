@@ -96,6 +96,15 @@ def roles_spans(raw: str, body: Any) -> list[str | None]:
                     inner = re.escape(json.dumps(label, ensure_ascii=False)[1:-1])
                     pattern = re.compile(r'"navn"\s*:\s*\[\s*"' + inner + r'"[^\]]*\]')
                     match = pattern.search(raw, cursor) or pattern.search(raw)
+            if match is None:
+                # A role with no name (e.g. a bankruptcy trustee entry): cite the role-type object.
+                code = ((item.get("type") or {}).get("kode"))
+                if code:
+                    type_object = re.compile(r'"type"\s*:\s*\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}')
+                    for candidate in type_object.finditer(raw, cursor):
+                        if '"kode":"' + str(code) + '"' in candidate.group(0):
+                            match = candidate
+                            break
             if match:
                 out.append(_clip(match.group(0)))
                 cursor = match.end()

@@ -1437,6 +1437,23 @@ class WebsiteIdentityTests(unittest.TestCase):
         self.assertFalse(result["publishable"])
         self.assertEqual(result["score"], 0.5)
 
+    def test_single_word_name_on_a_js_rendered_com_site_is_published_when_the_registry_lists_it(self):
+        # Real case: ELOPAK ASA. The registry lists www.elopak.com; the page is JavaScript-rendered,
+        # so only the title ("Elopak - Elopak") and hostname are visible and there is no page text.
+        row = {"organisation_number": "811413682", "name": "ELOPAK ASA", "evidence": {
+            "registry": {"status": "available", "value": {"hjemmeside": "www.elopak.com"}},
+            "website": {"status": "available", "value": {"final_url": "https://www.elopak.com/", "title": "Elopak - Elopak", "main_text_excerpt": ""}},
+        }}
+        result = assess_website_identity(row)
+        self.assertTrue(result["publishable"])
+        # without the registry listing the same page is not enough
+        row["evidence"]["registry"]["value"]["hjemmeside"] = ""
+        self.assertFalse(assess_website_identity(row)["publishable"])
+        # and a listed site that never mentions the name is still not published
+        row["evidence"]["registry"]["value"]["hjemmeside"] = "www.parentgroup.com"
+        row["evidence"]["website"]["value"].update({"final_url": "https://www.parentgroup.com/", "title": "Home"})
+        self.assertFalse(assess_website_identity(row)["publishable"])
+
     def test_multi_word_name_on_a_foreign_domain_is_published_when_the_registry_lists_that_site(self):
         row = {"organisation_number": "916544472", "name": "BLUE BAY AS", "evidence": {
             "registry_live": {"status": "available", "value": {"website": "www.bluebayresidence.it"}},

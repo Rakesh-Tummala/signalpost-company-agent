@@ -362,6 +362,28 @@ class ContractEvidenceTests(unittest.TestCase):
         self.assertEqual(cited["snapshot"], "snapshots/reg.json")
         self.assertEqual(cited["extraction_method"], "rules_v1")
 
+    def test_accounting_obligation_falls_back_to_the_bulk_registry_row_when_live_omits_the_fact(self):
+        profile = self._profile()
+        profile["evidence"]["registry_live"]["spans"].pop("sisteInnsendteAarsregnskap")
+        profile["evidence"]["registry"] = evidence(
+            "registry", "available", "official_registry_bulk", "https://data.brreg.no/enhetsregisteret/api/enheter/lastned/csv",
+            value={"sisteInnsendteAarsregnskap": "2025"}, content_sha256="a" * 64,
+        )
+        envelope = build_envelope(profile, run_id="r", started_at="2026-01-01T00:00:00Z", completed_at="2026-01-01T00:01:00Z")
+        claim = next(c for c in envelope["claims"] if c["field"] == "accounting_obligation")
+        cited = next(e for e in envelope["evidence"] if e["id"] == claim["evidence_ids"][0])
+        self.assertEqual((cited["claim_span"], cited["content_sha256"]), ('{"sisteInnsendteAarsregnskap":"2025"}', "a" * 64))
+
+    def test_a_role_with_no_person_name_is_cited_to_its_role_type_object_only(self):
+        raw = json.dumps({"rollegrupper": [{"roller": [
+            {"fratraadt": False, "person": {"foedselsdato": "1970-05-10"}, "rekkefolge": 0, "type": {"_links": {"self": {"href": "https://x/BOBE"}}, "beskrivelse": "Bostyrer", "kode": "BOBE"}},
+        ]}]}, separators=(",", ":"))
+        roles = {"rollegrupper": [{"roller": [{"person": {"foedselsdato": "1970-05-10"}, "type": {"kode": "BOBE", "beskrivelse": "Bostyrer"}}]}]}
+        span = roles_spans(raw, roles)[0]
+        self.assertIn(span, raw)
+        self.assertIn('"kode":"BOBE"', span)
+        self.assertNotIn("1970", span)
+
     def test_job_and_news_observations_become_claims_with_snapshot_and_span(self):
         page = _page()
         observations = job_observations(_profile([page]), today="2026-09-01") + news_observations(_profile([page]))

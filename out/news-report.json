@@ -1,10 +1,10 @@
 {
   "connector": "exact_company_site_dated_articles_v1",
   "profiles": 1000,
-  "companies_with_dated_articles": 19,
-  "observations": 120,
+  "companies_with_dated_articles": 21,
+  "observations": 140,
   "by_evidence_kind": {
-    "feed_item": 104,
+    "feed_item": 124,
     "json_ld_article": 3,
     "time_element": 13
   },

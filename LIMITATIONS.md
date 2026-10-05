@@ -16,9 +16,9 @@ these are silently hidden: every gap below shows up as an honest `not_available`
 | Registered locations/subunits | 745 | 74.5% |
 | Registry-reported employee count | 142 | 14.2% |
 | Group/ownership structure | 70 | 7.0% |
-| Verified official website (a further 55 listed sites are published as `ambiguous`) | 58 | 5.8% |
-| Verified social profiles | 28 | 2.8% |
-| **Dated** company-owned news items (120 items) | 19 | 1.9% |
+| Verified official website (a further 46 listed sites are published as `ambiguous`) | 67 | 6.7% |
+| Verified social profiles (59 links) | 34 | 3.4% |
+| **Dated** company-owned news items (140 items) | 21 | 2.1% |
 | **Real job postings** on the company's own site | 1 | 0.1% |
 
 Checked-and-empty results (no registered subunits: 255 companies) are published as an
@@ -297,9 +297,10 @@ companies (`out/run-summary.json`; every stage, 3h12m, 6,756 registry requests):
 - **Every claim now has its own evidence entry, a saved copy of its source, and an exact
   excerpt.** Raw API responses, crawled pages, feeds and annual-report PDFs are stored under
   `snapshots/<sha256>`; `scripts/audit_evidence.py` re-checks the artifact. Result on the
-  regenerated artifact (`out/audit-report.json`): 19,046 claims; 17,169 available claims each
-  point at a snapshot whose SHA-256 matches; **15,503 excerpts are literal slices of their
-  snapshot; 0 failures.** 1,664 excerpts come from annual-report PDFs (a matched OCR/text-layer
+  regenerated artifact (`out/audit-report.json`): 19,080 claims; **all 17,212 available claims
+  are evidence-complete inside the saved result itself** (public source URL, retrieval time,
+  SHA-256 and supporting text, no other file needed); 15,547 excerpts are literal slices of their
+  saved snapshot; **0 failures.** 1,664 excerpts come from annual-report PDFs (a matched OCR/text-layer
   line) and cannot be searched for in a PDF's compressed bytes, so they are reported as
   `span_from_pdf` rather than passed; 2 claims carry no excerpt. The snapshot store is not
   committed (it holds about a gigabyte of PDFs); regenerate it with `run_agent.py`.
@@ -316,20 +317,21 @@ companies (`out/run-summary.json`; every stage, 3h12m, 6,756 registry requests):
 - **News: only dated articles count.** Previously any page under a `/news/` path counted (16
   companies, no date on any of them). Now: schema.org `NewsArticle`/`BlogPosting`/`PressRelease`,
   a plain `Article` or `article:published_time` only on a news-style URL, `<time datetime>`
-  cards, and the site's own RSS/Atom feed (comment feeds excluded). **19 companies, 120 dated
+  cards, and the site's own RSS/Atom feed (comment feeds excluded). **21 companies, 140 dated
   items.** Real-data review of the first version found and removed false positives: WordPress
   marks ordinary contact/about pages as `Article` with a publish date, feeds list password-
   protected posts and comments, and the same story appears through several markups.
 - **Social links** are also read from JSON-LD `sameAs`, `twitter:site` and `rel="me"`. Because
-  fewer sites now pass the identity gate, the published total is 28 companies (was 35).
+  fewer sites now pass the identity gate, the published total is 34 companies (was 35).
 - **Two precision bugs, found by testing on real data, in the submitted artifact:**
   1. *Wrong-company websites.* "BLUE BAY AS" was published against an Italian resort site because
      both name words appear on it. The identity gate's multi-word branch now needs a Norway tie
      (registry-listed site, `.no`, or the registered place on the page); see
-     `IDENTITY_RESOLUTION.md`. Published sites: 74 -> 58.
+     `IDENTITY_RESOLUTION.md`. Published sites: 74 -> 67 (the last 9 are registry-listed sites with the name on the
+     page, e.g. Zivid, that the first version of the rule wrongly held back).
   2. *Unverified sites published as available.* 49 sites the gate had **not** verified
      (confidence 0.3-0.85) were emitted as `official_website` with availability `available`.
-     Builderr's rule is that an uncertain match is `ambiguous`; they are now `ambiguous` (55 in
+     Builderr's rule is that an uncertain match is `ambiguous`; they are now `ambiguous` (46 in
      this run) and the summary no longer calls them verified.
 - **Two crawl-path fixes.** Job/news extraction used to run only when the optional `scrapy` extra
   was installed; both crawlers now record the same page signals, so results do not depend on it.
@@ -348,7 +350,7 @@ consistent with the 1,000-company rates. No search-API keys were set, so discove
 Cost of the stricter gate, stated plainly: a few genuine Norwegian companies on a `.com` (TBG
 Holding, Axess Technologies, Oslo Analytica, Lie Nilsen) are no longer published because their
 captured text carries none of the four accepted Norway signals. Website coverage on the verified
-list fell from 123 to 58 companies; what remains is far less likely to be attributed to the wrong
+list fell from 123 to 67 companies; what remains is far less likely to be attributed to the wrong
 company.
 
 ## Not yet run against real data

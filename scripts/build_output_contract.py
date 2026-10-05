@@ -152,15 +152,22 @@ def emit_accounting_obligation(emitter: Emitter, evidence: dict[str, Any]) -> No
     if not record:
         return
     value = record.get("value") or {}
-    # The rule (registry facts -> classification) is ours; the facts it is applied to
-    # come from the registry response, so that response is the cited source.
-    module = "registry_live" if (evidence.get("registry_live") or {}).get("status") == "available" else "registry"
-    source = evidence.get(module) or {}
-    spans = source.get("spans") or {}
-    if source.get("status") == "available" and spans:
-        key = "sisteInnsendteAarsregnskap" if value.get("classification") == "filing_observed" else "organisasjonsform"
-        emitter.claim("accounting_obligation", value.get("classification"), source, module="accounting_obligation",
-                      span=spans.get(key), method=str(value.get("ruleset_version") or "accounting_obligation_rules"))
+    method = str(value.get("ruleset_version") or "accounting_obligation_rules")
+    # The rule (registry facts -> classification) is ours; the facts it is applied to come from
+    # the registry, so a registry response is the cited source: the live response when it carries
+    # the fact, else the frozen bulk row.
+    filed = value.get("classification") == "filing_observed"
+    live = evidence.get("registry_live") or {}
+    live_span = (live.get("spans") or {}).get("sisteInnsendteAarsregnskap" if filed else "organisasjonsform")
+    if live.get("status") == "available" and live_span:
+        emitter.claim("accounting_obligation", value.get("classification"), live, module="accounting_obligation", span=live_span, method=method)
+        return
+    bulk = evidence.get("registry") or {}
+    bulk_value = bulk.get("value") or {}
+    key = "sisteInnsendteAarsregnskap" if filed else "organisasjonsform.kode"
+    if bulk.get("status") == "available" and bulk_value.get(key):
+        emitter.claim("accounting_obligation", value.get("classification"), bulk, module="accounting_obligation",
+                      span=json.dumps({key: bulk_value[key]}, ensure_ascii=False, separators=(",", ":")), method=method)
         return
     emitter.claim("accounting_obligation", value.get("classification"), record, module="accounting_obligation")
 

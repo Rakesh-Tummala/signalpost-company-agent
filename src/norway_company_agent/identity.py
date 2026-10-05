@@ -124,6 +124,13 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     elif org_digits and org_digits in compact_homepage_candidate:
         score = 1.0
         reasons.append("exact organisation number appears in homepage identity evidence")
+    elif core and exact_homepage_name and registry_lists_site(profile, hostname):
+        # The company itself told Brreg this is its website, and the page (or at least its
+        # title/hostname, which is all a JavaScript-rendered homepage exposes) carries the
+        # legal name. That anchors the match for single-word names too, with no .no domain or
+        # long page text required (elopak.com, a JS-rendered page, is the real case).
+        score = 0.95
+        reasons.append("the registry lists this site for the entity and its homepage identity evidence carries the legal name")
     elif len(core) >= 2 and exact_homepage_name and (
         registry_lists_site(profile, hostname)
         or hostname.casefold().endswith(".no")

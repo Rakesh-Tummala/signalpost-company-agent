@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Re-run the identity gate over already-published website evidence.
 
-Run after every tightening of assess_website_identity (first the single-token-name
+Applies in both directions: sites the current rule no longer verifies are demoted, and sites it
+newly verifies are promoted. Run after every change to assess_website_identity (first the single-token-name
 branch, then the multi-word-name branch: "Blue Bay" on an Italian resort site).
 Re-uses the already-crawled page content cached in evidence.website /
 evidence.website_discovered -- no new network requests, no new API spend.
@@ -47,16 +48,24 @@ def main() -> None:
 
     profiles = read_jsonl(Path(args.profiles))
     demoted = []
+    promoted = []
     for profile in profiles:
         evidence = profile.setdefault("evidence", {})
         for module in ("website", "website_discovered"):
             record = evidence.get(module)
-            if not record or record.get("status") != "available" or not was_published(record):
+            if not record or record.get("status") != "available":
                 continue
+            was = was_published(record)
             gated = apply_website_identity_gate(profile, dict(record))
             assessment = gated["assessment"]
             if assessment and assessment["publishable"]:
-                continue  # re-assessed, still holds (e.g. it does end in .no after all)
+                evidence[module] = gated["website"]  # still holds, or newly verified: keep the refreshed assessment
+                if not was:
+                    promoted.append({"organisation_number": profile["organisation_number"], "module": module, "url": record.get("source_url"), "new_score": assessment["score"]})
+                continue
+            if not was:
+                evidence[module] = gated["website"]
+                continue
             demoted.append({
                 "organisation_number": profile["organisation_number"],
                 "module": module,
@@ -71,7 +80,9 @@ def main() -> None:
             if module == "website":
                 profile["website"] = ""
     write_jsonl(Path(args.output), profiles)
-    print(json.dumps({"profiles": len(profiles), "demoted": len(demoted)}, indent=2))
+    print(json.dumps({"profiles": len(profiles), "demoted": len(demoted), "newly_verified": len(promoted)}, indent=2))
+    for item in promoted:
+        print(json.dumps({"promoted": item}))
     for item in demoted:
         print(json.dumps(item))
 

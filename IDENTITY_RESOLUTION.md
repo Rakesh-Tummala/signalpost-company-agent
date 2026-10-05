@@ -69,7 +69,9 @@ co-occur on a page are not evidence of *this* entity.
 is tied to the Norwegian entity by at least one of:
 
 1. **the registry itself lists that site** (`hjemmeside` / live `website`) -- the
-   company told Brreg it is theirs, which outranks any text match;
+   company told Brreg it is theirs, which outranks any text match. For this case the name
+   only has to appear in the page title or hostname, so JavaScript-rendered homepages with
+   no readable text (elopak.com) still verify, and single-word names are covered too;
 2. **a `.no` domain**;
 3. **the registered place on the page** -- the registered postal code *and* town both
    appear, or the registered town appears together with an explicit mention of
@@ -79,7 +81,8 @@ is tied to the Norwegian entity by at least one of:
 
 Without any of those the score is 0.5 ("related_or_uncertain"), not published.
 Re-running the gate over the already-published batch (`scripts/reassess_published_websites.py`,
-cached pages only, no new requests) took published websites from 74 to 59; the 15
+cached pages only, no new requests) took published websites from 74 to 59 (a later correction, registry-listed sites also anchor
+single-word names and JavaScript-rendered pages, restored 9 genuine ones: 67 are published now); the 15
 demoted include every clear foreign-site match. The cost is real: a few genuine
 Norwegian companies on a `.com` (TBG Holding, Axess Technologies, Oslo Analytica,
 Lie Nilsen) fall out because their captured text carries none of the four signals.
