@@ -1,11 +1,11 @@
 {
   "summary": {
-    "claims": 2109,
-    "evidence_complete_in_result": 1921,
-    "body_inline_in_result": 1757,
-    "snapshot_hash_ok": 1921,
-    "span_exact": 1757,
-    "not_available_claims": 188,
+    "claims": 2110,
+    "evidence_complete_in_result": 1923,
+    "body_inline_in_result": 1759,
+    "snapshot_hash_ok": 1923,
+    "span_exact": 1759,
+    "not_available_claims": 187,
     "span_from_pdf": 164
   },
   "by_field_family": {
@@ -103,10 +103,10 @@
     },
     "official_website": {
       "claims": 100,
-      "evidence_complete_in_result": 8,
-      "body_inline_in_result": 8,
-      "snapshot_hash_ok": 8,
-      "span_exact": 8
+      "evidence_complete_in_result": 9,
+      "body_inline_in_result": 9,
+      "snapshot_hash_ok": 9,
+      "span_exact": 9
     },
     "registered_workplaces": {
       "claims": 24,
@@ -123,11 +123,11 @@
       "span_exact": 423
     },
     "site_news": {
-      "claims": 20,
-      "evidence_complete_in_result": 20,
-      "body_inline_in_result": 20,
-      "snapshot_hash_ok": 20,
-      "span_exact": 20
+      "claims": 21,
+      "evidence_complete_in_result": 21,
+      "body_inline_in_result": 21,
+      "snapshot_hash_ok": 21,
+      "span_exact": 21
     },
     "social_profile": {
       "claims": 3,

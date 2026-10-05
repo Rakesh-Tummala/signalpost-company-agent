@@ -1,0 +1,16 @@
+{
+  "connector": "domain_probe_v1",
+  "started_at": "2026-10-05T16:09:36.827649Z",
+  "completed_at": "2026-10-05T16:09:58.716351Z",
+  "counts": {
+    "input_profiles": 100,
+    "probed_profiles": 84,
+    "candidates": 241,
+    "probe_requests": 61,
+    "hits_by_registered_place": 2,
+    "crawl_requests": 14,
+    "verified_sites": 1,
+    "quarantined_sites": 1
+  },
+  "claim_boundary": "A site is published only if its page shows the exact organisation number (or, for a name-derived domain, the registered postcode and town) AND the identity gate calls it exact; a name-derived domain alone is never evidence."
+}
