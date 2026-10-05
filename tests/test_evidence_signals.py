@@ -360,6 +360,17 @@ class SelfContainedResultTests(unittest.TestCase):
         self.assertEqual(snapshot["source_url"], "https://data.brreg.no/enhetsregisteret/api/enheter/923609016")
         self.assertEqual(len(envelope["source_snapshots"]), 1)  # shared by every claim, stored once
 
+    def test_evidence_also_uses_the_reviewers_field_names(self):
+        body = '{"organisasjonsnummer":"923609016","navn":"EXAMPLE AS"}'.encode()
+        with tempfile.TemporaryDirectory() as directory:
+            envelope, sha = self._build(directory, body)
+        cited = next(item for item in envelope["evidence"] if item.get("snapshot"))
+        self.assertEqual(cited["content_hash"], cited["content_sha256"])
+        self.assertEqual(cited["captured_at"], cited["retrieved_at"])
+        self.assertEqual(cited["capture_date"], str(cited["retrieved_at"])[:10])
+        self.assertEqual(cited["retained_response_ref"], cited["snapshot_id"])
+        self.assertEqual(cited["retained_response_ref"], envelope["source_snapshots"][0]["id"])
+
     def test_the_audit_passes_from_the_result_alone_with_the_saved_folder_deleted(self):
         from scripts.audit_evidence import audit
 
@@ -491,6 +502,55 @@ class SummarySourcesAndChangesTests(unittest.TestCase):
         self.assertEqual(diff_datasets([row(4, "a" * 64, "t1", "s")], [row(4, "c" * 64, "t2", "s2")]), [])  # same values, new fetch: not a change
 
 
+class WikidataTests(unittest.TestCase):
+    BINDINGS = [{
+        "o": {"type": "literal", "value": "811413682"}, "i": {"type": "uri", "value": "http://www.wikidata.org/entity/Q1329436"},
+        "iLabel": {"type": "literal", "value": "Elopak"}, "site": {"type": "uri", "value": "https://www.elopak.com/"},
+        "inc": {"type": "literal", "value": "1957-01-01T00:00:00Z"}, "tw": {"type": "literal", "value": "elopak"},
+    }]
+
+    def test_facts_are_summarised_from_the_rows_for_one_organisation_number(self):
+        from norway_company_agent import wikidata
+
+        summary = wikidata.summarize(self.BINDINGS)
+        self.assertEqual((summary["qid"], summary["inception"], summary["websites"]), ("Q1329436", "1957-01-01", ["https://www.elopak.com/"]))
+        self.assertEqual(summary["social_links"], {"x": "https://x.com/elopak"})
+        self.assertEqual(wikidata.group_by_organisation(self.BINDINGS * 2)["811413682"].__len__(), 2)
+
+    def test_each_claim_cites_a_literal_slice_of_the_saved_company_response_and_survives_offline_respanning(self):
+        from norway_company_agent import wikidata
+        from scripts.build_output_contract import derive_spans_from_snapshots
+        from scripts.run_wikidata_enrichment import record_for
+
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.dict(os.environ, {"SIGNALPOST_SNAPSHOT_DIR": str(Path(directory) / "snapshots")}):
+                record = record_for("811413682", self.BINDINGS, None, "2026-10-05T00:00:00Z")
+            profile = {"organisation_number": "811413682", "evidence": {"wikidata": record}}
+            derive_spans_from_snapshots([profile], Path(directory))  # the converter recomputes spans from the saved bodies
+            envelope = build_envelope(profile, run_id="r", started_at="2026-10-05T00:00:00Z", completed_at="2026-10-05T00:01:00Z", snapshot_root=Path(directory))
+            self.assertEqual(record["content_sha256"], hashlib.sha256(wikidata.retained_body("811413682", self.BINDINGS)).hexdigest())
+            by_field = {c["field"]: c for c in envelope["claims"]}
+            self.assertLessEqual({"wikidata_entity", "inception_date", "social_profile.x"}, set(by_field))
+            cited = {c["field"]: next(e for e in envelope["evidence"] if e["id"] == c["evidence_ids"][0]) for c in envelope["claims"]}
+            self.assertIn("Q1329436", cited["wikidata_entity"]["claim_span"])
+            self.assertIn("1957-01-01", cited["inception_date"]["claim_span"])
+            self.assertIn("elopak", cited["social_profile.x"]["claim_span"])
+            from scripts.audit_evidence import audit
+
+            report = audit([envelope], Path(directory))
+            self.assertEqual(report["failure_count"], 0, report["failures"])
+
+    def test_an_item_that_does_not_exist_is_an_explicit_not_found_claim(self):
+        from scripts.run_wikidata_enrichment import record_for
+
+        record = record_for("923609016", None, None, "2026-10-05T00:00:00Z")
+        envelope = build_envelope({"organisation_number": "923609016", "evidence": {"wikidata": record}}, run_id="r", started_at="x", completed_at="y")
+        claim = next(c for c in envelope["claims"] if c["field"] == "wikidata_entity")
+        self.assertEqual((claim["availability"], claim["value"]), ("not_available", None))
+        failed = build_envelope({"organisation_number": "923609016", "evidence": {"wikidata": record_for("923609016", None, "HTTP 429", "t")}}, run_id="r", started_at="x", completed_at="y")
+        self.assertEqual(next(c for c in failed["claims"] if c["field"] == "wikidata_entity")["availability"], "failed")
+
+
 class DomainProbeTests(unittest.TestCase):
     def test_candidates_are_derived_from_the_legal_name_with_norwegian_letter_variants(self):
         from norway_company_agent.domain_probe import domain_candidates
@@ -557,6 +617,24 @@ class DomainProbeTests(unittest.TestCase):
 
         with patch.object(probe, "assert_public_url", refuse):
             self.assertEqual(probe.light_probe("nonexistent-guess.no", "923609016", 5), (None, None, 0))
+
+
+class AnnualReportCandidateTests(unittest.TestCase):
+    def test_the_report_url_is_derived_from_the_bulk_filing_year_without_the_history_module(self):
+        from scripts.run_annual_report_workforce_connector import pdf_candidates
+
+        profile = {"organisation_number": "923609016", "latest_submitted_accounts": "2025", "evidence": {"registry": {"value": {}}}}
+        self.assertEqual(pdf_candidates(profile), [{"year": "2025", "url": "https://data.brreg.no/regnskapsregisteret/regnskap/aarsregnskap/kopi/923609016/2025"}])
+        from_registry_row = {"organisation_number": "923609016", "evidence": {"registry": {"value": {"sisteInnsendteAarsregnskap": "2024"}}}}
+        self.assertEqual(pdf_candidates(from_registry_row)[0]["year"], "2024")
+        self.assertEqual(pdf_candidates({"organisation_number": "923609016", "evidence": {}}), [])
+
+    def test_the_history_module_still_wins_when_it_ran(self):
+        from scripts.run_annual_report_workforce_connector import pdf_candidates
+
+        profile = {"organisation_number": "923609016", "latest_submitted_accounts": "2025", "evidence": {"financial_history": {"value": {"pdfs": [
+            {"year": "2023", "url": "u23"}, {"year": "2024", "url": "u24"}]}}}}
+        self.assertEqual([item["year"] for item in pdf_candidates(profile)], ["2024", "2023"])
 
 
 class OcrLanguageTests(unittest.TestCase):

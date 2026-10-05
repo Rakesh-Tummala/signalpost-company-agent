@@ -41,7 +41,7 @@ def _host(value: Any) -> str:
 
 
 def registry_lists_site(profile: dict[str, Any], hostname: str) -> bool:
-    """True when the registry itself (bulk or live) lists this site for the entity.
+    """True when the registry (bulk or live), or Wikidata matched by organisation number, lists this site.
 
     The company told Brreg this is its website, which is a stronger anchor than any
     text match, so registry-listed sites are not held to the extra corroboration that
@@ -51,6 +51,8 @@ def registry_lists_site(profile: dict[str, Any], hostname: str) -> bool:
     listed = {
         _host((evidence.get("registry") or {}).get("value", {}).get("hjemmeside")),
         _host((evidence.get("registry_live") or {}).get("value", {}).get("website")),
+        # Wikidata, matched exactly by organisation number, is an independent attribution of the site.
+        *[_host(site) for site in ((evidence.get("wikidata") or {}).get("value") or {}).get("websites", [])],
     } - {""}
     host = hostname.casefold().removeprefix("www.")
     return any(host == item or host.endswith("." + item) or item.endswith("." + host) for item in listed)
@@ -75,6 +77,24 @@ def registered_place_on_page(profile: dict[str, Any], core: list[str], candidate
     if re.fullmatch(r"\d{4}", postcode) and re.search(r"(?<!\d)" + postcode + r"(?!\d)", candidate_text):
         return True
     return bool(town_tokens - set(core)) and bool(re.search(r"\b(norway|norge|noreg)\b", candidate_text, re.I))
+
+
+def _postcode_and_town_on_page(profile: dict[str, Any], candidate_tokens: set[str], candidate_text: str) -> bool:
+    evidence = profile.get("evidence") or {}
+    live = ((evidence.get("registry_live") or {}).get("value") or {}).get("business_address") or {}
+    bulk = (evidence.get("registry") or {}).get("value") or {}
+    postcode = str(live.get("postnummer") or bulk.get("forretningsadresse.postnummer") or "").strip()
+    town_tokens = set(_tokens(live.get("poststed") or bulk.get("forretningsadresse.poststed") or ""))
+    return bool(re.fullmatch(r"\d{4}", postcode)) and bool(town_tokens) and town_tokens <= candidate_tokens and bool(re.search(r"(?<!\d)" + postcode + r"(?!\d)", candidate_text))
+
+
+def _registered_town_on_page(profile: dict[str, Any], core: list[str], candidate_tokens: set[str]) -> bool:
+    """The registered town appears on the site's pages (and is not merely part of the company's name)."""
+    evidence = profile.get("evidence") or {}
+    live = ((evidence.get("registry_live") or {}).get("value") or {}).get("business_address") or {}
+    bulk = (evidence.get("registry") or {}).get("value") or {}
+    town_tokens = set(_tokens(live.get("poststed") or bulk.get("forretningsadresse.poststed") or ""))
+    return bool(town_tokens) and town_tokens <= candidate_tokens and not town_tokens <= set(core)
 
 
 def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
@@ -131,6 +151,12 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         # long page text required (elopak.com, a JS-rendered page, is the real case).
         score = 0.95
         reasons.append("the registry lists this site for the entity and its homepage identity evidence carries the legal name")
+    elif core and set(core) <= candidate_tokens and registry_lists_site(profile, hostname) and _postcode_and_town_on_page(profile, candidate_tokens, candidate_text):
+        # Listed as the entity's own site by the registry (or Wikidata), the full legal name appears
+        # on its pages, and so do the registered postcode and town. A manager's or parent's site that
+        # merely sits in the same town does not carry the full legal name, so it does not qualify.
+        score = 0.95
+        reasons.append("listed for the entity, with its full legal name and registered postcode and town on the site's pages")
     elif len(core) >= 2 and exact_homepage_name and (
         registry_lists_site(profile, hostname)
         or hostname.casefold().endswith(".no")
@@ -146,9 +172,11 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         # for an unrelated company of the same name.
         score = 0.5
         reasons.append("legal-name tokens appear together, but nothing on the page ties the site to this Norwegian entity (no organisation number, .no domain, registry listing or registered place) -- too high a collision risk to publish")
-    elif len(core) == 1 and exact_homepage_name and substantive_homepage and hostname.casefold().endswith(".no"):
+    elif len(core) == 1 and exact_homepage_name and substantive_homepage and hostname.casefold().endswith(".no") and _registered_town_on_page(profile, core, candidate_tokens):
+        # One common word on a .no domain is not enough to tell this company from another Norwegian
+        # company with the same name; the registered town on the site's pages is the tie-breaker.
         score = 0.95
-        reasons.append("single distinctive legal-name token appears in homepage identity evidence with substantive content, corroborated by a .no domain")
+        reasons.append("single distinctive legal-name token appears in homepage identity evidence with substantive content, on a .no domain, with the registered town on the site's pages")
     elif len(core) == 1 and exact_homepage_name and substantive_homepage:
         # A single common word matching page text, with no organisation number
         # (checked above) and no .no domain to at least anchor it to Norway, is too
@@ -160,6 +188,11 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         # a .no domain.
         score = 0.5
         reasons.append("single distinctive legal-name token matched, but no organisation number or .no domain to corroborate it -- too high a collision risk for a common word to publish")
+    elif ratio >= 0.75 and len(overlap) >= 2 and registry_lists_site(profile, hostname):
+        # Most of the legal name is on a site that the registry (or Wikidata, matched by organisation
+        # number) lists for this very entity: the company's own declaration closes the remaining gap.
+        score = 0.9
+        reasons.append("most legal-name tokens appear on a site the registry or Wikidata lists for the entity")
     elif ratio >= 0.75 and len(overlap) >= 2:
         score = 0.85
         reasons.append("most legal-name tokens appear, but exact identity is incomplete")

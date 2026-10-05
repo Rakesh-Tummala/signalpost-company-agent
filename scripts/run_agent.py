@@ -151,6 +151,35 @@ def main() -> None:
         print(f"Time budget {args.time_budget_minutes:g} min: plan = {plan}", file=sys.stderr)
     stages_run: list[str] = []
 
+    # 0. Annual-report OCR in the background. It needs only the company list and each company's latest
+    # filing year, which the bulk registry row already carries, so it runs alongside every network
+    # stage below instead of after them (it was about two thirds of a 1,000-company run). Joined at 5.
+    workforce_obs_path = output_dir / "workforce-observations.jsonl"
+    ocr_process = None
+    if not args.skip_workforce_ocr:
+        try:
+            from norway_company_agent.batch import profiles_from_bulk, read_organisation_inputs
+
+            organisation_numbers = [record["organisation_number"] for record in read_organisation_inputs(args.organisations)]
+            bulk_profiles, _ = profiles_from_bulk(args.bulk, organisation_numbers)
+            write_jsonl(output_dir / "bulk-profiles.jsonl", bulk_profiles)
+            orgs_path = output_dir / "all-orgs.txt"
+            orgs_path.write_text("\n".join(organisation_numbers), encoding="utf-8")
+            ocr_command = [
+                args.python, str(ROOT / "run_annual_report_workforce_connector.py"),
+                "--profiles", str(output_dir / "bulk-profiles.jsonl"),
+                "--organisations", str(orgs_path),
+                "--output", str(workforce_obs_path),
+                "--cache", str(output_dir / "workforce-cache"),
+                "--report", str(output_dir / "workforce-report.json"),
+                *(["--deadline-epoch", str(deadline - plan["reserve_seconds"])] if deadline else []),
+            ]
+            print("+ (background) " + " ".join(ocr_command), file=sys.stderr)
+            ocr_process = subprocess.Popen(ocr_command)
+        except Exception as exc:  # noqa: BLE001 -- optional stage: never stop the run
+            ocr_process = None
+            print(f"  (optional stage failed to start, continuing: {exc})", file=sys.stderr)
+
     # 1. Registry batch: identity, financials, financial_history, roles, group,
     # locations, single-page website. Required.
     profiles_path = output_dir / "profiles.jsonl"
@@ -181,6 +210,19 @@ def main() -> None:
     if ok:
         profiles_path = probe_path
         stages_run.append("domain_probe")
+
+    # 2a'. Wikidata (CC0), matched exactly by organisation number: an independent third-party source
+    # for founding date, social handles and an independently attributed website.
+    wikidata_path = output_dir / "profiles-with-wikidata.jsonl"
+    ok = run([
+        args.python, str(ROOT / "run_wikidata_enrichment.py"),
+        "--input", str(profiles_path),
+        "--output", str(wikidata_path),
+        "--report", str(output_dir / "wikidata-report.json"),
+    ], optional=True)
+    if ok:
+        profiles_path = wikidata_path
+        stages_run.append("wikidata")
 
     # 2b. Website discovery: Tavily, then Exa, for whatever's still missing.
     for name, script, env_var in (("tavily", "run_tavily_discovery.py", "TAVILY_API_KEY"), ("exa", "run_exa_discovery.py", "EXA_API_KEY")):
@@ -257,23 +299,13 @@ def main() -> None:
     if jobs_obs_path.exists():
         stages_run.append("site_jobs")
 
-    # 5. Official annual-report OCR workforce extraction. Already degrades
-    # per-company internally; skip the whole stage only if asked to.
-    workforce_obs_path = output_dir / "workforce-observations.jsonl"
-    if not args.skip_workforce_ocr:
-        orgs_path = output_dir / "all-orgs.txt"
-        orgs_path.write_text("\n".join(row["organisation_number"] for row in profiles), encoding="utf-8")
-        ok = run([
-            args.python, str(ROOT / "run_annual_report_workforce_connector.py"),
-            "--profiles", str(profiles_path),
-            "--organisations", str(orgs_path),
-            "--output", str(workforce_obs_path),
-            "--cache", str(output_dir / "workforce-cache"),
-            "--report", str(output_dir / "workforce-report.json"),
-            *(["--deadline-epoch", str(deadline - plan["reserve_seconds"])] if deadline else []),
-        ], optional=True)
-        if ok:
+    # 5. Join the background OCR (usually already finished). Best-effort like every optional stage.
+    if ocr_process is not None:
+        returncode = ocr_process.wait()
+        if returncode == 0:
             stages_run.append("workforce_ocr")
+        else:
+            print(f"  (optional stage failed, continuing: workforce OCR exited with {returncode})", file=sys.stderr)
 
     # 5b. Prior-year comparative financial figures, recovered from the same
     # annual-report OCR cache the workforce stage just populated -- no new

@@ -139,9 +139,15 @@ class Emitter:
             "content_sha256": source.get("content_sha256"),
             "claim_span": span,
         }
+        # The same facts under the names Builderr's reviewers use, so no reader has to guess:
+        # capture date, content hash and retained-response reference.
+        entry["captured_at"] = entry["retrieved_at"]
+        entry["capture_date"] = str(entry["retrieved_at"])[:10] if entry["retrieved_at"] else None
+        entry["content_hash"] = entry["content_sha256"]
         if source.get("snapshot_path"):
             entry["snapshot"] = source["snapshot_path"]
             entry["snapshot_id"] = self._register_snapshot(source["snapshot_path"], source)
+            entry["retained_response_ref"] = entry["snapshot_id"]
         if method:
             entry["extraction_method"] = method
         self.evidence.append(entry)
@@ -321,6 +327,26 @@ def emit_website(emitter: Emitter, evidence: dict[str, Any]) -> None:
     )
 
 
+def emit_wikidata(emitter: Emitter, evidence: dict[str, Any]) -> None:
+    """Facts from Wikidata, an independent licensed source matched exactly by organisation number."""
+    record = evidence.get("wikidata") or {}
+    if not record:
+        return
+    if record.get("status") != "available":
+        emitter.claim("wikidata_entity", None, record, module="wikidata")
+        return
+    value = record.get("value") or {}
+    spans = record.get("spans") or {}
+    emitter.claim("wikidata_entity", {"qid": value.get("qid"), "url": value.get("entity_url"), "label": value.get("label")}, record, module="wikidata", span=spans.get("i"))
+    if value.get("inception"):
+        emitter.claim("inception_date", value["inception"], record, module="wikidata", span=spans.get("inc"))
+    published = {claim["field"] for claim in emitter.claims}
+    keys = {"x": "tw", "facebook": "fb", "linkedin": "li", "instagram": "ig", "youtube": "yt"}
+    for platform, url in (value.get("social_links") or {}).items():
+        if f"social_profile.{platform}" not in published:
+            emitter.claim(f"social_profile.{platform}", url, record, module="wikidata", span=spans.get(keys.get(platform, "")))
+
+
 def emit_social_links(emitter: Emitter, evidence: dict[str, Any]) -> None:
     # apply_website_identity_gate already independently verified each link against
     # the company's legal name (assess_social_identity, publishable only >= 0.9)
@@ -479,6 +505,10 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
     else:
         unknowns.append("open roles (no job posting, role card or apply action found on its own site)")
 
+    wikidata_value = (evidence.get("wikidata") or {}).get("value") or {}
+    if (evidence.get("wikidata") or {}).get("status") == "available" and wikidata_value.get("inception"):
+        say(f"Wikidata, matched exactly by organisation number, records it as founded {wikidata_value['inception']}.", "wikidata_entity", "inception_date")
+
     if changes is not None:
         if changes:
             shown = [f"{item['field']} ({_short(item.get('old_value'))} -> {_short(item.get('new_value'))})" for item in changes[:3]]
@@ -570,6 +600,7 @@ def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, com
     emit_group(emitter, evidence)
     emit_website(emitter, evidence)
     emit_social_links(emitter, evidence)
+    emit_wikidata(emitter, evidence)
     emit_external_observations(emitter, observations or [])
 
     summary = summarize_profile(evidence, observations, changes)

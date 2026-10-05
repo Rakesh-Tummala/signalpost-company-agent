@@ -21,6 +21,7 @@ import sys
 from pypdf import PdfReader
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from norway_company_agent.official import BRREG_ACCOUNT_PDF  # noqa: E402
 from norway_company_agent.snapshot_store import save_snapshot  # noqa: E402
 
 
@@ -181,6 +182,23 @@ def default_workers() -> int:
     return max(2, min(6, (os.cpu_count() or 4) - 1))
 
 
+def pdf_candidates(profile: dict) -> list[dict]:
+    """The annual-report copies available for a company, newest first.
+
+    From the account-history module when it ran; otherwise derived from the latest filing year the
+    bulk registry row already carries (the copy URL depends only on organisation number and year), so
+    this stage does not have to wait for the rate-limited history endpoint.
+    """
+    history = (profile.get("evidence") or {}).get("financial_history") or {}
+    pdfs = (history.get("value") or {}).get("pdfs") or []
+    if not pdfs:
+        registry = ((profile.get("evidence") or {}).get("registry") or {}).get("value") or {}
+        year = str(profile.get("latest_submitted_accounts") or registry.get("sisteInnsendteAarsregnskap") or "").strip()
+        if year.isdigit():
+            pdfs = [{"year": year, "url": BRREG_ACCOUNT_PDF.format(org=profile["organisation_number"], year=year)}]
+    return sorted(pdfs, key=lambda item: str(item.get("year") or ""), reverse=True)
+
+
 def collect(profile: dict, cache_dir: Path, *, ocr_pages: int, ocr_dpi: int, deadline: float | None = None) -> tuple[dict | None, dict]:
     org = str(profile["organisation_number"])
     if deadline is not None and time.time() > deadline:
@@ -189,11 +207,10 @@ def collect(profile: dict, cache_dir: Path, *, ocr_pages: int, ocr_dpi: int, dea
     registry = ((profile.get("evidence") or {}).get("registry") or {}).get("value") or {}
     if str(registry.get("antallAnsatte") or "").isdigit():
         return None, {"organisation_number": org, "status": "registry_count_already_available"}
-    history = (profile.get("evidence") or {}).get("financial_history") or {}
-    pdfs = (history.get("value") or {}).get("pdfs") or []
+    pdfs = pdf_candidates(profile)
     if not pdfs:
         return None, {"organisation_number": org, "status": "no_annual_report"}
-    latest = sorted(pdfs, key=lambda item: str(item.get("year") or ""), reverse=True)[0]
+    latest = pdfs[0]
     url = str(latest["url"])
     cache_path = cache_dir / f"{org}-{latest['year']}.pdf"
     try:
@@ -284,8 +301,7 @@ def main() -> None:
     for org in wanted:
         profile = profile_map[org]
         registry = ((profile.get("evidence") or {}).get("registry") or {}).get("value") or {}
-        pdfs = ((((profile.get("evidence") or {}).get("financial_history") or {}).get("value") or {}).get("pdfs") or [])
-        if not str(registry.get("antallAnsatte") or "").isdigit() and pdfs:
+        if not str(registry.get("antallAnsatte") or "").isdigit() and pdf_candidates(profile):
             eligible.append(profile)
     if args.limit:
         eligible = eligible[: args.limit]

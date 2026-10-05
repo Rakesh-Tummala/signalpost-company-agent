@@ -1437,6 +1437,26 @@ class WebsiteIdentityTests(unittest.TestCase):
         self.assertFalse(result["publishable"])
         self.assertEqual(result["score"], 0.5)
 
+    def test_most_of_the_name_on_a_listed_site_publishes_but_not_on_a_found_site(self):
+        # Real case: ANOTHER WORLD ENTERTAINMENT NORWAY AS. Wikidata (matched by organisation number)
+        # lists anotherworld.no; the page carries three of the four name words.
+        row = {"organisation_number": "997524306", "name": "ANOTHER WORLD ENTERTAINMENT NORWAY AS", "evidence": {
+            "wikidata": {"status": "available", "value": {"websites": ["https://www.anotherworld.no/"]}},
+            "website": {"status": "available", "value": {"final_url": "https://www.anotherworld.no/", "title": "Another World Entertainment | Oslo", "main_text_excerpt": ""}},
+        }}
+        self.assertTrue(assess_website_identity(row)["publishable"])
+        row["evidence"]["wikidata"]["value"]["websites"] = []
+        self.assertFalse(assess_website_identity(row)["publishable"])  # same page, nobody lists it: still only "review"
+
+    def test_a_listed_manager_site_with_none_of_the_name_is_not_published(self):
+        # Real case: STATOILS FORSKNINGSFOND is listed at nansenfondet.no, the fund manager's site.
+        row = {"organisation_number": "977126231", "name": "STATOILS FORSKNINGSFOND STIFTELSE", "evidence": {
+            "wikidata": {"status": "available", "value": {"websites": ["https://www.nansenfondet.no"]}},
+            "registry_live": {"status": "available", "value": {"business_address": {"postnummer": "0271", "poststed": "OSLO"}}},
+            "website": {"status": "available", "value": {"final_url": "https://www.nansenfondet.no/", "title": "Hjem", "main_text_excerpt": "Fridtjof Nansens belonning Oslo 0271"}},
+        }}
+        self.assertFalse(assess_website_identity(row)["publishable"])
+
     def test_single_word_name_on_a_js_rendered_com_site_is_published_when_the_registry_lists_it(self):
         # Real case: ELOPAK ASA. The registry lists www.elopak.com; the page is JavaScript-rendered,
         # so only the title ("Elopak - Elopak") and hostname are visible and there is no page text.
@@ -1481,11 +1501,21 @@ class WebsiteIdentityTests(unittest.TestCase):
         }}
         self.assertFalse(assess_website_identity(row)["publishable"])
 
-    def test_single_token_name_on_no_domain_is_publishable(self):
-        row = {"organisation_number": "923609016", "name": "Asperia AS", "evidence": {"website": {"status": "available", "value": {
-            "final_url": "https://asperia.no/", "title": "Asperia", "main_text_excerpt": "Asperia leverer " + "tjenester " * 20,
-        }}}}
+    def test_single_token_name_on_no_domain_needs_the_registered_town_on_the_site(self):
+        # One common word on a .no domain cannot tell this company from another Norwegian company
+        # with the same name; the registered town on the site's pages is the tie-breaker. (Found by
+        # auditing the published sites: five of nine such matches showed no registered place at all.)
+        row = {"organisation_number": "923609016", "name": "Asperia AS", "evidence": {
+            "registry_live": {"status": "available", "value": {"business_address": {"postnummer": "3015", "poststed": "DRAMMEN"}}},
+            "website": {"status": "available", "value": {
+                "final_url": "https://asperia.no/", "title": "Asperia", "main_text_excerpt": "Asperia leverer " + "tjenester " * 20,
+            }},
+        }}
+        self.assertFalse(assess_website_identity(row)["publishable"])
+        row["evidence"]["website"]["value"]["identity_text_excerpt"] = "Asperia AS, Strandveien 1, Drammen"
         self.assertTrue(assess_website_identity(row)["publishable"])
+        row["evidence"]["registry_live"]["value"]["business_address"]["poststed"] = "ASPERIA"  # a town that is just the name proves nothing
+        self.assertFalse(assess_website_identity(row)["publishable"])
 
     def test_single_token_name_on_foreign_domain_without_org_number_is_quarantined(self):
         # Real case that slipped through before this branch required a .no domain
