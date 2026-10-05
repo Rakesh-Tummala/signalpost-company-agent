@@ -1,11 +1,11 @@
 {
   "summary": {
-    "claims": 2110,
-    "evidence_complete_in_result": 1923,
-    "body_inline_in_result": 1759,
-    "snapshot_hash_ok": 1923,
-    "span_exact": 1759,
-    "not_available_claims": 187,
+    "claims": 2215,
+    "evidence_complete_in_result": 1930,
+    "body_inline_in_result": 1766,
+    "snapshot_hash_ok": 1930,
+    "span_exact": 1766,
+    "not_available_claims": 285,
     "span_from_pdf": 164
   },
   "by_field_family": {
@@ -58,6 +58,13 @@
       "body_inline_in_result": 5,
       "snapshot_hash_ok": 5,
       "span_exact": 5
+    },
+    "inception_date": {
+      "claims": 2,
+      "evidence_complete_in_result": 2,
+      "body_inline_in_result": 2,
+      "snapshot_hash_ok": 2,
+      "span_exact": 2
     },
     "industry": {
       "claims": 100,
@@ -130,11 +137,18 @@
       "span_exact": 21
     },
     "social_profile": {
-      "claims": 3,
-      "evidence_complete_in_result": 3,
-      "body_inline_in_result": 3,
-      "snapshot_hash_ok": 3,
-      "span_exact": 3
+      "claims": 6,
+      "evidence_complete_in_result": 6,
+      "body_inline_in_result": 6,
+      "snapshot_hash_ok": 6,
+      "span_exact": 6
+    },
+    "wikidata_entity": {
+      "claims": 100,
+      "evidence_complete_in_result": 2,
+      "body_inline_in_result": 2,
+      "snapshot_hash_ok": 2,
+      "span_exact": 2
     },
     "workforce_value": {
       "claims": 83,

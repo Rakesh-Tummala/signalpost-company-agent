@@ -1,11 +1,11 @@
 {
   "run_id": "clean-100",
-  "started_at": "2026-10-05T16:05:14Z",
-  "completed_at": "2026-10-05T16:22:31Z",
+  "started_at": "2026-10-05T19:23:04Z",
+  "completed_at": "2026-10-05T19:33:10Z",
   "stages_run": [
     "registry_batch",
     "domain_probe",
-    "deep_crawl",
+    "wikidata",
     "site_news",
     "site_jobs",
     "workforce_ocr",
@@ -13,6 +13,6 @@
     "claims_conversion",
     "viewer"
   ],
-  "profiles": "out\\d100\\profiles.jsonl",
-  "envelopes": "out\\d100\\envelopes.jsonl"
+  "profiles": "out\\smoke-100-rerun\\profiles.jsonl",
+  "envelopes": "out\\smoke-100-rerun\\envelopes.jsonl"
 }

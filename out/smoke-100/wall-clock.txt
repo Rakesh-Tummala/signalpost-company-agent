@@ -1,4 +1,1 @@
-
-real	17m30.808s
-user	0m0.030s
-sys	0m0.015s
+10m14s (614 s), one-command run from a clean clone of the pinned commit, Windows 11, no API keys

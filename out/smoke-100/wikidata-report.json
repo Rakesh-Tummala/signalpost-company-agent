@@ -1,0 +1,14 @@
+{
+  "connector": "wikidata_p2333_v1",
+  "completed_at": "2026-10-05T19:28:33.823708Z",
+  "counts": {
+    "profiles": 100,
+    "available": 2,
+    "not_found": 98,
+    "source_error": 0,
+    "websites_listed": 2,
+    "sites_promoted": 0,
+    "crawl_requests": 0
+  },
+  "claim_boundary": "Exact entity by organisation number (P2333); a Wikidata-listed site is published only after an independent crawl and the identity gate."
+}
