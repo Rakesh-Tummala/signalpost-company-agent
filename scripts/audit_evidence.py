@@ -3,8 +3,10 @@
 
 For each claim in a claims/evidence artifact this checks that:
   * each evidence id resolves;
-  * the saved snapshot exists and its SHA-256 equals the evidence `content_sha256`;
-  * the `claim_span` is a literal substring of the snapshot text.
+  * the source body behind it is reachable -- inline in the envelope's `source_snapshots`
+    (text bodies up to a size budget) or as the saved file -- and its SHA-256 equals the evidence
+    `content_sha256`;
+  * the `claim_span` is a literal substring of that body.
 
 PDF snapshots hold compressed page streams, so an excerpt read from a PDF (OCR or
 text-layer extraction) cannot be matched against its bytes; those are counted
@@ -20,6 +22,7 @@ not a literal slice of its (text) snapshot.
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import re
@@ -62,6 +65,7 @@ def audit(envelopes: list[dict], root: Path) -> dict:
 
     for envelope in envelopes:
         evidence_by_id = {item["id"]: item for item in envelope.get("evidence", [])}
+        snapshots_by_id = {item["id"]: item for item in envelope.get("source_snapshots", [])}
         for claim in envelope.get("claims", []):
             counts["claims"] += 1
             family = str(claim["field"]).split(".")[0]
@@ -85,6 +89,27 @@ def audit(envelopes: list[dict], root: Path) -> dict:
                 counts["evidence_complete_in_result"] += 1
                 tally["evidence_complete_in_result"] += 1
             span, snapshot = item.get("claim_span"), item.get("snapshot")
+            inline = snapshots_by_id.get(item.get("snapshot_id") or "")
+            if inline is not None and inline.get("body") is not None:
+                body = inline["body"]
+                raw_inline = body.encode("utf-8") if inline.get("body_encoding") == "utf-8" else base64.b64decode(body)
+                if hashlib.sha256(raw_inline).hexdigest() != item.get("content_sha256"):
+                    counts["inline_hash_mismatch"] += 1
+                    failures.append({"org": envelope["organisation_number"], "field": claim["field"], "problem": "inline source body does not hash to content_sha256"})
+                    continue
+                counts["body_inline_in_result"] += 1
+                tally["body_inline_in_result"] += 1
+                counts["snapshot_hash_ok"] += 1
+                tally["snapshot_hash_ok"] += 1
+                if span:
+                    text_inline = raw_inline.decode("utf-8", errors="replace")
+                    if span in text_inline:
+                        counts["span_exact"] += 1
+                        tally["span_exact"] += 1
+                    else:
+                        counts["span_not_in_snapshot"] += 1
+                        failures.append({"org": envelope["organisation_number"], "field": claim["field"], "problem": "claim_span is not a literal slice of the inline body", "span": span[:120]})
+                continue
             if not span:
                 counts["no_span"] += 1
                 tally["no_span"] += 1

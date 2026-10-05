@@ -124,8 +124,19 @@ excerpt from it. Check that yourself:
 uv run python scripts/audit_evidence.py --envelopes out/agent-run/envelopes.jsonl --root out/agent-run
 ```
 
-It re-hashes every snapshot against the evidence `content_sha256`, confirms each excerpt is a
-literal slice of its snapshot, and exits non-zero on any mismatch.
+It checks that every available claim carries a public source URL, retrieval time, SHA-256 and supporting
+text, re-hashes the source body behind it (inline in the result when it is text, else the saved file),
+confirms each excerpt is a literal slice of it, and exits non-zero on any gap or mismatch. Each result also
+carries its own `source_snapshots` (see `DATA_SCHEMA.md`), so the envelope file alone is enough to verify
+text-source claims. A committed 100-company run from a clean clone is in `out/smoke-100/`.
+
+Runtime: 100 companies take about 20 minutes. 1,000 take about 3h15m (the registry stage is bound by
+Brreg's ~30 requests/minute account-history limit, about 36 minutes; the annual-report OCR is the rest).
+If you are given a wall-clock budget, pass `--time-budget-minutes N` (or set
+`SIGNALPOST_TIME_BUDGET_MINUTES`): the run then plans its optional stages to finish inside it -- dropping
+the rate-limited history module when it alone would eat most of the budget, bounding the crawl, and
+starting no new OCR after the deadline -- and still writes one terminal result per company; whatever was
+skipped appears as an explicit `not_available`. Without the flag nothing is limited.
 `out/agent-run/viewer.html` is a self-contained offline page for browsing it, including each
 claim's excerpt — open it directly, no server required.
 

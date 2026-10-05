@@ -54,6 +54,7 @@ def main() -> None:
     parser.add_argument("--concurrency", type=int, default=16)
     parser.add_argument("--per-domain", type=int, default=2)
     parser.add_argument("--log-level", default="WARNING")
+    parser.add_argument("--time-limit-seconds", type=int, help="Stop the crawl after this many seconds (pages already fetched are kept)")
     args = parser.parse_args()
 
     input_path = Path(args.input)
@@ -75,6 +76,7 @@ def main() -> None:
         "CONCURRENT_REQUESTS_PER_DOMAIN": args.per_domain,
         "JOBDIR": str(jobdir),
         "LOG_LEVEL": args.log_level,
+        **({"CLOSESPIDER_TIMEOUT": args.time_limit_seconds} if args.time_limit_seconds else {}),
         "FEEDS": {str(events_path.resolve()): {"format": "jsonlines", "encoding": "utf8", "overwrite": False}},
     })
     process = CrawlerProcess(settings)

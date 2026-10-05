@@ -81,6 +81,32 @@ def merge_profiles(base: list[dict], updated: list[dict], *, only_if_has: str | 
     return merged
 
 
+REGISTRY_MODULES = "registry,accounting_obligation,registry_live,financials,financial_history,roles,group,locations,website"
+HISTORY_REQUESTS_PER_MINUTE = 30  # Brreg's documented-by-observation limit on the account-history endpoint
+FINALIZE_RESERVE_SECONDS = 360  # claims conversion + viewer, kept clear of every optional stage
+PRIOR_YEAR_RESERVE_SECONDS = 60
+
+
+def plan_stages(company_count: int, budget_seconds: float | None) -> dict:
+    """Decide what fits in an optional wall-clock budget, so the run always writes every result.
+
+    With no budget nothing is limited. With one: the account-history module is dropped when the
+    rate limit alone would eat most of it (and the OCR stage that needs its PDF list then has nothing
+    to do); the crawl and the OCR get what is left after a fixed reserve for writing the results.
+    """
+    if budget_seconds is None:
+        return {"modules": REGISTRY_MODULES, "history": True, "crawl_seconds": None, "reserve_seconds": 0.0}
+    history_seconds = company_count / HISTORY_REQUESTS_PER_MINUTE * 60 + 180
+    keep_history = history_seconds <= 0.6 * budget_seconds
+    modules = REGISTRY_MODULES if keep_history else REGISTRY_MODULES.replace("financial_history,", "")
+    return {
+        "modules": modules,
+        "history": keep_history,
+        "crawl_seconds": max(60, int(0.2 * budget_seconds)),
+        "reserve_seconds": FINALIZE_RESERVE_SECONDS + PRIOR_YEAR_RESERVE_SECONDS,
+    }
+
+
 def backfill_top_level_website(profiles: list[dict]) -> None:
     for row in profiles:
         if row.get("website"):
@@ -102,6 +128,8 @@ def main() -> None:
     parser.add_argument("--skip-deep-crawl", action="store_true", help="Skip the scrapy multi-page crawl stage")
     parser.add_argument("--skip-workforce-ocr", action="store_true", help="Skip the annual-report OCR workforce stage")
     parser.add_argument("--previous-profiles", help="profiles.jsonl from an earlier run: websites it found are re-crawled and re-verified (never trusted as-is) for companies the registry lists none for")
+    parser.add_argument("--time-budget-minutes", type=float, default=float(os.environ.get("SIGNALPOST_TIME_BUDGET_MINUTES") or 0) or None,
+                        help="Optional wall-clock budget (or env SIGNALPOST_TIME_BUDGET_MINUTES). The run then plans its optional stages to finish inside it and still writes every terminal result; omit for no limit.")
     parser.add_argument("--python", default=sys.executable)
     args = parser.parse_args()
 
@@ -111,6 +139,12 @@ def main() -> None:
     # Every stage saves the raw bodies behind its claims here, content-addressed.
     os.environ["SIGNALPOST_SNAPSHOT_DIR"] = str(output_dir / "snapshots")
     started_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    run_started = time.time()
+    budget_seconds = args.time_budget_minutes * 60 if args.time_budget_minutes else None
+    plan = plan_stages(args.expected_count, budget_seconds)
+    deadline = (run_started + budget_seconds) if budget_seconds else None
+    if budget_seconds:
+        print(f"Time budget {args.time_budget_minutes:g} min: plan = {plan}", file=sys.stderr)
     stages_run: list[str] = []
 
     # 1. Registry batch: identity, financials, financial_history, roles, group,
@@ -125,7 +159,7 @@ def main() -> None:
         "--report", str(output_dir / "registry-report.json"),
         "--run-id", args.run_id,
         "--expected-count", str(args.expected_count),
-        "--modules", "registry,accounting_obligation,registry_live,financials,financial_history,roles,group,locations,website",
+        "--modules", plan["modules"],
     ])
     stages_run.append("registry_batch")
 
@@ -185,6 +219,7 @@ def main() -> None:
             "--events", str(output_dir / "crawl-events.jsonl"),
             "--jobdir", str(output_dir / "crawl-jobdir"),
             "--report", str(output_dir / "crawl-report.json"),
+            *(["--time-limit-seconds", str(plan["crawl_seconds"])] if plan["crawl_seconds"] else []),
         ], optional=True)
         if ok:
             crawled = read_jsonl(crawled_path)
@@ -216,6 +251,7 @@ def main() -> None:
             "--output", str(workforce_obs_path),
             "--cache", str(output_dir / "workforce-cache"),
             "--report", str(output_dir / "workforce-report.json"),
+            *(["--deadline-epoch", str(deadline - plan["reserve_seconds"])] if deadline else []),
         ], optional=True)
         if ok:
             stages_run.append("workforce_ocr")

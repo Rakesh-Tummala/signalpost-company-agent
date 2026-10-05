@@ -347,6 +347,29 @@ downloads) against the 2,000 cap; workforce 86 of 89 eligible, prior-year figure
 Site-derived facts are sparse there too (10 dated articles from 1 company, no job postings),
 consistent with the 1,000-company rates. No search-API keys were set, so discovery was skipped.
 
+**Evidence now travels inside the result.** Builderr's note that claims "did not include complete
+evidence records that resolve to the exact saved responses" is addressed in the output format: every
+envelope carries `source_snapshots` with the exact body behind each claim inline (text bodies up to 1 MB,
+4 MB per envelope), each evidence entry points at its snapshot, and `scripts/audit_evidence.py` verifies
+hash and excerpt from the result alone. Measured on the 1,000-company artifact with the saved folder
+deliberately absent: 15,542 available claims verify completely (body hash and exact excerpt) from the
+inline bodies alone. The remaining 1,669 rest on annual-report PDFs -- 853 files, 239 MB -- which are
+carried by reference (hash, size, path, and the public `source_url`) with the matched report line as the
+excerpt; they verify against the saved file, not from the result alone. The result file grows from 8 MB to
+51 MB for 1,000 companies (median company: about 7 KB of inline sources), so full 1,000-company results
+are not committed; a 100-company run is (`out/smoke-100/`), which is also what the official-run checks ask
+for. The bulk-registry fallback (used only when a company's live registry call fails) is a retained response
+too, so those claims are evidence-complete as well.
+
+**Official-run size and time are unknown to us.** The contract now says the official batch is 1,000
+companies (it may grow to 1,100) under "a fixed time and resource budget", without stating it. Measured
+here: 3h12m for 1,000 companies with 6,756 registry requests, of which about 36 minutes is the registry stage
+(bound by Brreg's account-history rate limit) and about 2h15m the annual-report OCR (now run with more
+workers and single-threaded tesseract to use the stated 8 vCPU better; not re-timed at 1,000). Since a timeout
+is unscored, there is an opt-in `--time-budget-minutes` mode (see `README.md`) that plans stages to fit and
+still produces every terminal result; it is off by default because the right value is not known, and
+the default run would be cut short only if the evaluator's budget is below the full run time.
+
 Cost of the stricter gate, stated plainly: a few genuine Norwegian companies on a `.com` (TBG
 Holding, Axess Technologies, Oslo Analytica, Lie Nilsen) are no longer published because their
 captured text carries none of the four accepted Norway signals. Website coverage on the verified

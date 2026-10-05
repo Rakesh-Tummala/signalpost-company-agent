@@ -5,9 +5,11 @@ import argparse
 import hashlib
 import io
 import json
+import os
 import re
 import subprocess
 import tempfile
+import time
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
@@ -137,13 +139,23 @@ def ocr_pdf(pdf_path: Path, *, pages: int, dpi: int) -> str:
                 text=True,
                 encoding="utf-8",
                 timeout=60,
+                env={**os.environ, "OMP_THREAD_LIMIT": "1"},
             )
             text.append(completed.stdout)
         return "\n".join(text)
 
 
-def collect(profile: dict, cache_dir: Path, *, ocr_pages: int, ocr_dpi: int) -> tuple[dict | None, dict]:
+def default_workers() -> int:
+    # OCR is CPU-bound and each tesseract run is pinned to one thread (see ocr_pdf), so use most
+    # cores but leave one for the rest of the pipeline.
+    return max(2, min(6, (os.cpu_count() or 4) - 1))
+
+
+def collect(profile: dict, cache_dir: Path, *, ocr_pages: int, ocr_dpi: int, deadline: float | None = None) -> tuple[dict | None, dict]:
     org = str(profile["organisation_number"])
+    if deadline is not None and time.time() > deadline:
+        # Out of time budget: an explicit, honest "not attempted" instead of running past the limit.
+        return None, {"organisation_number": org, "status": "skipped_time_budget"}
     registry = ((profile.get("evidence") or {}).get("registry") or {}).get("value") or {}
     if str(registry.get("antallAnsatte") or "").isdigit():
         return None, {"organisation_number": org, "status": "registry_count_already_available"}
@@ -226,7 +238,8 @@ def main() -> None:
     parser.add_argument("--output", required=True)
     parser.add_argument("--cache", required=True)
     parser.add_argument("--report", required=True)
-    parser.add_argument("--workers", type=int, default=3)
+    parser.add_argument("--workers", type=int, default=default_workers())
+    parser.add_argument("--deadline-epoch", type=float, help="Unix time after which no new company is started (in-flight ones finish)")
     parser.add_argument("--limit", type=int)
     parser.add_argument("--ocr-pages", type=int, default=15)
     parser.add_argument("--ocr-dpi", type=int, default=130)
@@ -251,7 +264,7 @@ def main() -> None:
     collected = {}
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
         futures = {
-            pool.submit(collect, profile, cache_dir, ocr_pages=args.ocr_pages, ocr_dpi=args.ocr_dpi): str(profile["organisation_number"])
+            pool.submit(collect, profile, cache_dir, ocr_pages=args.ocr_pages, ocr_dpi=args.ocr_dpi, deadline=args.deadline_epoch): str(profile["organisation_number"])
             for profile in eligible
         }
         for future in as_completed(futures):

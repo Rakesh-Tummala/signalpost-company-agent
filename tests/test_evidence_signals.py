@@ -331,6 +331,147 @@ class SiteExtractorTests(unittest.TestCase):
         self.assertEqual(news_observations(_profile([page])), [])
 
 
+class SelfContainedResultTests(unittest.TestCase):
+    """The result alone must be enough to reopen and verify the response behind each claim."""
+
+    def _build(self, directory, body: bytes, suffix: str = "json"):
+        sha = hashlib.sha256(body).hexdigest()
+        (Path(directory) / "snapshots").mkdir(exist_ok=True)
+        (Path(directory) / "snapshots" / f"{sha}.{suffix}").write_bytes(body)
+        live = evidence(
+            "registry_live", "available", "official_registry_live", "https://data.brreg.no/enhetsregisteret/api/enheter/923609016",
+            value={"name": "EXAMPLE AS"}, content_sha256=sha, snapshot_path=f"snapshots/{sha}.{suffix}",
+            spans=module_spans("registry_live", body, json.loads(body)) if suffix == "json" else None,
+        )
+        envelope = build_envelope({"organisation_number": "923609016", "evidence": {"registry_live": live}}, run_id="r",
+                                  started_at="2026-01-01T00:00:00Z", completed_at="2026-01-01T00:01:00Z", snapshot_root=Path(directory))
+        return envelope, sha
+
+    def test_the_text_body_is_carried_inline_and_evidence_points_at_it(self):
+        body = '{"organisasjonsnummer":"923609016","navn":"EXAMPLE AS"}'.encode()
+        with tempfile.TemporaryDirectory() as directory:
+            envelope, sha = self._build(directory, body)
+        snapshot = envelope["source_snapshots"][0]
+        self.assertEqual((snapshot["sha256"], snapshot["body_encoding"], snapshot["content_type"]), (sha, "utf-8", "application/json"))
+        self.assertEqual(hashlib.sha256(snapshot["body"].encode()).hexdigest(), sha)
+        cited = [item for item in envelope["evidence"] if item.get("snapshot")]
+        self.assertGreaterEqual(len(cited), 1)
+        self.assertTrue(all(item["snapshot_id"] == snapshot["id"] for item in cited))
+        self.assertEqual(snapshot["source_url"], "https://data.brreg.no/enhetsregisteret/api/enheter/923609016")
+        self.assertEqual(len(envelope["source_snapshots"]), 1)  # shared by every claim, stored once
+
+    def test_the_audit_passes_from_the_result_alone_with_the_saved_folder_deleted(self):
+        from scripts.audit_evidence import audit
+
+        body = '{"organisasjonsnummer":"923609016","navn":"EXAMPLE AS"}'.encode()
+        with tempfile.TemporaryDirectory() as directory:
+            envelope, _ = self._build(directory, body)
+        report = audit([envelope], Path("this-folder-does-not-exist"))
+        self.assertEqual(report["failure_count"], 0, report["failures"])
+        self.assertEqual(report["summary"]["body_inline_in_result"], report["summary"]["evidence_complete_in_result"])
+        # tampering with the inline body is caught
+        envelope["source_snapshots"][0]["body"] = envelope["source_snapshots"][0]["body"].replace("EXAMPLE", "OTHER")
+        self.assertGreater(audit([envelope], Path("nowhere"))["failure_count"], 0)
+
+    def test_pdfs_and_oversized_bodies_are_referenced_not_inlined_and_non_utf8_round_trips(self):
+        import base64
+        from scripts import build_output_contract as contract
+
+        with tempfile.TemporaryDirectory() as directory:
+            pdf, _ = self._build(directory, b"%PDF-1.4 binary", "pdf")
+            self.assertEqual(pdf["source_snapshots"][0]["body_omitted"], "binary_pdf")
+            self.assertEqual(pdf["source_snapshots"][0]["bytes"], len(b"%PDF-1.4 binary"))
+            with patch.object(contract, "INLINE_MAX_BYTES", 10):
+                big, _ = self._build(directory, b'{"a":"0123456789abcdef"}')
+            self.assertEqual(big["source_snapshots"][0]["body_omitted"], "too_large")
+            latin = '<html>Bjørn</html>'.encode("latin-1")
+            odd, sha = self._build(directory, latin, "html")
+        snapshot = odd["source_snapshots"][0]
+        self.assertEqual(snapshot["body_encoding"], "base64")
+        self.assertEqual(hashlib.sha256(base64.b64decode(snapshot["body"])).hexdigest(), sha)
+
+    def test_line_separator_characters_in_a_saved_body_cannot_split_an_envelope_line(self):
+        from scripts.build_output_contract import write_jsonl
+
+        body = ("<p>a" + chr(0x2028) + "b" + chr(0x2029) + "c" + chr(0x85) + "d</p>").encode("utf-8")
+        with tempfile.TemporaryDirectory() as directory:
+            envelope, sha = self._build(directory, body, "html")
+            target = Path(directory) / "out.jsonl"
+            write_jsonl(target, [envelope])
+            text = target.read_text(encoding="utf-8")
+        self.assertEqual(len(text.splitlines()), 1)
+        restored = json.loads(text.splitlines()[0])["source_snapshots"][0]["body"]
+        self.assertEqual(hashlib.sha256(restored.encode("utf-8")).hexdigest(), sha)
+
+    def test_a_missing_saved_file_is_recorded_as_such_not_hidden(self):
+        with tempfile.TemporaryDirectory() as directory:
+            profile = {"organisation_number": "923609016", "evidence": {"registry_live": evidence(
+                "registry_live", "available", "official_registry_live", "https://x.test/", value={"name": "EXAMPLE AS"}, content_sha256="a" * 64, snapshot_path="snapshots/" + "a" * 64 + ".json")}}
+            envelope = build_envelope(profile, run_id="r", started_at="2026-01-01T00:00:00Z", completed_at="2026-01-01T00:01:00Z", snapshot_root=Path(directory))
+        self.assertEqual(envelope["source_snapshots"][0]["body_omitted"], "file_not_found")
+
+    def test_the_bulk_registry_row_is_a_retained_response_for_fallback_claims(self):
+        from norway_company_agent.batch import profiles_from_bulk
+
+        with tempfile.TemporaryDirectory() as directory:
+            bulk = Path(directory) / "bulk.csv.gz"
+            import gzip as gz
+
+            with gz.open(bulk, "wt", encoding="utf-8", newline="") as handle:
+                handle.write("organisasjonsnummer;navn;organisasjonsform.kode;antallAnsatte;konkurs;underAvvikling;sisteInnsendteAarsregnskap" + chr(10))
+                handle.write("923609016;EXAMPLE AS;AS;4;false;false;2025" + chr(10))
+            with patch.dict(os.environ, {"SIGNALPOST_SNAPSHOT_DIR": str(Path(directory) / "snapshots")}):
+                profiles, _ = profiles_from_bulk(bulk, ["923609016"])
+            record = profiles[0]["evidence"]["registry"]
+            self.assertEqual(record["spans"]["navn"], '"navn":"EXAMPLE AS"')
+            saved = (Path(directory) / "snapshots" / Path(record["snapshot_path"]).name).read_bytes()
+            self.assertEqual(hashlib.sha256(saved).hexdigest(), record["content_sha256"])
+            self.assertIn("file sha256", record["note"])
+            envelope = build_envelope({"organisation_number": "923609016", "evidence": {"registry": record}}, run_id="r", started_at="2026-01-01T00:00:00Z", completed_at="2026-01-01T00:01:00Z", snapshot_root=Path(directory))
+        name = next(c for c in envelope["claims"] if c["field"] == "legal_name")
+        cited = next(e for e in envelope["evidence"] if e["id"] == name["evidence_ids"][0])
+        self.assertEqual((cited["claim_span"], name["availability"]), ('"navn":"EXAMPLE AS"', "available"))
+        self.assertTrue(cited["snapshot_id"])
+
+
+class TimeBudgetTests(unittest.TestCase):
+    def test_no_budget_means_no_limits(self):
+        from scripts.run_agent import plan_stages
+
+        plan = plan_stages(1000, None)
+        self.assertTrue(plan["history"])
+        self.assertIsNone(plan["crawl_seconds"])
+        self.assertIn("financial_history", plan["modules"])
+
+    def test_a_tight_budget_drops_the_rate_limited_history_module_but_keeps_everything_else(self):
+        from scripts.run_agent import plan_stages
+
+        tight = plan_stages(1000, 45 * 60)  # 1,000 companies at 30 history requests/minute alone is 36 minutes
+        self.assertFalse(tight["history"])
+        self.assertNotIn("financial_history", tight["modules"])
+        for module in ("registry", "registry_live", "financials", "roles", "locations", "website"):
+            self.assertIn(module, tight["modules"])
+        self.assertGreaterEqual(tight["reserve_seconds"], 360)
+        roomy = plan_stages(1000, 300 * 60)
+        self.assertTrue(roomy["history"])
+        self.assertEqual(plan_stages(100, 45 * 60)["history"], True)
+
+    def test_a_dropped_history_module_is_an_explicit_not_available_claim(self):
+        envelope = build_envelope({"organisation_number": "923609016", "evidence": {}}, run_id="r", started_at="2026-01-01T00:00:00Z", completed_at="2026-01-01T00:01:00Z")
+        claim = next(c for c in envelope["claims"] if c["field"] == "annual_accounts_years_on_file")
+        self.assertEqual((claim["availability"], claim["value"]), ("not_available", None))
+
+    def test_the_ocr_connector_starts_no_new_company_after_its_deadline(self):
+        import time as time_module
+        from scripts.run_annual_report_workforce_connector import collect
+
+        profile = {"organisation_number": "923609016", "evidence": {"financial_history": {"value": {"pdfs": [{"year": "2025", "url": "https://x.test/a.pdf"}]}}}}
+        with tempfile.TemporaryDirectory() as directory:
+            observation, status = collect(profile, Path(directory), ocr_pages=1, ocr_dpi=50, deadline=time_module.time() - 1)
+        self.assertIsNone(observation)
+        self.assertEqual(status["status"], "skipped_time_budget")
+
+
 class ContractEvidenceTests(unittest.TestCase):
     def _profile(self):
         raw = '{"organisasjonsnummer":"923609016","navn":"EXAMPLE AS","organisasjonsform":{"kode":"AS"},"antallAnsatte":4,"sisteInnsendteAarsregnskap":"2025"}'

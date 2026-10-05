@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from .evidence import evidence, utc_now
+from .evidence_spans import module_spans
+from .snapshot_store import save_snapshot
 from .official import accounting_obligation_assessment
 from .sampling import iter_bulk
 
@@ -68,6 +70,10 @@ def profiles_from_bulk(path: str | Path, organisation_numbers: Iterable[str]) ->
         if org not in wanted:
             continue
         raw = profile.pop("raw", {})
+        # The Brreg bulk snapshot is one large file; the row this profile was built from is the
+        # response its fallback claims rest on, so keep that row as its own retained response
+        # (content-addressed, with the frozen file's hash recorded as provenance).
+        row_bytes = json.dumps(raw, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
         profile["evidence"] = {
             "registry": evidence(
                 "registry",
@@ -76,8 +82,12 @@ def profiles_from_bulk(path: str | Path, organisation_numbers: Iterable[str]) ->
                 "https://data.brreg.no/enhetsregisteret/api/enheter/lastned/csv",
                 value=raw,
                 retrieved_at=retrieved_at,
-                content_sha256=snapshot_sha256,
+                content_sha256=hashlib.sha256(row_bytes).hexdigest(),
                 source_row_key=org,
+                snapshot_path=save_snapshot(row_bytes, "json"),
+                spans=module_spans("registry", row_bytes, raw),
+                extraction_method="official_bulk_registry_row",
+                note=f"Row from the frozen Brreg bulk snapshot (file sha256 {snapshot_sha256}).",
             ),
             "accounting_obligation": accounting_obligation_assessment(profile),
         }

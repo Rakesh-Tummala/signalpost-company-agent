@@ -136,6 +136,13 @@ def module_spans(module: str, raw_bytes: bytes | None, body: Any) -> Any:
     raw = raw_bytes.decode("utf-8", errors="replace")
     if module == "registry_live":
         return entity_spans(raw)
+    if module == "registry":
+        spans = {}
+        for key in ("organisasjonsnummer", "navn", "organisasjonsform.kode", "antallAnsatte", "konkurs", "underAvvikling", "sisteInnsendteAarsregnskap"):
+            found = json_key_span(raw, key)
+            if found:
+                spans[key] = found[0]
+        return spans
     if module == "financials":
         return {"records": financials_spans(raw, body)}
     if module == "roles":

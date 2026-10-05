@@ -12,6 +12,7 @@ re-fetching anything -- it is a pure reshape of data we already collected.
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import sys
 from pathlib import Path
@@ -44,7 +45,13 @@ def write_jsonl(path: Path, rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as handle:
         for row in rows:
-            handle.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
+            line = json.dumps(row, ensure_ascii=False, separators=(",", ":"))
+            # Saved page bodies can contain U+2028/U+2029/U+0085: valid inside a JSON string, but
+            # splitlines()-style readers treat them as line breaks. Escape them so one envelope is
+            # always exactly one physical line.
+            for char in ("\u2028", "\u2029", "\u0085"):
+                line = line.replace(char, "\\u%04x" % ord(char))
+            handle.write(line + "\n")
 
 
 def availability_for(status: str | None) -> str:
@@ -64,13 +71,59 @@ def confidence_for(record: dict[str, Any]) -> float | None:
     return 0.9
 
 
-class Emitter:
-    """Collects claims; every claim gets its own evidence entry so it can carry an exact excerpt."""
+INLINE_MAX_BYTES = 1_000_000
+ENVELOPE_INLINE_BUDGET = 4_000_000
+CONTENT_TYPES = {
+    ".json": "application/json", ".html": "text/html", ".xml": "application/xml", ".pdf": "application/pdf", ".txt": "text/plain",
+}
 
-    def __init__(self) -> None:
+
+class Emitter:
+    """Collects claims; every claim gets its own evidence entry so it can carry an exact excerpt.
+
+    Every saved source body a claim rests on is also registered once in the envelope's
+    `source_snapshots`, with the body inline when it is text and fits the budget, so the
+    result alone is enough to reopen and re-hash the exact response behind each claim.
+    """
+
+    def __init__(self, snapshot_root: Path | None = None) -> None:
         self.claims: list[dict[str, Any]] = []
         self.evidence: list[dict[str, Any]] = []
+        self.snapshots: list[dict[str, Any]] = []
+        self._snapshot_ids: dict[str, str] = {}
+        self._inline_used = 0
+        self._root = snapshot_root
         self._counts: dict[str, int] = {}
+
+    def _register_snapshot(self, path: str, source: dict[str, Any]) -> str:
+        if path in self._snapshot_ids:
+            return self._snapshot_ids[path]
+        sha = Path(path).stem
+        snapshot_id = f"snap-{sha[:16]}"
+        suffix = Path(path).suffix.lower()
+        entry: dict[str, Any] = {
+            "id": snapshot_id, "sha256": sha, "path": path, "content_type": CONTENT_TYPES.get(suffix, "application/octet-stream"),
+            "source_url": source.get("source_url"), "retrieved_at": source.get("retrieved_at"),
+        }
+        file = (self._root / path) if self._root is not None else None
+        raw = file.read_bytes() if file is not None and file.exists() else None
+        if raw is None:
+            entry["body_omitted"] = "file_not_found"
+        else:
+            entry["bytes"] = len(raw)
+            if suffix == ".pdf":
+                entry["body_omitted"] = "binary_pdf"
+            elif len(raw) > INLINE_MAX_BYTES or self._inline_used + len(raw) > ENVELOPE_INLINE_BUDGET:
+                entry["body_omitted"] = "too_large"
+            else:
+                try:
+                    entry["body"], entry["body_encoding"] = raw.decode("utf-8"), "utf-8"
+                except UnicodeDecodeError:
+                    entry["body"], entry["body_encoding"] = base64.b64encode(raw).decode("ascii"), "base64"
+                self._inline_used += len(raw)
+        self.snapshots.append(entry)
+        self._snapshot_ids[path] = snapshot_id
+        return snapshot_id
 
     def _next_id(self, stem: str) -> str:
         self._counts[stem] = self._counts.get(stem, 0) + 1
@@ -88,6 +141,7 @@ class Emitter:
         }
         if source.get("snapshot_path"):
             entry["snapshot"] = source["snapshot_path"]
+            entry["snapshot_id"] = self._register_snapshot(source["snapshot_path"], source)
         if method:
             entry["extraction_method"] = method
         self.evidence.append(entry)
@@ -141,6 +195,8 @@ def emit_registry_claims(emitter: Emitter, evidence: dict[str, Any]) -> None:
         "liquidating": "underAvvikling", "business_address": "forretningsadresse", "industry": "naeringskode1",
         "latest_submitted_accounts": "sisteInnsendteAarsregnskap",
     }
+    if module == "registry":  # the flat bulk row names legal_form by its code column
+        span_keys["legal_form"] = "organisasjonsform.kode"
     for field, claim_value in fields.items():
         if claim_value is None:
             continue
@@ -166,8 +222,8 @@ def emit_accounting_obligation(emitter: Emitter, evidence: dict[str, Any]) -> No
     bulk_value = bulk.get("value") or {}
     key = "sisteInnsendteAarsregnskap" if filed else "organisasjonsform.kode"
     if bulk.get("status") == "available" and bulk_value.get(key):
-        emitter.claim("accounting_obligation", value.get("classification"), bulk, module="accounting_obligation",
-                      span=json.dumps({key: bulk_value[key]}, ensure_ascii=False, separators=(",", ":")), method=method)
+        span = (bulk.get("spans") or {}).get(key) or json.dumps({key: bulk_value[key]}, ensure_ascii=False, separators=(",", ":"))
+        emitter.claim("accounting_obligation", value.get("classification"), bulk, module="accounting_obligation", span=span, method=method)
         return
     emitter.claim("accounting_obligation", value.get("classification"), record, module="accounting_obligation")
 
@@ -190,12 +246,18 @@ def emit_financials(emitter: Emitter, evidence: dict[str, Any]) -> None:
         emitter.claim(f"annual_accounts.{year}", item, record, module="financials", span=entry.get("period") or entry.get("revenue"))
 
 
-def emit_financial_history(emitter: Emitter, evidence: dict[str, Any]) -> None:
+def emit_financial_history(emitter: Emitter, evidence: dict[str, Any], organisation_number: str | None = None) -> None:
     # The financials module above only returns the most recent filing(s) -- the
     # official API doesn't hand back full historical figures in one call. We do
     # cheaply have the *list* of years with a filing on record (financial_history),
     # which is real "available history" even without every year's full P&L.
     record = evidence.get("financial_history") or {}
+    if not record and organisation_number:
+        # Not fetched (e.g. dropped to fit a time budget): say so explicitly rather than omit the claim.
+        stub = {"status": "not_fetched", "source_url": f"https://data.brreg.no/regnskapsregisteret/regnskap/aarsregnskap/kopi/{organisation_number}/aar",
+                "source_class": "official_annual_account_copies", "retrieved_at": None}
+        emitter.claim("annual_accounts_years_on_file", None, stub, module="financial_history")
+        return
     if record.get("status") != "available":
         return
     years = (record.get("value") or {}).get("years") or []
@@ -453,13 +515,13 @@ def emit_external_observations(emitter: Emitter, observations: list[dict[str, An
             emitter.observation_claim(f"annual_accounts.{year}", figures, observation)
 
 
-def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, completed_at: str, observations: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, completed_at: str, observations: list[dict[str, Any]] | None = None, snapshot_root: Path | None = None) -> dict[str, Any]:
     evidence = profile.get("evidence") or {}
-    emitter = Emitter()
+    emitter = Emitter(snapshot_root)
     emit_registry_claims(emitter, evidence)
     emit_accounting_obligation(emitter, evidence)
     emit_financials(emitter, evidence)
-    emit_financial_history(emitter, evidence)
+    emit_financial_history(emitter, evidence, str(profile.get("organisation_number") or ""))
     emit_roles(emitter, evidence)
     emit_locations(emitter, evidence)
     emit_group(emitter, evidence)
@@ -483,6 +545,7 @@ def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, com
         },
         "claims": emitter.claims,
         "evidence": emitter.evidence,
+        "source_snapshots": emitter.snapshots,
         "summary": summarize_profile(evidence, observations),
         "changes": [],
         "errors": errors,
@@ -523,7 +586,7 @@ def derive_spans_from_snapshots(profiles: list[dict[str, Any]], root: Path) -> i
 def build_envelopes_safe(
     profiles: list[dict[str, Any]],
     observations_by_org: dict[str, list[dict[str, Any]]],
-    *, run_id: str, started_at: str, completed_at: str,
+    *, run_id: str, started_at: str, completed_at: str, snapshot_root: Path | None = None,
 ) -> tuple[list[dict[str, Any]], int]:
     """build_envelope() for every profile, but one bad profile can't drop the batch.
 
@@ -538,7 +601,7 @@ def build_envelopes_safe(
     for profile in profiles:
         org = str(profile.get("organisation_number") or "")
         try:
-            envelopes.append(build_envelope(profile, run_id=run_id, started_at=started_at, completed_at=completed_at, observations=observations_by_org.get(org)))
+            envelopes.append(build_envelope(profile, run_id=run_id, started_at=started_at, completed_at=completed_at, observations=observations_by_org.get(org), snapshot_root=snapshot_root))
         except Exception as exc:  # noqa: BLE001 -- one bad profile must not drop the whole batch
             failures += 1
             envelopes.append({
@@ -546,6 +609,7 @@ def build_envelopes_safe(
                 "run": {"run_id": run_id, "started_at": started_at, "completed_at": completed_at, "terminal_status": "submission_error"},
                 "claims": [],
                 "evidence": [],
+                "source_snapshots": [],
                 "summary": {"text": "", "unknown_fields": ["all fields -- envelope conversion failed"], "grounded_in_claims": False},
                 "changes": [],
                 "errors": [{"module": "build_output_contract", "note": f"{type(exc).__name__}: {exc}"}],
@@ -566,14 +630,15 @@ def main() -> None:
     args = parser.parse_args()
 
     profiles = read_jsonl(Path(args.profiles))
-    derive_spans_from_snapshots(profiles, Path(args.snapshot_root) if args.snapshot_root else Path(args.profiles).parent)
+    snapshot_root = Path(args.snapshot_root) if args.snapshot_root else Path(args.profiles).parent
+    derive_spans_from_snapshots(profiles, snapshot_root)
     observations_by_org: dict[str, list[dict[str, Any]]] = {}
     for observations_path in args.observations:
         for observation in read_jsonl(Path(observations_path)):
             org = str(observation.get("organisation_number"))
             observations_by_org.setdefault(org, []).append(observation)
 
-    envelopes, conversion_failures = build_envelopes_safe(profiles, observations_by_org, run_id=args.run_id, started_at=args.started_at, completed_at=args.completed_at)
+    envelopes, conversion_failures = build_envelopes_safe(profiles, observations_by_org, run_id=args.run_id, started_at=args.started_at, completed_at=args.completed_at, snapshot_root=snapshot_root)
     write_jsonl(Path(args.output), envelopes)
     total_claims = sum(len(e["claims"]) for e in envelopes)
     print(json.dumps({

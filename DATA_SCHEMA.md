@@ -13,7 +13,10 @@ from the pipeline's internal profile format. This matches `OUTPUT_CONTRACT.md`:
     {"field": "legal_name", "value": "Example AS", "availability": "available", "confidence": 1.0, "evidence_ids": ["ev-registry_live-1"]}
   ],
   "evidence": [
-    {"id": "ev-registry_live-1", "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016", "source_class": "official_registry_live", "retrieved_at": "...", "content_sha256": "...", "claim_span": "\"navn\":\"Example AS\"", "snapshot": "snapshots/<sha256>.json", "extraction_method": "official_api_json"}
+    {"id": "ev-registry_live-1", "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016", "source_class": "official_registry_live", "retrieved_at": "...", "content_sha256": "...", "claim_span": "\"navn\":\"Example AS\"", "snapshot": "snapshots/<sha256>.json", "snapshot_id": "snap-<sha256[:16]>", "extraction_method": "official_api_json"}
+  ],
+  "source_snapshots": [
+    {"id": "snap-<sha256[:16]>", "sha256": "...", "path": "snapshots/<sha256>.json", "content_type": "application/json", "bytes": 1234, "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016", "retrieved_at": "...", "body": "{\"organisasjonsnummer\":\"923609016\",...}", "body_encoding": "utf-8"}
   ],
   "summary": {"text": "Example AS is an AS...", "unknown_fields": ["group/ownership structure"], "grounded_in_claims": true},
   "changes": [],
@@ -58,12 +61,25 @@ Claim fields currently emitted:
 
 ## Saved sources and exact excerpts
 
+**The result is self-contained.** Each envelope's `source_snapshots` lists every saved source body
+its claims rest on, once each (several claims usually share one response), and each evidence entry
+points at its entry through `snapshot_id`. A text body (JSON, HTML, RSS/Atom) is carried **inline** as
+`body` -- `body_encoding` is `utf-8`, or `base64` for the rare body that is not valid UTF-8, so the
+exact bytes are always recoverable -- up to 1 MB per body and 4 MB per envelope. Annual-report PDFs are
+carried by reference (`body_omitted: "binary_pdf"`, with `sha256`, `bytes` and `path`) because they are
+large (about 240 MB for 1,000 companies) and are public at `source_url`; their `claim_span` is the matched
+report line. Anything else that did not fit is marked `body_omitted: "too_large"`; a saved file that could
+not be found is marked `file_not_found` rather than hidden. So a reader holding only the result can
+re-hash a text body and find the excerpt in it, without opening any other file.
+
 Every claim gets **its own evidence entry** (`ev-<source>-<n>`), so each can carry the exact
 excerpt that supports it:
 
-- `snapshot` -- path (relative to the output directory) of the saved raw body:
+- `snapshot` / `snapshot_id` -- the saved raw body: path (relative to the output directory)
   `snapshots/<sha256>.<json|html|xml|pdf>`, named by the SHA-256 of its exact bytes, so
-  `content_sha256` always equals the hash of that file.
+  `content_sha256` always equals the hash of that file; and its entry in `source_snapshots`.
+  The bulk-registry fallback is also a retained response: the row a profile was built from is
+  saved as its own JSON body, with the frozen bulk file's hash recorded in the evidence `note`.
 - `claim_span` -- a *literal slice* of that saved body, never a paraphrase: the JSON
   `"key":value` for official API facts, the `<time>`/`<meta>`/anchor element or the
   JSON-LD pair for company-site facts, the feed `<item>` for feed articles. For annual-report
