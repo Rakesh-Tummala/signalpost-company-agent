@@ -14,11 +14,11 @@
   profiles, 19,080 claims, zero violations, zero per-profile conversion failures
   (the last one guarded by `build_envelopes_safe`, see its own commit).
 - `scripts/audit_evidence.py` — checks that every claim is backed by an exact saved
-  source (`out/audit-report.json`, run on the artifact from a fresh full one-command run):
-  all 17,212 available claims carry a public source URL, retrieval time, SHA-256 and supporting
-  text inside the result itself; 15,547 excerpts are literal slices of their saved snapshot; 1,664
-  come from annual-report PDFs (reported separately: a PDF's bytes can't be searched for that
-  text); **0 failures**. Exits non-zero on any incomplete record or mismatch.
+  source. On the final one-command run over all 1,000 companies (21,829 claims, 18,976 available): every
+  available claim carries a public source URL, retrieval time, SHA-256 and supporting text inside the result
+  itself; **0 failures** both from `envelopes.jsonl` alone (17,318 text claims: body re-hashed, excerpt found
+  literally; 1,658 annual-report PDF claims checked by their recorded hash) and against the saved folder
+  (all 18,976 hashes re-computed). Exits non-zero on any incomplete record or mismatch.
 - `scripts/validate_refresh_at_scale.py` — real-scale refresh validation (not just
   the offline fixture): zero false positives and zero crashes across all 1,000 real
   profiles, confirmed idempotency at scale, 50/50 injected changes on real company
@@ -50,18 +50,12 @@
 - `scripts/evaluate_external_footprint.py` — audit gate for published external
   observations against evaluator-owned labels. **Not run** — we have no external
   observations to audit yet.
-- **Real per-field coverage from the actual final claims artifact** (not the older
-  proxy scorer above) — see the table in `LIMITATIONS.md`. This is the more relevant
-  number: computed directly from the claims artifact of the full 1,000-company run (not committed: 51 MB
-  with inline sources; `out/audit-report.json` and `out/run-summary.json` record it), and after the identity-gate precision fix demoted 24
-  wrong-company matches (also in `LIMITATIONS.md`). Official-registry fields are
-  ~100%; workforce size 84.1% (via OCR); prior-year annual accounts 82.3% (also via OCR,
-  recovered from the same cached report text -- no new fetches); group structure 7.0%;
-  verified website 6.7% (46 more listed but published `ambiguous`); social profiles 3.4%;
-  dated company news 2.1% (21 companies, 140 items); real job postings 0.1% (1 company).
-  This tells us *our own* coverage, not how it compares to Builderr's
-  independently-verified collection or the other entrants' pooled findings, which is
-  what the real 35-point coverage score is measured against.
+- **Real per-field coverage from the final claims artifact** — see the table at the top of
+  `LIMITATIONS.md` (final code, one clean-clone run, 1h35m). Official-registry fields ~100%; workforce size
+  84.0% and prior-year accounts 81.8% (both via OCR of the official annual report); group structure 7.0%;
+  verified website 7.4%; social profiles 3.3%; dated company news 1.7%; real job postings 0.1%; Wikidata
+  items 0.8%. This tells us *our own* coverage, not how it compares to Builderr's independently verified
+  collection or the other entrants' pooled findings, which is what the real coverage score is measured against.
 
 ## What's missing
 

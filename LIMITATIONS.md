@@ -4,27 +4,40 @@ Honest account of what this agent does not yet do, as of this submission. None o
 these are silently hidden: every gap below shows up as an honest `not_available` /
 `not_applicable` claim rather than a fabricated or zero value.
 
-## Real per-field coverage (1,000-company entry batch, from the final claims artifact)
+## Real per-field coverage (1,000-company entry batch, final code, one clean-clone run)
+
+Produced by one `run_agent.py` run from a fresh clone, no API keys, Windows 11 (the same code also ran
+clean on Ubuntu 24.04, 10 companies): 1,000 terminal results, 21,829 claims, **1h35m** wall clock, about
+8,800 outbound requests (registry stage 6,776 including its homepage crawl, key-free site probe 1,132,
+Wikidata 39, about 855 annual-report downloads). Numbers below are from that run's `envelopes.jsonl`;
+sections further down were written at earlier stages and describe the history of the work, so where a number
+differs, this table is current.
 
 | Field | Companies | % |
 |---|---|---|
-| Legal identity, legal form, accounting obligation | 1,000 | 100% |
-| Bankruptcy/liquidation status, industry, latest filed year, roles | 998 | ~100% |
-| Latest annual accounts, business address | 997 / 996 | 99.7% / 99.6% |
-| **Workforce size** (OCR'd from official annual reports) | 841 | 84.1% |
-| **Prior-year annual accounts** (recovered from the same official annual-report OCR) | 823 | 82.3% |
+| Legal identity, legal form, accounting obligation, years of accounts on file | 1,000 | 100% |
+| Bankruptcy/liquidation status, industry, latest filed year, roles | 998 | 99.8% |
+| Annual accounts (latest filed year), business address | 997 / 996 | 99.7% / 99.6% |
+| **Workforce size** (OCR'd from official annual reports; 855 eligible, 15 abstained) | 840 | 84.0% |
+| **Prior-year annual accounts** (recovered from the same official annual-report OCR; 853 eligible, 818 accepted) | 818 | 81.8% |
 | Registered locations/subunits | 745 | 74.5% |
 | Registry-reported employee count | 142 | 14.2% |
+| Verified official website (identity gate: exact entity only) | 74 | 7.4% |
 | Group/ownership structure | 70 | 7.0% |
-| Verified official website (a further 46 listed sites are published as `ambiguous`) | 67 | 6.7% |
-| Verified social profiles (59 links) | 34 | 3.4% |
-| **Dated** company-owned news items (140 items) | 21 | 2.1% |
-| **Real job postings** on the company's own site | 1 | 0.1% |
+| Verified social profiles (64 links; Facebook 26, Instagram 18, LinkedIn 15) | 33 | 3.3% |
+| **Dated** company-owned news items (98 items, 86 from the site's own feed) | 17 | 1.7% |
+| Wikidata item matched by organisation number (CC0, independent of Brreg and of the company) | 8 | 0.8% |
+| **Real job postings** on the company's own site (3 role cards) | 1 | 0.1% |
+
+Evidence completeness in that run: of 21,829 claims, 18,976 are available, and all 18,976 carry a public source URL,
+retrieval time, SHA-256 and supporting text. `scripts/audit_evidence.py` reports **0 failures** both ways: from
+`envelopes.jsonl` alone (17,318 text claims re-hashed and the excerpt found literally in the inline body; 1,658
+annual-report PDF claims checked by their recorded hash) and against the saved folder (all 18,976 hashes re-computed).
 
 Checked-and-empty results (no registered subunits: 255 companies) are published as an
 explicit empty list cited to the response's own `"totalElements":0`, not counted above.
 
-Four rows changed meaning or fell in this revision, on purpose, and the change is
+The website, social, news and jobs rows are lower than a raw "technically discovered" count on purpose, and the change is
 toward precision (see "After the 700-company diagnostic" below): the website row now
 counts only sites the identity gate verified (before, 49 sites it had *not* verified
 were published as `available` at low confidence); social profiles depend on a verified
@@ -349,8 +362,8 @@ consistent with the 1,000-company rates. No search-API keys were set, so discove
 
 **Evidence now travels inside the result.** Builderr's note that claims "did not include complete
 evidence records that resolve to the exact saved responses" is addressed in the output format: every
-envelope carries `source_snapshots` with the exact body behind each claim inline (text bodies up to 1 MB,
-4 MB per envelope), each evidence entry points at its snapshot, and `scripts/audit_evidence.py` verifies
+envelope carries `source_snapshots` with the exact body behind each claim inline (text bodies up to 3 MB,
+8 MB per envelope), each evidence entry points at its snapshot, and `scripts/audit_evidence.py` verifies
 hash and excerpt from the result alone. Measured on the 1,000-company artifact with the saved folder
 deliberately absent: 15,542 available claims verify completely (body hash and exact excerpt) from the
 inline bodies alone. The remaining 1,669 rest on annual-report PDFs -- 853 files, 239 MB -- which are
@@ -363,9 +376,9 @@ too, so those claims are evidence-complete as well.
 
 **Official-run size and time are unknown to us.** The contract now says the official batch is 1,000
 companies (it may grow to 1,100) under "a fixed time and resource budget", without stating it. Measured
-here: 3h12m for 1,000 companies with 6,756 registry requests, of which about 36 minutes is the registry stage
-(bound by Brreg's account-history rate limit) and about 2h15m the annual-report OCR (now run with more
-workers and single-threaded tesseract to use the stated 8 vCPU better; not re-timed at 1,000). Since a timeout
+here: **1h35m** for 1,000 companies on the final code with about 8,800 outbound requests (it was 3h12m before the
+annual-report OCR was started first, in the background, so it overlaps the registry stage, which is bound by
+Brreg's account-history rate limit of about 30 requests a minute). Since a timeout
 is unscored, there is an opt-in `--time-budget-minutes` mode (see `README.md`) that plans stages to fit and
 still produces every terminal result; it is off by default because the right value is not known, and
 the default run would be cut short only if the evaluator's budget is below the full run time.
