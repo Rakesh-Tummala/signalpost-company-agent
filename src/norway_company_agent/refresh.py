@@ -60,6 +60,12 @@ def diff_profile(previous: dict[str, Any], current: dict[str, Any]) -> list[dict
             "source_class": record.get("source_class") or record.get("source_type"),
             "old_content_sha256": previous_record.get("content_sha256"),
             "new_content_sha256": record.get("content_sha256"),
+            # The earlier evidence is preserved on the event, not overwritten: where and when the
+            # old value was read, and which saved response it came from.
+            "old_source_url": previous_record.get("source_url"),
+            "old_retrieved_at": previous_record.get("retrieved_at"),
+            "old_snapshot_path": previous_record.get("snapshot_path"),
+            "new_snapshot_path": record.get("snapshot_path"),
             "status": record.get("status"),
         })
     return changes

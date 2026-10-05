@@ -434,6 +434,163 @@ class SelfContainedResultTests(unittest.TestCase):
         self.assertTrue(cited["snapshot_id"])
 
 
+class SummarySourcesAndChangesTests(unittest.TestCase):
+    ARGS = dict(run_id="r", started_at="2026-01-01T00:00:00Z", completed_at="2026-01-01T00:01:00Z")
+
+    def _profile(self):
+        raw = b'{"organisasjonsnummer":"923609016","navn":"EXAMPLE AS","antallAnsatte":4}'
+        live = evidence("registry_live", "available", "official_registry_live", "https://data.brreg.no/x",
+                        value={"name": "EXAMPLE AS", "legal_form": "AS", "employees": 4}, content_sha256=hashlib.sha256(raw).hexdigest(),
+                        spans=module_spans("registry_live", raw, json.loads(raw)))
+        return {"organisation_number": "923609016", "evidence": {"registry_live": live}}
+
+    def test_every_summary_sentence_cites_published_claims_and_their_evidence(self):
+        page = _page()
+        observations = news_observations(_profile([page])) + job_observations(_profile([page]), today="2026-09-01")
+        envelope = build_envelope(self._profile(), observations=observations, **self.ARGS)
+        published = {c["field"] for c in envelope["claims"]}
+        known_evidence = {e["id"] for e in envelope["evidence"]}
+        by_text = {item["text"]: item for item in envelope["summary"]["sentences"]}
+        self.assertEqual(" ".join(by_text), envelope["summary"]["text"])
+        for item in envelope["summary"]["sentences"]:
+            self.assertTrue(set(item["fields"]) <= published, item)
+            self.assertTrue(set(item["evidence_ids"]) <= known_evidence, item)
+        news_sentence = next(item for text, item in by_text.items() if "dated news item" in text)
+        self.assertTrue(all(field.startswith("site_news.") for field in news_sentence["fields"]))
+        self.assertTrue(news_sentence["evidence_ids"])
+        identity = next(item for text, item in by_text.items() if "registered in Norway" in text)
+        self.assertIn("legal_name", identity["fields"])
+
+    def test_material_changes_are_in_the_envelope_and_the_summary_and_none_when_no_previous_run(self):
+        event = {"organisation_number": "923609016", "field": "registry.employees", "old_value": 4, "new_value": 6,
+                 "old_content_sha256": "a" * 64, "new_content_sha256": "b" * 64, "old_retrieved_at": "2026-01-01T00:00:00Z"}
+        changed = build_envelope(self._profile(), changes=[event], **self.ARGS)
+        self.assertEqual(changed["changes"], [event])
+        self.assertIn("1 tracked field(s) changed: registry.employees (4 -> 6)", changed["summary"]["text"])
+        unchanged = build_envelope(self._profile(), changes=[], **self.ARGS)
+        self.assertEqual(unchanged["changes"], [])
+        self.assertIn("No tracked field has changed since the previous run.", unchanged["summary"]["text"])
+        first_run = build_envelope(self._profile(), **self.ARGS)
+        self.assertEqual(first_run["changes"], [])
+        self.assertNotIn("previous run", first_run["summary"]["text"])
+
+    def test_a_change_event_preserves_the_earlier_evidence(self):
+        from norway_company_agent.refresh import diff_datasets
+
+        def row(employees, sha, retrieved, snapshot):
+            record = evidence("registry_live", "available", "official_registry_live", "https://data.brreg.no/x", value={}, content_sha256=sha,
+                              retrieved_at=retrieved, snapshot_path=snapshot)
+            return {"organisation_number": "923609016", "employees": employees, "evidence": {"registry_live": record}}
+
+        events = diff_datasets([row(4, "a" * 64, "2026-01-01T00:00:00Z", "snapshots/old.json")], [row(6, "b" * 64, "2026-02-01T00:00:00Z", "snapshots/new.json")])
+        self.assertEqual(len(events), 1)
+        event = events[0]
+        self.assertEqual((event["old_value"], event["new_value"]), (4, 6))
+        self.assertEqual((event["old_content_sha256"], event["old_retrieved_at"], event["old_snapshot_path"]), ("a" * 64, "2026-01-01T00:00:00Z", "snapshots/old.json"))
+        self.assertEqual((event["new_content_sha256"], event["new_snapshot_path"]), ("b" * 64, "snapshots/new.json"))
+        self.assertEqual(diff_datasets([row(4, "a" * 64, "t1", "s")], [row(4, "c" * 64, "t2", "s2")]), [])  # same values, new fetch: not a change
+
+
+class DomainProbeTests(unittest.TestCase):
+    def test_candidates_are_derived_from_the_legal_name_with_norwegian_letter_variants(self):
+        from norway_company_agent.domain_probe import domain_candidates
+
+        self.assertEqual(domain_candidates("TRUCK INVEST AS"), ["truckinvest.no", "truck-invest.no", "truckinvest.com"])
+        self.assertEqual(domain_candidates("BJØRN & SØNN BYGG AS")[:2], ["bjornsonnbygg.no", "bjorn-sonn-bygg.no"])
+        self.assertIn("bjoernsoennbygg.no", domain_candidates("BJØRN & SØNN BYGG AS"))
+        self.assertEqual(domain_candidates("AS"), [])
+        self.assertEqual(domain_candidates("X AS"), [])
+        self.assertLessEqual(len(domain_candidates("KNUT OLAV HALLAND BRØYTING OG GRAVING AS")), 4)
+
+    def test_the_organisation_number_must_be_a_delimited_number(self):
+        from norway_company_agent.domain_probe import org_number_on_page
+
+        for text in ("Org.nr. 923 609 016 MVA", "923609016", "NO 923.609.016", "org 923 609 016"):
+            self.assertTrue(org_number_on_page(text, "923609016"), text)
+        for text in ("tlf 99923609016", "9236090161", "923 609 017", ""):
+            self.assertFalse(org_number_on_page(text, "923609016"), text)
+
+    def test_the_registered_place_needs_both_postcode_and_town(self):
+        from norway_company_agent.domain_probe import place_on_page
+
+        self.assertTrue(place_on_page("Storgata 1, 2004 Lillestrøm", "2004", "LILLESTRØM"))
+        self.assertFalse(place_on_page("Storgata 1, 2004 Oslo", "2004", "LILLESTRØM"))
+        self.assertFalse(place_on_page("Storgata 1, 9999 Lillestrøm", "2004", "LILLESTRØM"))
+        self.assertFalse(place_on_page("anything", None, "LILLESTRØM"))
+
+    def _row(self):
+        return {"organisation_number": "923609016", "name": "EXAMPLE TOOLS AS", "evidence": {"registry_live": {"status": "available", "value": {"name": "EXAMPLE TOOLS AS", "business_address": {"postnummer": "2004", "poststed": "LILLESTRØM"}}}}}
+
+    def test_a_site_is_a_hit_only_with_proof_on_its_own_domain(self):
+        from scripts import run_domain_probe as probe
+
+        class Response:
+            def __init__(self, body, url):
+                self._body, self._url = body, url
+                self.headers = {"content-type": "text/html"}
+            def read(self, n=-1): return self._body
+            def geturl(self): return self._url
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+
+        def opener(body, url):
+            return type("Opener", (), {"open": staticmethod(lambda request, timeout=None: Response(body, url))})
+
+        page = "<html><body><footer>Example Tools AS, org.nr. 923 609 016</footer></body></html>".encode()
+        with patch.object(probe, "assert_public_url", lambda url: None), patch.object(probe, "_robots_allowed", lambda url, timeout: True):
+            with patch.object(probe, "SAFE_OPENER", opener(page, "https://exampletools.no/")):
+                self.assertEqual(probe.light_probe("exampletools.no", "923609016", 5)[:2], ("https://exampletools.no/", "organisation_number"))
+            with patch.object(probe, "SAFE_OPENER", opener(page.replace(b"923 609 016", b"111 222 333"), "https://exampletools.no/")):
+                self.assertEqual(probe.light_probe("exampletools.no", "923609016", 5)[:2], (None, None))
+                self.assertEqual(probe.light_probe("exampletools.no", "923609016", 5, ("2004", "LILLESTRØM"))[:2], (None, None))  # place not on the page either
+            placed = "<html><body>Example Tools, Storgata 1, 2004 Lillestr" + chr(0xF8) + "m</body></html>"
+            with patch.object(probe, "SAFE_OPENER", opener(placed.encode("utf-8"), "https://exampletools.no/")):
+                self.assertEqual(probe.light_probe("exampletools.no", "923609016", 5, ("2004", "LILLESTRØM"))[:2], ("https://exampletools.no/", "registered_place"))
+            with patch.object(probe, "SAFE_OPENER", opener(page, "https://elsewhere.example.com/")):
+                self.assertEqual(probe.light_probe("exampletools.no", "923609016", 5)[:2], (None, None))  # redirected off the candidate domain
+
+    def test_an_unresolvable_guess_costs_no_http_request(self):
+        from scripts import run_domain_probe as probe
+
+        def refuse(url):
+            raise ValueError("Hostname did not resolve")
+
+        with patch.object(probe, "assert_public_url", refuse):
+            self.assertEqual(probe.light_probe("nonexistent-guess.no", "923609016", 5), (None, None, 0))
+
+
+class OcrLanguageTests(unittest.TestCase):
+    def _settings(self, langs_by_dir):
+        from types import SimpleNamespace
+        from scripts import run_annual_report_workforce_connector as connector
+
+        def fake_run(command, **kwargs):
+            key = "bundled" if "--tessdata-dir" in command else "system"
+            names = langs_by_dir.get(key, [])
+            header = "List of available languages (%d):" % len(names)
+            return SimpleNamespace(stdout=chr(10).join([header, *names]) + chr(10), stderr="")
+
+        connector.ocr_settings.cache_clear()
+        try:
+            with patch.object(connector.subprocess, "run", fake_run):
+                return connector.ocr_settings()
+        finally:
+            connector.ocr_settings.cache_clear()
+
+    def test_the_system_norwegian_pack_is_preferred(self):
+        self.assertEqual(self._settings({"system": ["eng", "nor"], "bundled": ["nor"]}), ([], "nor"))
+
+    def test_the_bundled_pack_is_used_via_tessdata_dir_when_the_system_has_no_norwegian(self):
+        args, language = self._settings({"system": ["eng"], "bundled": ["nor"]})
+        self.assertEqual(language, "nor")
+        self.assertEqual(args[0], "--tessdata-dir")
+        self.assertTrue(Path(args[1], "nor.traineddata").exists())  # the pack really ships in the repo
+
+    def test_english_is_the_degraded_fallback_and_missing_tesseract_does_not_crash(self):
+        self.assertEqual(self._settings({"system": ["eng"], "bundled": []}), ([], "eng"))
+        self.assertEqual(self._settings({}), ([], "nor"))
+
+
 class TimeBudgetTests(unittest.TestCase):
     def test_no_budget_means_no_limits(self):
         from scripts.run_agent import plan_stages

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import functools
 import hashlib
 import io
 import json
@@ -120,6 +121,35 @@ def extract_candidate(text: str) -> tuple[int | float | None, str | None, str, s
     return chosen[1], chosen[2], "accepted", chosen[3]
 
 
+BUNDLED_TESSDATA = Path(__file__).resolve().parents[1] / "third_party" / "tessdata"
+
+
+@functools.lru_cache(maxsize=1)
+def ocr_settings() -> tuple[list[str], str]:
+    """(extra tesseract arguments, language) for this machine, decided once.
+
+    Order: the system's own Norwegian pack; else the bundled one via --tessdata-dir (works on
+    Tesseract 4 and 5, unlike TESSDATA_PREFIX whose meaning changed between them); else English,
+    a degraded fallback (accented letters are misread, which the patterns above tolerate).
+    """
+
+    def languages(extra: list[str]) -> set[str]:
+        try:
+            done = subprocess.run(["tesseract", "--list-langs", *extra], capture_output=True, text=True, encoding="utf-8", timeout=30)
+        except (OSError, subprocess.SubprocessError):
+            return set()
+        return {line.strip() for line in (done.stdout + done.stderr).splitlines() if line.strip() and not line.startswith("List of")}
+
+    if "nor" in languages([]):
+        return [], "nor"
+    bundled = ["--tessdata-dir", str(BUNDLED_TESSDATA)]
+    if (BUNDLED_TESSDATA / "nor.traineddata").exists() and "nor" in languages(bundled):
+        return bundled, "nor"
+    if "eng" in languages([]):
+        return [], "eng"
+    return [], "nor"  # let tesseract report the real error per page
+
+
 def ocr_pdf(pdf_path: Path, *, pages: int, dpi: int) -> str:
     with tempfile.TemporaryDirectory(prefix="signalpost-annual-ocr-") as temporary:
         prefix = Path(temporary) / "page"
@@ -133,7 +163,7 @@ def ocr_pdf(pdf_path: Path, *, pages: int, dpi: int) -> str:
         text = []
         for image_path in sorted(Path(temporary).glob("page-*.jpg")):
             completed = subprocess.run(
-                ["tesseract", str(image_path), "stdout", "-l", "nor", "--psm", "6"],
+                ["tesseract", str(image_path), "stdout", *ocr_settings()[0], "-l", ocr_settings()[1], "--psm", "6"],
                 check=True,
                 capture_output=True,
                 text=True,

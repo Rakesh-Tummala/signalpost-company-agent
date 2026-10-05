@@ -370,6 +370,21 @@ is unscored, there is an opt-in `--time-budget-minutes` mode (see `README.md`) t
 still produces every terminal result; it is off by default because the right value is not known, and
 the default run would be cut short only if the evaluator's budget is below the full run time.
 
+**Key-free website discovery.** Search APIs need keys the evaluator may not supply, and most small
+Norwegian companies list no website in the registry. `scripts/run_domain_probe.py` builds the obvious
+domains from the legal name and keeps a site only if its page shows the exact organisation number (or the
+registered postcode and town); the normal crawl and identity gate then decide. Measured on 150 companies of
+the batch with no website: 420 candidate domains, 51 pages loaded, 3 companies published (2%, about +20
+per 1,000 on top of 67), 5 candidates reaching the gate, 2 of which it correctly refused (not every legal-name
+word was on the page). Cost: about 1.3 requests per probed company. Of the pages that loaded, most were
+real businesses with the right name but no organisation number on the homepage, so they stay unpublished: a
+name match alone is not evidence.
+
+**Reruns now report changes** (see `REFRESH.md`), and every summary sentence lists the claims and evidence it
+rests on. OCR no longer depends on a locally installed Norwegian language pack. Not verified: a phone-sized
+view of the viewer (the browser pane reported a 0px viewport, so overflow could not be measured), and the
+`uv run` flow from a clean machine (it would write to the system package cache outside this drive).
+
 Cost of the stricter gate, stated plainly: a few genuine Norwegian companies on a `.com` (TBG
 Holding, Axess Technologies, Oslo Analytica, Lie Nilsen) are no longer published because their
 captured text carries none of the four accepted Norway signals. Website coverage on the verified

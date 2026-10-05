@@ -24,6 +24,19 @@ is the practice check the starter kit's own "first run" instructions describe â€
 uses saved responses, not live data, and doesn't by itself prove refresh correctness
 at the scale of a real submission.
 
+## Wired into the one command
+
+`run_agent.py --previous-profiles <earlier run's profiles.jsonl>` compares the new run with that earlier
+one (organisations present in both) through `diff_datasets` and puts the material changes in each
+result's `changes`, one event per changed tracked field: field, old and new value, and **the earlier
+evidence preserved on the event** -- old source URL, retrieval time, content hash and saved-response path
+beside the new ones. The summary says what changed, or that nothing did. Sites the earlier run found are
+re-crawled and re-verified, never trusted as-is. Checked for real on live data: running the same five
+companies twice reports no changes (an unchanged rerun is idempotent: a new fetch with new retrieval times
+and hashes but the same values is not a change), and an edited earlier snapshot is reported with the old
+evidence attached. Tracked fields are the registry identity fields, financial records, roles, locations and
+the website title/description/social links; changes in news items or job postings are not diffed.
+
 ## Validated at real scale (`scripts/validate_refresh_at_scale.py`)
 
 We don't have two real time-separated snapshots of the full batch (that needs

@@ -1,0 +1,201 @@
++ W:\builderr_hackathon\signalpost-starter-kit\.venv\Scripts\python.exe W:\builderr_hackathon\signalpost-starter-kit\scripts\run_competition_batch.py --organisations ../twelve.jsonl --bulk brreg-enheter.csv --profiles-output out\_ocr\profiles.jsonl --output out\_ocr\registry-envelopes.jsonl --report out\_ocr\registry-report.json --run-id ocr --expected-count 12 --modules registry,accounting_obligation,registry_live,financials,financial_history,roles,group,locations,website
+{
+  "run_id": "ocr",
+  "started_at": "2026-10-05T15:55:57.826367Z",
+  "completed_at": "2026-10-05T15:56:42.935618Z",
+  "expected_count": 12,
+  "emitted_envelopes": 12,
+  "resumed_profiles": 0,
+  "profiles_fetched_this_run": 12,
+  "modules": [
+    "registry",
+    "accounting_obligation",
+    "registry_live",
+    "financials",
+    "financial_history",
+    "roles",
+    "group",
+    "locations",
+    "website"
+  ],
+  "registry": {
+    "registry_snapshot_sha256": "1817f874fe09747c63207128d341a0b461c1596d070b2e08172cffffa1bb6732",
+    "registry_rows_scanned": 1066461,
+    "requested": 12,
+    "selected": 12,
+    "missing_from_bulk": []
+  },
+  "operations": {
+    "requests": 78,
+    "bytes": 1654415,
+    "p50_ms": 724,
+    "p95_ms": 966
+  },
+  "validation": {
+    "passed": true,
+    "checks": {
+      "exact_expected_count": true,
+      "unique_organisation_numbers": true,
+      "all_entity_states_terminal": true,
+      "all_module_states_terminal": true,
+      "zero_silent_drops": true
+    },
+    "invalid_states": []
+  }
+}
+No TAVILY_API_KEY set -- skipping tavily discovery.
+No EXA_API_KEY set -- skipping exa discovery.
++ W:\builderr_hackathon\signalpost-starter-kit\.venv\Scripts\python.exe W:\builderr_hackathon\signalpost-starter-kit\scripts\run_scrapy_websites.py --input out\_ocr\crawl-input.jsonl --output out\_ocr\profiles-crawled.jsonl --events out\_ocr\crawl-events.jsonl --jobdir out\_ocr\crawl-jobdir --report out\_ocr\crawl-report.json
+2026-10-05 21:26:46 [py.warnings] WARNING: W:\builderr_hackathon\signalpost-starter-kit\.venv\Lib\site-packages\scrapy\core\downloader\middleware.py:46: ScrapyDeprecationWarning: OperationalTelemetryMiddleware.process_request() requires a spider argument, this is deprecated and the argument will not be passed in future Scrapy versions. If you need to access the spider instance you can save the crawler instance passed to from_crawler() and use its spider attribute.
+  self._check_mw_method_spider_arg(mw.process_request)
+
+2026-10-05 21:26:46 [py.warnings] WARNING: W:\builderr_hackathon\signalpost-starter-kit\.venv\Lib\site-packages\scrapy\core\downloader\middleware.py:49: ScrapyDeprecationWarning: OperationalTelemetryMiddleware.process_response() requires a spider argument, this is deprecated and the argument will not be passed in future Scrapy versions. If you need to access the spider instance you can save the crawler instance passed to from_crawler() and use its spider attribute.
+  self._check_mw_method_spider_arg(mw.process_response)
+
+2026-10-05 21:26:46 [py.warnings] WARNING: W:\builderr_hackathon\signalpost-starter-kit\.venv\Lib\site-packages\scrapy\core\downloader\middleware.py:52: ScrapyDeprecationWarning: OperationalTelemetryMiddleware.process_exception() requires a spider argument, this is deprecated and the argument will not be passed in future Scrapy versions. If you need to access the spider instance you can save the crawler instance passed to from_crawler() and use its spider attribute.
+  self._check_mw_method_spider_arg(mw.process_exception)
+
+2026-10-05 21:26:48 [scrapy.spidermiddlewares.metacopy] WARNING: SignalpostWebsiteSpider yielded a request containing internal meta keys that were likely copied from response.meta and should not be forwarded to new requests: ['download_latency', 'redirect_reasons', 'redirect_times', 'redirect_ttl', 'redirect_urls']. See the MetaCopyDetectionMiddleware documentation for more information. Source response: <403 https://www.danalim.com/select-language/>, target request: <GET http://www.danalim.com/select-language/>
+{
+  "input_sha256": "23a4e91f12e250e4efcc69728c736148cd8618ef64c7dd855f9e62e37bd78b86",
+  "profiles": 2,
+  "website_seeds_selected": 2,
+  "profiles_with_events": 2,
+  "unique_events": 3,
+  "events_added": 3,
+  "events_present_before_run": 0,
+  "synthetic_terminal_events": 0,
+  "website_statuses": {
+    "available": 1,
+    "source_error": 1
+  },
+  "identity_statuses": {
+    "exact": 1
+  },
+  "published_social_profiles": 0,
+  "elapsed_seconds": 2.998,
+  "run_started_at": "2026-10-05T15:56:46.940631Z",
+  "run_finished_at": "2026-10-05T15:56:49.938532Z",
+  "events_per_second": 1.001,
+  "requests": 11,
+  "responses": 11,
+  "response_bytes": 296060,
+  "retries": 0,
+  "robots_forbidden": 0,
+  "request_wall_latency_including_queue": {
+    "n": 11,
+    "p50_ms": 520.757,
+    "p95_ms": 797.797,
+    "max_ms": 797.797
+  },
+  "response_download_latency": {
+    "n": 11,
+    "p50_ms": 84.404,
+    "p95_ms": 768.253,
+    "max_ms": 768.253
+  },
+  "failure_attempt_wall_latency": {
+    "n": 0,
+    "p50_ms": null,
+    "p95_ms": null,
+    "max_ms": null
+  },
+  "company_completion_latency": {
+    "n": 2,
+    "p50_ms": 2159.655,
+    "p95_ms": 2713.909,
+    "max_ms": 2713.909
+  },
+  "company_completion_synthetic_upper_bounds": 0,
+  "request_domain_fairness": {
+    "domains": 4,
+    "p50_requests": 2.0,
+    "p95_requests": 4.0,
+    "max_requests": 4
+  },
+  "response_statuses": {
+    "200": 4,
+    "301": 3,
+    "403": 4
+  },
+  "error_buckets": {},
+  "request_amplification_per_seed": 5.5,
+  "terminal_coverage": 1.0,
+  "crawl_complete": true,
+  "peak_rss_bytes": 0,
+  "output_sha256": "43162e1be3be9166203bf1ff8d46f2c7e0ab9a73c722584498a4587a0f4fe9d5",
+  "finish_reason": "finished",
+  "resume_noop": false,
+  "concurrency": 16,
+  "per_domain": 2,
+  "jobdir": "out\\_ocr\\crawl-jobdir",
+  "events_path": "out\\_ocr\\crawl-events.jsonl"
+}
++ W:\builderr_hackathon\signalpost-starter-kit\.venv\Scripts\python.exe W:\builderr_hackathon\signalpost-starter-kit\scripts\extract_company_site_news.py --profiles out\_ocr\profiles.jsonl --output out\_ocr\news-observations.jsonl --report out\_ocr\news-report.json
+{
+  "connector": "exact_company_site_dated_articles_v1",
+  "profiles": 12,
+  "companies_with_dated_articles": 0,
+  "observations": 0,
+  "by_evidence_kind": {},
+  "claim_boundary": "Only items with a parseable publication date on an identity-verified company site or its own RSS/Atom feed; an undated news page is not published."
+}
++ W:\builderr_hackathon\signalpost-starter-kit\.venv\Scripts\python.exe W:\builderr_hackathon\signalpost-starter-kit\scripts\extract_company_site_jobs.py --profiles out\_ocr\profiles.jsonl --output out\_ocr\jobs-observations.jsonl --report out\_ocr\jobs-report.json
+{
+  "connector": "exact_company_site_jobs_v1",
+  "profiles": 12,
+  "companies_with_hiring_facts": 0,
+  "observations": 0,
+  "by_evidence_kind": {},
+  "claim_boundary": "Only real roles (JobPosting, role card linking to an individual posting, or explicit apply action) on an identity-verified company site; a generic careers page is not a hiring fact."
+}
++ W:\builderr_hackathon\signalpost-starter-kit\.venv\Scripts\python.exe W:\builderr_hackathon\signalpost-starter-kit\scripts\run_annual_report_workforce_connector.py --profiles out\_ocr\profiles.jsonl --organisations out\_ocr\all-orgs.txt --output out\_ocr\workforce-observations.jsonl --cache out\_ocr\workforce-cache --report out\_ocr\workforce-report.json
+{
+  "connector": "official_annual_report_workforce_v1",
+  "eligible": 11,
+  "accepted": 10,
+  "status_counts": {
+    "accepted": 10,
+    "no_employee_phrase": 1
+  },
+  "claim_boundary": "Latest official PDF, exact organisation number in document, company-scope employee phrase only; group phrases and conflicts abstain."
+}
++ W:\builderr_hackathon\signalpost-starter-kit\.venv\Scripts\python.exe W:\builderr_hackathon\signalpost-starter-kit\scripts\extract_prior_year_financials.py --profiles out\_ocr\profiles.jsonl --cache out\_ocr\workforce-cache --output out\_ocr\prior-year-financials-observations.jsonl --report out\_ocr\prior-year-financials-report.json
+{
+  "connector": "prior_year_financials_v1",
+  "profiles": 12,
+  "eligible": 11,
+  "accepted": 11,
+  "observations": 11,
+  "claim_boundary": "Only fields where the known current-year value was found as an exact prefix of the OCR'd digit sequence; the remainder is trusted as the prior year. Abstains rather than guesses a split point."
+}
++ W:\builderr_hackathon\signalpost-starter-kit\.venv\Scripts\python.exe W:\builderr_hackathon\signalpost-starter-kit\scripts\build_output_contract.py --profiles out\_ocr\profiles.jsonl --output out\_ocr\envelopes.jsonl --run-id ocr --started-at 2026-10-05T15:55:56Z --completed-at 2026-10-05T15:58:24Z --observations out\_ocr\news-observations.jsonl --observations out\_ocr\jobs-observations.jsonl --observations out\_ocr\workforce-observations.jsonl --observations out\_ocr\prior-year-financials-observations.jsonl
+{
+  "profiles": 12,
+  "total_claims": 256,
+  "mean_claims_per_profile": 21.33,
+  "conversion_failures": 0
+}
++ W:\builderr_hackathon\signalpost-starter-kit\.venv\Scripts\python.exe W:\builderr_hackathon\signalpost-starter-kit\scripts\build_viewer.py --envelopes out\_ocr\envelopes.jsonl --profiles out\_ocr\profiles.jsonl --output out\_ocr\viewer.html
+{
+  "companies": 12,
+  "output": "out\\_ocr\\viewer.html",
+  "size_bytes": 154377
+}
+{
+  "run_id": "ocr",
+  "started_at": "2026-10-05T15:55:56Z",
+  "completed_at": "2026-10-05T15:58:24Z",
+  "stages_run": [
+    "registry_batch",
+    "deep_crawl",
+    "site_news",
+    "site_jobs",
+    "workforce_ocr",
+    "prior_year_financials",
+    "claims_conversion",
+    "viewer"
+  ],
+  "profiles": "out\\_ocr\\profiles.jsonl",
+  "envelopes": "out\\_ocr\\envelopes.jsonl"
+}

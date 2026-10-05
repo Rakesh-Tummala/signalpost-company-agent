@@ -349,10 +349,21 @@ def emit_social_links(emitter: Emitter, evidence: dict[str, Any]) -> None:
             emitter.claim(f"social_profile.{platform}", url, source, module=module, span=link.get("span"))
 
 
-def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any]] | None = None) -> dict[str, Any]:
-    """Build a grounded, template-based summary -- every sentence traces to a claim
-    we already published above. No model invents or infers anything here; this is
-    string formatting over facts that already passed the identity/evidence gates.
+def _short(value: Any) -> str:
+    if isinstance(value, (dict, list)):
+        return "updated"
+    text = str(value)
+    return text if len(text) <= 40 else text[:37] + "..."
+
+
+def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any]] | None = None, changes: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """Build a grounded, template-based summary -- every sentence traces to claims
+    published in the same envelope (`sentences[].fields`, resolved to evidence ids by
+    build_envelope). No model invents or infers anything here; this is string formatting
+    over facts that already passed the identity/evidence gates.
+
+    `changes` is None when no previous run was supplied; otherwise the material changes
+    since that run (possibly empty), which the summary reports.
     """
     registry_module = "registry_live" if (evidence.get("registry_live") or {}).get("status") == "available" else "registry"
     registry_value = (evidence.get(registry_module) or {}).get("value") or {}
@@ -365,14 +376,18 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
     if isinstance(address, dict):
         municipality = address.get("kommune")
 
-    sentences: list[str] = []
+    sentences: list[dict[str, Any]] = []
+
+    def say(text: str, *fields: str) -> None:
+        sentences.append({"text": text, "fields": list(fields)})
+
     article = "an" if legal_form and legal_form[0].upper() in "AEIOU" else "a"
     identity_bits = [f"{article} {legal_form}" if legal_form else "a company", "registered in Norway"]
     if industry_label:
         identity_bits.append(f"operating in {industry_label.lower()}")
     if municipality:
         identity_bits.append(f"based in {municipality.title()}")
-    sentences.append(f"{name} is " + ", ".join(identity_bits) + ".")
+    say(f"{name} is " + ", ".join(identity_bits) + ".", "legal_name", "legal_form", "industry", "business_address")
 
     financials_record = evidence.get("financials") or {}
     financials_records = (financials_record.get("value") or {}).get("records") or []
@@ -384,7 +399,7 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
         revenue = latest.get("revenue")
         result = latest.get("annual_result")
         if revenue is not None:
-            sentences.append(f"Its most recently filed accounts ({year}) report revenue of {revenue:,.0f} NOK" + (f" and a result of {result:,.0f} NOK." if result is not None else "."))
+            say(f"Its most recently filed accounts ({year}) report revenue of {revenue:,.0f} NOK" + (f" and a result of {result:,.0f} NOK." if result is not None else "."), f"annual_accounts.{year}")
 
         prior_year_items = [o for o in (observations or []) if o.get("signal_type") == "prior_year_financials"]
         if prior_year_items:
@@ -399,9 +414,9 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
                     trend = "fell"
                 else:
                     trend = "held steady"
-                sentences.append(f"Revenue {trend} from {prior_revenue:,.0f} NOK ({prior_year}) to {revenue:,.0f} NOK ({year}).")
+                say(f"Revenue {trend} from {prior_revenue:,.0f} NOK ({prior_year}) to {revenue:,.0f} NOK ({year}).", f"annual_accounts.{year}", f"annual_accounts.{prior_year}")
             elif prior_year:
-                sentences.append(f"Additional filed figures for {prior_year} are also on file, recovered from the same official annual report.")
+                say(f"Additional filed figures for {prior_year} are also on file, recovered from the same official annual report.", f"annual_accounts.{prior_year}")
     else:
         unknowns.append("financial results")
 
@@ -409,7 +424,7 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
     roles = (roles_record.get("value") or {}).get("roles") or []
     leader = next((r for r in roles if not r.get("inactive") and str(r.get("role_code") or "").upper() == "DAGL"), None)
     if leader and leader.get("name"):
-        sentences.append(f"{leader['name']} is listed as daglig leder (managing director).")
+        say(f"{leader['name']} is listed as daglig leder (managing director).", f"role.{roles.index(leader)}")
     elif roles_record.get("status") != "available" or not roles:
         unknowns.append("leadership")
 
@@ -418,7 +433,7 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
     website_url = website_value.get("final_url") or website_value.get("requested_url")
     website_verified = (website_value.get("identity_assessment") or {}).get("publishable", True)
     if website_record.get("status") == "available" and website_url and website_verified:
-        sentences.append(f"Its verified official website is {website_url}.")
+        say(f"Its verified official website is {website_url}.", "official_website")
     elif website_record.get("status") == "available" and website_url:
         unknowns.append("official website (a site is listed, but nothing on it ties it to this entity)")
     else:
@@ -426,8 +441,8 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
 
     social_links = (website_value.get("social_links") or []) + ((evidence.get("website_discovered") or {}).get("value") or {}).get("social_links", [])
     if social_links:
-        platforms = ", ".join(sorted({link.get("platform", "unknown") for link in social_links}))
-        sentences.append(f"Verified social profiles were found on: {platforms}.")
+        platforms = sorted({link.get("platform", "unknown") for link in social_links})
+        say(f"Verified social profiles were found on: {', '.join(platforms)}.", *[f"social_profile.{platform}" for platform in platforms])
 
     if (evidence.get("group") or {}).get("status") != "available" or not ((evidence.get("group") or {}).get("value") or {}).get("companies"):
         unknowns.append("group/ownership structure")
@@ -438,7 +453,7 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
     )
     if news_items:
         latest_news = news_items[0].get("metrics") or {}
-        sentences.append(f"{len(news_items)} dated news item(s) on its own site; the latest, '{latest_news.get('headline')}', is dated {str(latest_news.get('published_at'))[:10]}.")
+        say(f"{len(news_items)} dated news item(s) on its own site; the latest, '{latest_news.get('headline')}', is dated {str(latest_news.get('published_at'))[:10]}.", "site_news.*")
     else:
         unknowns.append("dated news/press")
 
@@ -447,7 +462,7 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
         latest = max(workforce_items, key=lambda o: (o.get("metrics") or {}).get("year") or "")
         metrics = latest.get("metrics") or {}
         measure = "full-time equivalents" if metrics.get("measure") == "full_time_equivalents" else "employees"
-        sentences.append(f"Its official annual report states {metrics.get('workforce_value')} {measure} ({metrics.get('year')}).")
+        say(f"Its official annual report states {metrics.get('workforce_value')} {measure} ({metrics.get('year')}).", f"workforce_value.{metrics.get('year')}")
     else:
         unknowns.append("workforce size (official annual-report headcount attempted but not found or not applicable for this company)")
 
@@ -458,20 +473,48 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
             for o in job_items if (o.get("metrics") or {}).get("evidence_kind") != "apply_action"
         ][:3]
         if titles:
-            sentences.append(f"{len(job_items)} open role(s) shown on its own site, e.g. {', '.join(titles)}.")
+            say(f"{len(job_items)} open role(s) shown on its own site, e.g. {', '.join(titles)}.", "job_posting.*")
         else:
-            sentences.append("Its own site shows an apply action for open roles.")
+            say("Its own site shows an apply action for open roles.", "job_posting.*")
     else:
         unknowns.append("open roles (no job posting, role card or apply action found on its own site)")
 
+    if changes is not None:
+        if changes:
+            shown = [f"{item['field']} ({_short(item.get('old_value'))} -> {_short(item.get('new_value'))})" for item in changes[:3]]
+            more = f" and {len(changes) - 3} more" if len(changes) > 3 else ""
+            say(f"Since the previous run {len(changes)} tracked field(s) changed: {'; '.join(shown)}{more}.")
+        else:
+            say("No tracked field has changed since the previous run.")
+
     if unknowns:
-        sentences.append("Not yet determined: " + "; ".join(unknowns) + ".")
+        say("Not yet determined: " + "; ".join(unknowns) + ".", "official_website", "leadership", "annual_accounts", "group_structure", "annual_accounts_years_on_file")
 
     return {
-        "text": " ".join(sentences),
+        "text": " ".join(item["text"] for item in sentences),
+        "sentences": sentences,
         "unknown_fields": unknowns,
         "grounded_in_claims": True,
     }
+
+
+def resolve_summary_sources(summary: dict[str, Any], claims: list[dict[str, Any]]) -> None:
+    """Attach, to each summary sentence, the evidence ids of the claims it rests on.
+
+    A field ending in ".*" matches every claim with that prefix. Fields with no claim in this
+    envelope are dropped, so a sentence never cites something that was not published.
+    """
+    for sentence in summary["sentences"]:
+        evidence_ids: list[str] = []
+        cited: list[str] = []
+        for field in sentence["fields"]:
+            for claim in claims:
+                name = str(claim["field"])
+                if (name.startswith(field[:-1]) if field.endswith(".*") else name == field):
+                    cited.append(name)
+                    evidence_ids.extend(item for item in claim["evidence_ids"] if item not in evidence_ids)
+        sentence["fields"] = sorted(set(cited))
+        sentence["evidence_ids"] = evidence_ids
 
 
 def emit_external_observations(emitter: Emitter, observations: list[dict[str, Any]]) -> None:
@@ -515,7 +558,7 @@ def emit_external_observations(emitter: Emitter, observations: list[dict[str, An
             emitter.observation_claim(f"annual_accounts.{year}", figures, observation)
 
 
-def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, completed_at: str, observations: list[dict[str, Any]] | None = None, snapshot_root: Path | None = None) -> dict[str, Any]:
+def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, completed_at: str, observations: list[dict[str, Any]] | None = None, snapshot_root: Path | None = None, changes: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     evidence = profile.get("evidence") or {}
     emitter = Emitter(snapshot_root)
     emit_registry_claims(emitter, evidence)
@@ -529,6 +572,8 @@ def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, com
     emit_social_links(emitter, evidence)
     emit_external_observations(emitter, observations or [])
 
+    summary = summarize_profile(evidence, observations, changes)
+    resolve_summary_sources(summary, emitter.claims)
     metrics = profile.get("run_metrics") or {}
     errors = [
         {"module": module, "note": record.get("note")}
@@ -546,8 +591,8 @@ def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, com
         "claims": emitter.claims,
         "evidence": emitter.evidence,
         "source_snapshots": emitter.snapshots,
-        "summary": summarize_profile(evidence, observations),
-        "changes": [],
+        "summary": summary,
+        "changes": changes or [],
         "errors": errors,
         "operations": {
             "requests": metrics.get("requests", 0),
@@ -587,6 +632,7 @@ def build_envelopes_safe(
     profiles: list[dict[str, Any]],
     observations_by_org: dict[str, list[dict[str, Any]]],
     *, run_id: str, started_at: str, completed_at: str, snapshot_root: Path | None = None,
+    changes_by_org: dict[str, list[dict[str, Any]]] | None = None,
 ) -> tuple[list[dict[str, Any]], int]:
     """build_envelope() for every profile, but one bad profile can't drop the batch.
 
@@ -601,7 +647,8 @@ def build_envelopes_safe(
     for profile in profiles:
         org = str(profile.get("organisation_number") or "")
         try:
-            envelopes.append(build_envelope(profile, run_id=run_id, started_at=started_at, completed_at=completed_at, observations=observations_by_org.get(org), snapshot_root=snapshot_root))
+            envelopes.append(build_envelope(profile, run_id=run_id, started_at=started_at, completed_at=completed_at, observations=observations_by_org.get(org), snapshot_root=snapshot_root,
+                changes=(changes_by_org.get(org, []) if changes_by_org is not None else None)))
         except Exception as exc:  # noqa: BLE001 -- one bad profile must not drop the whole batch
             failures += 1
             envelopes.append({
@@ -626,6 +673,7 @@ def main() -> None:
     parser.add_argument("--started-at", required=True)
     parser.add_argument("--completed-at", required=True)
     parser.add_argument("--observations", action="append", default=[], help="Optional JSONL file(s) of external observations (e.g. dated news, job postings); repeatable")
+    parser.add_argument("--changes", help="Optional JSONL of material changes since a previous run (one event per line, with organisation_number); orgs without events then report an empty list")
     parser.add_argument("--snapshot-root", help="Directory the profiles' snapshot paths are relative to (default: the profiles file's directory)")
     args = parser.parse_args()
 
@@ -638,7 +686,12 @@ def main() -> None:
             org = str(observation.get("organisation_number"))
             observations_by_org.setdefault(org, []).append(observation)
 
-    envelopes, conversion_failures = build_envelopes_safe(profiles, observations_by_org, run_id=args.run_id, started_at=args.started_at, completed_at=args.completed_at, snapshot_root=snapshot_root)
+    changes_by_org: dict[str, list[dict[str, Any]]] | None = None
+    if args.changes:
+        changes_by_org = {}
+        for event in read_jsonl(Path(args.changes)):
+            changes_by_org.setdefault(str(event.get("organisation_number")), []).append(event)
+    envelopes, conversion_failures = build_envelopes_safe(profiles, observations_by_org, run_id=args.run_id, started_at=args.started_at, completed_at=args.completed_at, snapshot_root=snapshot_root, changes_by_org=changes_by_org)
     write_jsonl(Path(args.output), envelopes)
     total_claims = sum(len(e["claims"]) for e in envelopes)
     print(json.dumps({

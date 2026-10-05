@@ -25,6 +25,11 @@ from the pipeline's internal profile format. This matches `OUTPUT_CONTRACT.md`:
 }
 ```
 
+`summary` carries, besides its `text`, a `sentences` list: each sentence with the claim `fields` it rests on
+and their `evidence_ids`, so every statement can be traced to its published claims and sources. When a
+previous run was supplied (`--previous-profiles`) the summary also says what changed (or that nothing did),
+and `changes` holds the events.
+
 `availability` is one of `available`, `not_available`, `blocked`, `not_applicable`,
 `ambiguous`, `failed` — never silently replaced with a zero or empty value. `summary`
 is additive beyond OUTPUT_CONTRACT.md's minimal example — see AGENT.md for how it's

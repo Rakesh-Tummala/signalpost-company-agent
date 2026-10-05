@@ -6,7 +6,9 @@ Chains every stage of the pipeline into one command, as required by the
 
   1. registry batch (identity, financials, financial_history, roles, group,
      locations, single-page website fetch) -- required, no optional deps.
-  2. website discovery (Tavily, then Exa) for companies still missing a site --
+  2. website discovery: first a key-free probe of name-derived domains (a site is kept only if
+     its page shows the exact organisation number or the registered postcode and town), then
+     (Tavily, then Exa) for companies still missing a site --
      runs only if TAVILY_API_KEY / EXA_API_KEY is set (server-side secret, per
      the locked evaluator budget's own requirement).
   3. deep multi-page site crawl (scrapy) for every company with a website
@@ -39,6 +41,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT.parent / "src"))
 
 
 def run(cmd: list[str], *, optional: bool = False) -> bool:
@@ -128,7 +131,7 @@ def main() -> None:
     parser.add_argument("--discovery-limit", type=int, default=None, help="Cap discovery queries; default is expected-count")
     parser.add_argument("--skip-deep-crawl", action="store_true", help="Skip the scrapy multi-page crawl stage")
     parser.add_argument("--skip-workforce-ocr", action="store_true", help="Skip the annual-report OCR workforce stage")
-    parser.add_argument("--previous-profiles", help="profiles.jsonl from an earlier run: websites it found are re-crawled and re-verified (never trusted as-is) for companies the registry lists none for")
+    parser.add_argument("--previous-profiles", help="profiles.jsonl from an earlier run. Websites it found are re-crawled and re-verified (never trusted as-is) for companies the registry lists none for, and the material changes since that run are reported in each result's `changes` (earlier evidence preserved on every event)")
     parser.add_argument("--time-budget-minutes", type=float, default=float(os.environ.get("SIGNALPOST_TIME_BUDGET_MINUTES") or 0) or None,
                         help="Optional wall-clock budget (or env SIGNALPOST_TIME_BUDGET_MINUTES). The run then plans its optional stages to finish inside it and still writes every terminal result; omit for no limit.")
     parser.add_argument("--python", default=sys.executable)
@@ -164,7 +167,22 @@ def main() -> None:
     ])
     stages_run.append("registry_batch")
 
-    # 2. Website discovery: Tavily, then Exa, for whatever's still missing.
+    # 2a. Key-free website discovery: name-derived domains, proven by organisation number or the
+    # registered place on the page, then the normal crawl and identity gate. Runs first so the paid
+    # search stages below only query what is still missing.
+    probe_path = output_dir / "profiles-with-probe.jsonl"
+    ok = run([
+        args.python, str(ROOT / "run_domain_probe.py"),
+        "--input", str(profiles_path),
+        "--output", str(probe_path),
+        "--report", str(output_dir / "domain-probe-report.json"),
+        *(["--deadline-epoch", str(time.time() + max(60, 0.1 * budget_seconds))] if budget_seconds else []),
+    ], optional=True)
+    if ok:
+        profiles_path = probe_path
+        stages_run.append("domain_probe")
+
+    # 2b. Website discovery: Tavily, then Exa, for whatever's still missing.
     for name, script, env_var in (("tavily", "run_tavily_discovery.py", "TAVILY_API_KEY"), ("exa", "run_exa_discovery.py", "EXA_API_KEY")):
         if not os.environ.get(env_var, "").strip():
             print(f"No {env_var} set -- skipping {name} discovery.", file=sys.stderr)
@@ -273,6 +291,23 @@ def main() -> None:
         if ok:
             stages_run.append("prior_year_financials")
 
+    # 5c. Material changes since the previous run (only when one was supplied). Compared on the
+    # organisations present in both; an unchanged rerun yields no events.
+    changes_path = output_dir / "changes.jsonl"
+    if args.previous_profiles:
+        from norway_company_agent.refresh import diff_datasets
+
+        previous_rows = read_jsonl(Path(args.previous_profiles))
+        common = {row["organisation_number"] for row in previous_rows} & {row["organisation_number"] for row in profiles}
+        try:
+            events = diff_datasets([r for r in previous_rows if r["organisation_number"] in common], [r for r in profiles if r["organisation_number"] in common])
+        except Exception as exc:  # noqa: BLE001 -- change reporting must never block the results
+            print(f"  (change detection failed, continuing without it: {exc})", file=sys.stderr)
+            events = None
+        if events is not None:
+            write_jsonl(changes_path, events)
+            stages_run.append("change_detection")
+
     completed_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
     # 6. Claims/evidence conversion, folding in every observation file collected.
@@ -288,6 +323,8 @@ def main() -> None:
     for obs_path in (news_obs_path, jobs_obs_path, workforce_obs_path, prior_year_obs_path):
         if obs_path.exists():
             convert_cmd += ["--observations", str(obs_path)]
+    if args.previous_profiles and changes_path.exists():
+        convert_cmd += ["--changes", str(changes_path)]
     run(convert_cmd)
     stages_run.append("claims_conversion")
 

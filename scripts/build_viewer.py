@@ -45,6 +45,8 @@ def flatten_envelope(envelope: dict[str, Any]) -> dict[str, Any]:
     return {
         "org": envelope.get("organisation_number"),
         "summary": summary.get("text", ""),
+        "sentences": [{"text": item.get("text"), "fields": item.get("fields", [])} for item in summary.get("sentences", [])],
+        "changes": [{"field": item.get("field"), "old": item.get("old_value"), "new": item.get("new_value")} for item in envelope.get("changes", [])],
         "unknowns": summary.get("unknown_fields", []),
         "claim_count": len(claims),
         "claims": claims,
@@ -111,6 +113,8 @@ PAGE_TEMPLATE = """<!doctype html>
   details summary { cursor: pointer; color: var(--muted); font-size: 12px; }
   .excerpt { display: block; white-space: pre-wrap; word-break: break-word; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; margin-top: 4px; font-size: 12px; }
   .meta { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .summary-text p { margin: 0 0 8px; }
+  .src { color: var(--muted); font-size: 11px; }
   @media (max-width: 720px) {
     .layout { flex-direction: column; }
     #list { max-height: 40vh; }
@@ -178,7 +182,10 @@ function renderDetail(org) {
     <div class="panel">
       <h2>${escapeHtml(c.name || c.org)}</h2>
       <p class="company-org">Organisation number: ${c.org}</p>
-      <p class="summary-text">${escapeHtml(c.summary)}</p>
+      ${c.sentences && c.sentences.length
+        ? `<div class="summary-text">${c.sentences.map(x => `<p>${escapeHtml(x.text)}${x.fields.length ? ` <span class="src">sources: ${x.fields.map(escapeHtml).join(', ')}</span>` : ''}</p>`).join('')}</div>`
+        : `<p class="summary-text">${escapeHtml(c.summary)}</p>`}
+      ${c.changes && c.changes.length ? `<p class="meta">Changed since the previous run: ${c.changes.map(x => escapeHtml(x.field) + ' (' + escapeHtml(JSON.stringify(x.old)) + ' → ' + escapeHtml(JSON.stringify(x.new)) + ')').join('; ')}</p>` : ''}
       <table>
         <thead><tr><th>Field</th><th>Value</th><th>Availability</th><th>Confidence</th><th>Evidence</th></tr></thead>
         <tbody>${rows}</tbody>
