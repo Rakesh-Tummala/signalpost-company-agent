@@ -9,6 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from norway_company_agent.fsutil import replace_file  # noqa: E402
 from norway_company_agent.website import normalize_social_url, structured_social_links  # noqa: E402
 from norway_company_agent.identity import assess_social_identity  # noqa: E402
 
@@ -39,7 +40,7 @@ def main() -> None:
     with temporary.open("w", encoding="utf-8") as handle:
         for row in rows:
             handle.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
-    temporary.replace(path)
+    replace_file(temporary, path)
     print(json.dumps({"profiles": len(rows), "links_before": before, "links_after": after, "removed_or_deduplicated": before - after}))
 
 

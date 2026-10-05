@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from norway_company_agent.fsutil import replace_file  # noqa: E402
 from norway_company_agent.identity import apply_website_identity_gate  # noqa: E402
 
 
@@ -33,7 +34,7 @@ def main() -> None:
     with temporary.open("w", encoding="utf-8") as handle:
         for row in rows:
             handle.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
-    temporary.replace(path)
+    replace_file(temporary, path)
     print(json.dumps({"profiles": len(rows), "website_identity_statuses": dict(statuses), "quarantined_social_links": quarantined_links}, ensure_ascii=False))
 
 

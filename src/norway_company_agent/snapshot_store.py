@@ -10,6 +10,8 @@ simply get no snapshot path.
 """
 from __future__ import annotations
 
+from .fsutil import replace_file
+
 import hashlib
 import os
 import tempfile
@@ -38,7 +40,7 @@ def save_snapshot(raw: bytes, suffix: str) -> str | None:
         try:
             with os.fdopen(handle, "wb") as out:
                 out.write(raw)
-            os.replace(temporary, target)
+            replace_file(temporary, target)
         except OSError:
             Path(temporary).unlink(missing_ok=True)
             return None

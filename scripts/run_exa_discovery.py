@@ -15,6 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from norway_company_agent.fsutil import replace_file  # noqa: E402
 from norway_company_agent.discovery import build_company_search_query, choose_search_candidate, parse_exa_web_results  # noqa: E402
 from norway_company_agent.evidence import evidence, utc_now  # noqa: E402
 from norway_company_agent.identity import apply_website_identity_gate  # noqa: E402
@@ -33,7 +34,7 @@ def write_jsonl(path: Path, rows: list[dict]) -> None:
     with temporary.open("w", encoding="utf-8") as handle:
         for row in rows:
             handle.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
-    temporary.replace(path)
+    replace_file(temporary, path)
 
 
 def resolved_search_profile(profile: dict) -> dict:

@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from norway_company_agent.fsutil import replace_file  # noqa: E402
 from norway_company_agent.batch import backfill_from_registry_live, profile_complete_for_modules, profiles_from_bulk, read_organisation_inputs, terminal_envelope, validate_envelopes  # noqa: E402
 from norway_company_agent.evidence import utc_now  # noqa: E402
 from norway_company_agent.identity import apply_website_identity_gate  # noqa: E402
@@ -23,7 +24,7 @@ def write_jsonl(path: Path, rows: list[dict]) -> None:
     with temporary.open("w", encoding="utf-8") as handle:
         for row in rows:
             handle.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
-    temporary.replace(path)
+    replace_file(temporary, path)
 
 
 def main() -> None:
@@ -96,7 +97,10 @@ def main() -> None:
             operations["latencies_ms"].extend(metric["latencies_ms"])
             if index % args.checkpoint_every == 0 or index == len(pending_profiles):
                 checkpoint = [state[org] for org in orgs if org in state]
-                write_jsonl(profiles_output, checkpoint)
+                try:
+                    write_jsonl(profiles_output, checkpoint)
+                except OSError as exc:  # a progress save must never end a healthy run; the final write is not optional
+                    print(f"(checkpoint skipped: {type(exc).__name__}: {exc})", file=sys.stderr)
 
     completed_at = utc_now()
     ordered_profiles = [state[org] for org in orgs]

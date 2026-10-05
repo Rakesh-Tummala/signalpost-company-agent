@@ -431,6 +431,31 @@ class SelfContainedResultTests(unittest.TestCase):
             envelope = build_envelope(profile, run_id="r", started_at="2026-01-01T00:00:00Z", completed_at="2026-01-01T00:01:00Z", snapshot_root=Path(directory))
         self.assertEqual(envelope["source_snapshots"][0]["body_omitted"], "file_not_found")
 
+    def test_a_brief_file_lock_on_a_checkpoint_does_not_kill_the_run(self):
+        # Real failure: Windows raised PermissionError replacing profiles.jsonl 36 minutes into the
+        # 1,000-company run because another process briefly had the file open.
+        from norway_company_agent import fsutil
+
+        with tempfile.TemporaryDirectory() as directory:
+            source, target = Path(directory) / "a.tmp", Path(directory) / "a.jsonl"
+            source.write_text("new", encoding="utf-8")
+            target.write_text("old", encoding="utf-8")
+            real = os.replace
+            calls = {"n": 0}
+
+            def flaky(src, dst):
+                calls["n"] += 1
+                if calls["n"] < 4:
+                    raise PermissionError(5, "Access is denied")
+                return real(src, dst)
+
+            with patch.object(fsutil.os, "replace", flaky), patch.object(fsutil.time, "sleep"):
+                fsutil.replace_file(source, target)
+            self.assertEqual((calls["n"], target.read_text(encoding="utf-8")), (4, "new"))
+            with patch.object(fsutil.os, "replace", side_effect=PermissionError(5, "locked")), patch.object(fsutil.time, "sleep"):
+                with self.assertRaises(PermissionError):  # a lock that never clears is still reported
+                    fsutil.replace_file(source, target, attempts=3)
+
     def test_a_malformed_bulk_row_with_surplus_columns_cannot_stop_the_registry_stage(self):
         # Real failure on the 1,000-company run: csv.DictReader files surplus columns under a None
         # key, and sort_keys=True cannot order None against str. It crashed the required registry stage.

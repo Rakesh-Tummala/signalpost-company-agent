@@ -17,6 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
+from norway_company_agent.fsutil import replace_file  # noqa: E402
 from norway_company_agent.official import fetch_official_modules  # noqa: E402
 
 
@@ -30,7 +31,7 @@ def write_jsonl(path: Path, rows: list[dict]) -> None:
     with temporary.open("w", encoding="utf-8") as handle:
         for row in rows:
             handle.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
-    temporary.replace(path)
+    replace_file(temporary, path)
 
 
 def main() -> None:

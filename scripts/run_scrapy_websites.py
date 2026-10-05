@@ -13,6 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from norway_company_agent.fsutil import replace_file  # noqa: E402
 from norway_company_agent.crawl_events import merge_profile_events, missing_seed_error_events  # noqa: E402
 from norway_company_agent.identity import apply_website_identity_gate  # noqa: E402
 from norway_company_agent.operations import domain_request_summary, latency_summary, peak_rss_bytes  # noqa: E402
@@ -28,7 +29,7 @@ def write_jsonl(path: Path, rows: list[dict]) -> None:
     with temporary.open("w", encoding="utf-8") as handle:
         for row in rows:
             handle.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
-    temporary.replace(path)
+    replace_file(temporary, path)
 
 
 def terminal_events_for_run(profiles: list[dict], events: list[dict], crawl_complete: bool) -> list[dict]:

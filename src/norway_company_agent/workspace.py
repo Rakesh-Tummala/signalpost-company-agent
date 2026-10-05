@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .fsutil import replace_file
+
 import json
 from pathlib import Path
 from typing import Any
@@ -32,7 +34,7 @@ def save_workspace(path: str | Path, workspace: dict[str, Any]) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary = target.with_suffix(target.suffix + ".tmp")
     temporary.write_text(json.dumps(workspace, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    temporary.replace(target)
+    replace_file(temporary, target)
 
 
 def record_screen(workspace: dict[str, Any], result: dict[str, Any], *, pin_organisations: list[str] | None = None) -> dict[str, Any]:
