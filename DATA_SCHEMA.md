@@ -78,7 +78,7 @@ Claim fields currently emitted:
 its claims rest on, once each (several claims usually share one response), and each evidence entry
 points at its entry through `snapshot_id`. A text body (JSON, HTML, RSS/Atom) is carried **inline** as
 `body` -- `body_encoding` is `utf-8`, or `base64` for the rare body that is not valid UTF-8, so the
-exact bytes are always recoverable -- up to 1 MB per body and 4 MB per envelope. Annual-report PDFs are
+exact bytes are always recoverable -- up to 3 MB per body and 8 MB per envelope. Annual-report PDFs are
 carried by reference (`body_omitted: "binary_pdf"`, with `sha256`, `bytes` and `path`) because they are
 large (about 240 MB for 1,000 companies) and are public at `source_url`; their `claim_span` is the matched
 report line. Anything else that did not fit is marked `body_omitted: "too_large"`; a saved file that could

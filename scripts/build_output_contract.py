@@ -71,8 +71,8 @@ def confidence_for(record: dict[str, Any]) -> float | None:
     return 0.9
 
 
-INLINE_MAX_BYTES = 1_000_000
-ENVELOPE_INLINE_BUDGET = 4_000_000
+INLINE_MAX_BYTES = 3_000_000
+ENVELOPE_INLINE_BUDGET = 8_000_000
 CONTENT_TYPES = {
     ".json": "application/json", ".html": "text/html", ".xml": "application/xml", ".pdf": "application/pdf", ".txt": "text/plain",
 }
