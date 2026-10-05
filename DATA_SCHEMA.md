@@ -13,7 +13,7 @@ from the pipeline's internal profile format. This matches `OUTPUT_CONTRACT.md`:
     {"field": "legal_name", "value": "Example AS", "availability": "available", "confidence": 1.0, "evidence_ids": ["ev-registry_live-1"]}
   ],
   "evidence": [
-    {"id": "ev-registry_live-1", "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016", "source_class": "official_registry_live", "retrieved_at": "...", "content_sha256": "...", "claim_span": "\"navn\":\"Example AS\"", "snapshot": "snapshots/<sha256>.json", "snapshot_id": "snap-<sha256[:16]>", "extraction_method": "official_api_json"}
+    {"id": "ev-registry_live-1", "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016", "source_class": "official_registry_live", "retrieved_at": "...", "content_sha256": "...", "captured_at": "...", "capture_date": "2026-10-05", "content_hash": "...", "retained_response_ref": "snap-<sha256[:16]>", "claim_span": "\"navn\":\"Example AS\"", "snapshot": "snapshots/<sha256>.json", "snapshot_id": "snap-<sha256[:16]>", "extraction_method": "official_api_json"}
   ],
   "source_snapshots": [
     {"id": "snap-<sha256[:16]>", "sha256": "...", "path": "snapshots/<sha256>.json", "content_type": "application/json", "bytes": 1234, "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016", "retrieved_at": "...", "body": "{\"organisasjonsnummer\":\"923609016\",...}", "body_encoding": "utf-8"}
@@ -30,6 +30,10 @@ and their `evidence_ids`, so every statement can be traced to its published clai
 previous run was supplied (`--previous-profiles`) the summary also says what changed (or that nothing did),
 and `changes` holds the events.
 
+Every evidence entry also carries the same facts under the names reviewers use: `captured_at` and
+`capture_date` (= `retrieved_at`), `content_hash` (= `content_sha256`) and `retained_response_ref` (= `snapshot_id`,
+the entry in `source_snapshots` holding the saved response). They are aliases, never different values.
+
 `availability` is one of `available`, `not_available`, `blocked`, `not_applicable`,
 `ambiguous`, `failed` — never silently replaced with a zero or empty value. `summary`
 is additive beyond OUTPUT_CONTRACT.md's minimal example — see AGENT.md for how it's
@@ -45,6 +49,10 @@ Claim fields currently emitted:
   record, from `financial_history` -- a list of years, not full figures for each),
   `role.<index>` (one per active role), `location.<index>` (one per registered
   subunit), `group_structure`.
+- From Wikidata (CC0, matched exactly by organisation number `P2333`, see `CRAWLERS.md`): `wikidata_entity`
+  (`{qid, url, label}`; `not_found` when no item carries the number, `failed` on a source error), `inception_date`,
+  and `social_profile.<platform>` for handles Wikidata lists that the company's own site did not already supply.
+  The retained response is the SPARQL rows returned for that company.
 - From website discovery/crawl: `official_website`, `social_profile.<platform>`
   (one per verified social link found on the crawled site).
 - From the crawl-derived observation files (`--observations`, wired in by
@@ -84,7 +92,8 @@ excerpt that supports it:
   `snapshots/<sha256>.<json|html|xml|pdf>`, named by the SHA-256 of its exact bytes, so
   `content_sha256` always equals the hash of that file; and its entry in `source_snapshots`.
   The bulk-registry fallback is also a retained response: the row a profile was built from is
-  saved as its own JSON body, with the frozen bulk file's hash recorded in the evidence `note`.
+  saved as its own JSON body, with the frozen bulk file's hash recorded in the evidence `note`. If that row
+  cannot be saved (a malformed row or a full disk), the claim keeps the frozen file's hash and the run goes on.
 - `claim_span` -- a *literal slice* of that saved body, never a paraphrase: the JSON
   `"key":value` for official API facts, the `<time>`/`<meta>`/anchor element or the
   JSON-LD pair for company-site facts, the feed `<item>` for feed articles. For annual-report

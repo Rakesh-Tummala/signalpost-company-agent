@@ -84,9 +84,11 @@ Increase `--count` and `--expected-count` together if you want to publish more t
 
 `run_competition_batch.py` above is just the official-registry stage. **The actual
 one-command evaluator entrypoint is `scripts/run_agent.py`** (see the next section):
-it chains that registry stage together with website discovery, a deeper site crawl,
-company-owned activity/news extraction, official annual-report OCR workforce
-extraction, prior-year financials recovery from that same OCR text, and a
+it chains that registry stage together with key-free website discovery (name-derived
+domains proven by the organisation number), Wikidata facts matched by organisation number,
+an optional deeper site crawl, company-owned activity/news and job extraction, official
+annual-report OCR workforce extraction (started first, in the background, so it overlaps the
+rate-limited registry stage), prior-year financials recovery from that same OCR text, and a
 self-contained offline HTML viewer, then converts everything into the submission's
 claims/evidence format in one call.
 
@@ -94,8 +96,8 @@ claims/evidence format in one call.
 
 ```bash
 # Server-side secrets, per the locked evaluator budget -- optional; the agent
-# still produces a complete submission without them, just with lower website
-# discovery coverage.
+# needs no key. Without them website discovery uses the key-free domain probe,
+# Wikidata and the registry-listed site; the keys only add search-based candidates.
 export TAVILY_API_KEY=...
 export EXA_API_KEY=...
 
@@ -123,6 +125,8 @@ excerpt from it. Check that yourself:
 ```bash
 uv run python scripts/audit_evidence.py --envelopes out/agent-run/envelopes.jsonl --root out/agent-run
 ```
+
+Add `--root out/agent-run` to also re-hash the saved files (the annual-report PDFs). Without it the audit still verifies every text claim from the result file alone and checks each PDF by the hash, size and path recorded in the result.
 
 It checks that every available claim carries a public source URL, retrieval time, SHA-256 and supporting
 text, re-hashes the source body behind it (inline in the result when it is text, else the saved file),
@@ -177,8 +181,10 @@ Submit a repository with:
 
 **The one command**: `scripts/run_agent.py` (see "Running the full agent" above).
 No model/LLM decides identity or invents any field in this submission — see
-`AGENT.md`. APIs used: Tavily Search and Exa Search (both optional, website
-discovery only); no model API calls. Third-party cost is small and bounded — see
+`AGENT.md`. External sources: the official Brreg registry and annual-report PDFs, the
+Wikidata SPARQL endpoint (CC0, one request per 150 companies), and the companies' own websites.
+APIs used: Tavily Search and Exa Search (both optional, website discovery only; the run needs
+no key); no model API calls. Third-party cost is small and bounded — see
 each discovery connector's own `--report` output for per-run `total_cost_usd`.
 
 Email the repository URL, run command, models/APIs and expected cost per 100-company run to `submit@builderr.ai`.

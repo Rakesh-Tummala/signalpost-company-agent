@@ -392,6 +392,16 @@ class SelfContainedResultTests(unittest.TestCase):
             pdf, _ = self._build(directory, b"%PDF-1.4 binary", "pdf")
             self.assertEqual(pdf["source_snapshots"][0]["body_omitted"], "binary_pdf")
             self.assertEqual(pdf["source_snapshots"][0]["bytes"], len(b"%PDF-1.4 binary"))
+            from scripts.audit_evidence import audit
+
+            for item in pdf["evidence"]:
+                item["claim_span"] = item.get("claim_span") or "Antall ansatte: 12"
+            by_reference = audit([pdf], None)  # no output folder: the PDF is checked by its recorded hash
+            self.assertEqual(by_reference["failure_count"], 0, by_reference["failures"])
+            self.assertGreaterEqual(by_reference["summary"]["pdf_by_reference"], 1)
+            pdf["source_snapshots"][0]["sha256"] = "0" * 64
+            self.assertGreater(audit([pdf], None)["failure_count"], 0)
+            pdf["source_snapshots"][0]["sha256"] = pdf["evidence"][0]["content_sha256"]
             with patch.object(contract, "INLINE_MAX_BYTES", 10):
                 big, _ = self._build(directory, b'{"a":"0123456789abcdef"}')
             self.assertEqual(big["source_snapshots"][0]["body_omitted"], "too_large")

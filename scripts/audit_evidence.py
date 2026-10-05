@@ -49,7 +49,7 @@ def record_problems(item: dict) -> list[str]:
     return problems
 
 
-def audit(envelopes: list[dict], root: Path) -> dict:
+def audit(envelopes: list[dict], root: Path | None) -> dict:
     counts: Counter[str] = Counter()
     failures: list[dict] = []
     cache: dict[str, tuple[bytes | None, str | None]] = {}
@@ -57,8 +57,8 @@ def audit(envelopes: list[dict], root: Path) -> dict:
 
     def load(path: str) -> tuple[bytes | None, str | None]:
         if path not in cache:
-            file = root / path
-            raw = file.read_bytes() if file.exists() else None
+            file = (root / path) if root is not None else Path(path)
+            raw = file.read_bytes() if root is not None and file.exists() else None
             text = raw.decode("utf-8", errors="replace") if raw is not None and file.suffix in TEXT_SUFFIXES else None
             cache[path] = (raw, text)
         return cache[path]
@@ -110,6 +110,16 @@ def audit(envelopes: list[dict], root: Path) -> dict:
                         counts["span_not_in_snapshot"] += 1
                         failures.append({"org": envelope["organisation_number"], "field": claim["field"], "problem": "claim_span is not a literal slice of the inline body", "span": span[:120]})
                 continue
+            if root is None and inline is not None and inline.get("body_omitted") == "binary_pdf":
+                # No output folder given: a PDF is carried by reference (hash, size, path, public source_url).
+                # Check the reference agrees with the evidence; the bytes need the folder to be re-hashed.
+                if inline.get("sha256") == item.get("content_sha256") and span:
+                    counts["pdf_by_reference"] += 1
+                    tally["pdf_by_reference"] += 1
+                else:
+                    counts["pdf_reference_mismatch"] += 1
+                    failures.append({"org": envelope["organisation_number"], "field": claim["field"], "problem": "PDF reference does not match the evidence hash or has no excerpt"})
+                continue
             if not span:
                 counts["no_span"] += 1
                 tally["no_span"] += 1
@@ -145,11 +155,11 @@ def audit(envelopes: list[dict], root: Path) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Audit claims against their saved sources.")
     parser.add_argument("--envelopes", required=True)
-    parser.add_argument("--root", required=True, help="Output directory the snapshot paths are relative to")
+    parser.add_argument("--root", help="Output directory the snapshot paths are relative to. Optional: without it, every text claim is verified from the result file alone (inline bodies) and only PDF-referenced claims cannot be re-hashed")
     parser.add_argument("--report")
     args = parser.parse_args()
     envelopes = [json.loads(line) for line in Path(args.envelopes).read_text(encoding="utf-8").splitlines() if line.strip()]
-    report = audit(envelopes, Path(args.root))
+    report = audit(envelopes, Path(args.root) if args.root else None)
     text = json.dumps(report, ensure_ascii=False, indent=2)
     if args.report:
         Path(args.report).write_text(text + "\n", encoding="utf-8")

@@ -68,8 +68,9 @@ co-occur on a page are not evidence of *this* entity.
 `assess_website_identity` now publishes a multi-word name match only when the site
 is tied to the Norwegian entity by at least one of:
 
-1. **the registry itself lists that site** (`hjemmeside` / live `website`) -- the
-   company told Brreg it is theirs, which outranks any text match. For this case the name
+1. **the registry or Wikidata lists that site** (`hjemmeside` / live `website`, or the site Wikidata
+   attributes to the item matched by organisation number) -- an independent party tied the site to this exact
+   entity, which outranks any text match. For this case the name
    only has to appear in the page title or hostname, so JavaScript-rendered homepages with
    no readable text (elopak.com) still verify, and single-word names are covered too;
 2. **a `.no` domain**;
@@ -82,12 +83,24 @@ is tied to the Norwegian entity by at least one of:
 Without any of those the score is 0.5 ("related_or_uncertain"), not published.
 Re-running the gate over the already-published batch (`scripts/reassess_published_websites.py`,
 cached pages only, no new requests) took published websites from 74 to 59 (a later correction, registry-listed sites also anchor
-single-word names and JavaScript-rendered pages, restored 9 genuine ones: 67 are published now); the 15
+single-word names and JavaScript-rendered pages, restored 9 genuine ones: 67 are published now; Wikidata-listed sites,
+the key-free domain probe and the organisation-number branch brought it to 72); the 15
 demoted include every clear foreign-site match. The cost is real: a few genuine
 Norwegian companies on a `.com` (TBG Holding, Axess Technologies, Oslo Analytica,
 Lie Nilsen) fall out because their captured text carries none of the four signals.
 That is the intended trade -- "it is better to miss some information than publish it
 under the wrong company."
+
+## Key-free discovery and the precision audit
+
+`scripts/run_domain_probe.py` builds likely hostnames from the legal name and keeps a site only if its page shows
+the exact organisation number, or the registered postcode and town; the normal full crawl and this gate then decide.
+Wikidata supplies a second independent anchor (see `CRAWLERS.md`). We audited every published site of the
+100-company run by hand (77 candidates: 41 anchored by the registry or Wikidata, 16 by the organisation number on
+the page, 20 by name plus a Norway signal). The audit led to one more tightening: a **single-word** name
+(e.g. "Sago") needs a `.no` domain *and* the registered town on the page, not just one of them, because a bare
+`.no` match on a common word is the same collision risk in a smaller form. There is no labelled ground truth for
+websites, so the precision is audited, not measured; the trade (a few genuine sites quarantined) is deliberate.
 
 ## When uncertain
 
