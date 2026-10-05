@@ -421,6 +421,35 @@ class SelfContainedResultTests(unittest.TestCase):
             envelope = build_envelope(profile, run_id="r", started_at="2026-01-01T00:00:00Z", completed_at="2026-01-01T00:01:00Z", snapshot_root=Path(directory))
         self.assertEqual(envelope["source_snapshots"][0]["body_omitted"], "file_not_found")
 
+    def test_a_malformed_bulk_row_with_surplus_columns_cannot_stop_the_registry_stage(self):
+        # Real failure on the 1,000-company run: csv.DictReader files surplus columns under a None
+        # key, and sort_keys=True cannot order None against str. It crashed the required registry stage.
+        from norway_company_agent.batch import profiles_from_bulk
+        import gzip as gz
+
+        with tempfile.TemporaryDirectory() as directory:
+            bulk = Path(directory) / "bulk.csv.gz"
+            with gz.open(bulk, "wt", encoding="utf-8", newline="") as handle:
+                handle.write('"organisasjonsnummer","navn","organisasjonsform.kode"' + chr(10))
+                handle.write('"923609016","EXAMPLE AS","AS","surplus1","surplus2"' + chr(10))
+                handle.write('"923609017","OTHER AS","AS"' + chr(10))
+            with patch.dict(os.environ, {"SIGNALPOST_SNAPSHOT_DIR": str(Path(directory) / "snapshots")}):
+                profiles, _ = profiles_from_bulk(bulk, ["923609016", "923609017"])
+            by_org = {row["organisation_number"]: row for row in profiles}
+            self.assertEqual(set(by_org), {"923609016", "923609017"})
+            malformed = by_org["923609016"]["evidence"]["registry"]
+            self.assertEqual(malformed["status"], "available")
+            self.assertEqual(malformed["spans"]["navn"], '"navn":"EXAMPLE AS"')
+            saved = (Path(directory) / "snapshots" / Path(malformed["snapshot_path"]).name).read_text(encoding="utf-8")
+            self.assertIn("surplus1", saved)
+        with patch("norway_company_agent.batch.save_snapshot", side_effect=OSError("disk full")):
+            with tempfile.TemporaryDirectory() as directory:
+                bulk = Path(directory) / "bulk.csv.gz"
+                with gz.open(bulk, "wt", encoding="utf-8", newline="") as handle:
+                    handle.write('"organisasjonsnummer","navn","organisasjonsform.kode"' + chr(10) + '"923609016","EXAMPLE AS","AS"' + chr(10))
+                profiles, _ = profiles_from_bulk(bulk, ["923609016"])
+        self.assertEqual(profiles[0]["evidence"]["registry"]["status"], "available")  # fell back, did not crash
+
     def test_the_bulk_registry_row_is_a_retained_response_for_fallback_claims(self):
         from norway_company_agent.batch import profiles_from_bulk
 
