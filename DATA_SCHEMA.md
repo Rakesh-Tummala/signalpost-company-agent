@@ -1,6 +1,6 @@
 # Data schema
 
-## Submission envelope (`out/output-contract-envelopes.jsonl`)
+## Submission envelope (`out/smoke-100/envelopes.jsonl`)
 
 One JSON object per organisation number, produced by `scripts/build_output_contract.py`
 from the pipeline's internal profile format. This matches `OUTPUT_CONTRACT.md`:
@@ -128,9 +128,9 @@ drops. This is not the submission format — it's what
 `scripts/run_competition_batch.py` uses to self-check a batch before handing off to
 `build_output_contract.py`.
 
-## Offline viewer (`out/viewer.html`)
+## Offline viewer (`out/smoke-100/viewer.html`)
 
-`scripts/build_viewer.py` reads `output-contract-envelopes.jsonl` and produces a
+`scripts/build_viewer.py` reads an envelopes file and produces a
 single, self-contained HTML file — no build step, no external dependencies, no
 local server required (it opens directly from disk). Each company's claims,
 evidence source links, and grounded summary are searchable by organisation number

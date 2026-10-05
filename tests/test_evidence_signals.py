@@ -451,7 +451,8 @@ class TimeBudgetTests(unittest.TestCase):
         self.assertNotIn("financial_history", tight["modules"])
         for module in ("registry", "registry_live", "financials", "roles", "locations", "website"):
             self.assertIn(module, tight["modules"])
-        self.assertGreaterEqual(tight["reserve_seconds"], 360)
+        self.assertGreaterEqual(tight["reserve_seconds"], 360)  # 1,000 companies keep about six minutes to write results
+        self.assertLess(plan_stages(100, 12 * 60)["reserve_seconds"], 180)  # a small batch does not waste its budget
         roomy = plan_stages(1000, 300 * 60)
         self.assertTrue(roomy["history"])
         self.assertEqual(plan_stages(100, 45 * 60)["history"], True)

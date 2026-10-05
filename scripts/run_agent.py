@@ -83,8 +83,9 @@ def merge_profiles(base: list[dict], updated: list[dict], *, only_if_has: str | 
 
 REGISTRY_MODULES = "registry,accounting_obligation,registry_live,financials,financial_history,roles,group,locations,website"
 HISTORY_REQUESTS_PER_MINUTE = 30  # Brreg's documented-by-observation limit on the account-history endpoint
-FINALIZE_RESERVE_SECONDS = 360  # claims conversion + viewer, kept clear of every optional stage
-PRIOR_YEAR_RESERVE_SECONDS = 60
+FINALIZE_BASE_SECONDS = 60  # writing the results (claims conversion + viewer) takes ~1 minute plus...
+FINALIZE_PER_COMPANY_SECONDS = 0.3  # ...a little per company (measured: ~5 minutes of headroom for 1,000)
+PRIOR_YEAR_RESERVE_SECONDS = 30
 
 
 def plan_stages(company_count: int, budget_seconds: float | None) -> dict:
@@ -103,7 +104,7 @@ def plan_stages(company_count: int, budget_seconds: float | None) -> dict:
         "modules": modules,
         "history": keep_history,
         "crawl_seconds": max(60, int(0.2 * budget_seconds)),
-        "reserve_seconds": FINALIZE_RESERVE_SECONDS + PRIOR_YEAR_RESERVE_SECONDS,
+        "reserve_seconds": FINALIZE_BASE_SECONDS + FINALIZE_PER_COMPANY_SECONDS * company_count + PRIOR_YEAR_RESERVE_SECONDS,
     }
 
 

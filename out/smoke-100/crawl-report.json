@@ -1,0 +1,84 @@
+{
+  "input_sha256": "51324e586372bc01ed9c327baaae2411298e8235a43ffbf045751565edcf5a2f",
+  "profiles": 16,
+  "website_seeds_selected": 16,
+  "profiles_with_events": 16,
+  "unique_events": 58,
+  "events_added": 58,
+  "events_present_before_run": 0,
+  "synthetic_terminal_events": 0,
+  "website_statuses": {
+    "available": 12,
+    "source_error": 4
+  },
+  "identity_statuses": {
+    "exact": 8,
+    "review": 1,
+    "related_or_uncertain": 3
+  },
+  "published_social_profiles": 3,
+  "elapsed_seconds": 44.465,
+  "run_started_at": "2026-10-05T15:17:16.879582Z",
+  "run_finished_at": "2026-10-05T15:18:01.344800Z",
+  "events_per_second": 1.304,
+  "requests": 119,
+  "responses": 106,
+  "response_bytes": 2908995,
+  "retries": 7,
+  "robots_forbidden": 0,
+  "request_wall_latency_including_queue": {
+    "n": 119,
+    "p50_ms": 800.216,
+    "p95_ms": 6921.736,
+    "max_ms": 10015.287
+  },
+  "response_download_latency": {
+    "n": 106,
+    "p50_ms": 326.706,
+    "p95_ms": 1443.371,
+    "max_ms": 2079.58
+  },
+  "failure_attempt_wall_latency": {
+    "n": 13,
+    "p50_ms": 442.351,
+    "p95_ms": 10015.375,
+    "max_ms": 10015.375
+  },
+  "company_completion_latency": {
+    "n": 16,
+    "p50_ms": 4728.708,
+    "p95_ms": 42313.075,
+    "max_ms": 42313.075
+  },
+  "company_completion_synthetic_upper_bounds": 0,
+  "request_domain_fairness": {
+    "domains": 28,
+    "p50_requests": 4.0,
+    "p95_requests": 10.0,
+    "max_requests": 11
+  },
+  "response_statuses": {
+    "200": 72,
+    "301": 22,
+    "302": 1,
+    "403": 4,
+    "404": 4,
+    "500": 3
+  },
+  "error_buckets": {
+    "DownloadFailedError": 9,
+    "DownloadTimeoutError": 4,
+    "IgnoreRequest": 2
+  },
+  "request_amplification_per_seed": 7.438,
+  "terminal_coverage": 1.0,
+  "crawl_complete": true,
+  "peak_rss_bytes": 0,
+  "output_sha256": "751a1ac8a895a24e9ad7278f5eac77f944e5c8d2f6f7ee6fd427580f31827aff",
+  "finish_reason": "finished",
+  "resume_noop": false,
+  "concurrency": 16,
+  "per_domain": 2,
+  "jobdir": "out\\c100\\crawl-jobdir",
+  "events_path": "out\\c100\\crawl-events.jsonl"
+}

@@ -1,0 +1,11 @@
+{
+  "connector": "exact_company_site_dated_articles_v1",
+  "profiles": 100,
+  "companies_with_dated_articles": 2,
+  "observations": 20,
+  "by_evidence_kind": {
+    "time_element": 18,
+    "feed_item": 2
+  },
+  "claim_boundary": "Only items with a parseable publication date on an identity-verified company site or its own RSS/Atom feed; an undated news page is not published."
+}

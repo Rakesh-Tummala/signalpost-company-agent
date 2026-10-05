@@ -52,8 +52,8 @@
   observations to audit yet.
 - **Real per-field coverage from the actual final claims artifact** (not the older
   proxy scorer above) — see the table in `LIMITATIONS.md`. This is the more relevant
-  number: computed directly from `out/output-contract-envelopes.jsonl`, the exact
-  file that would be submitted, and after the identity-gate precision fix demoted 24
+  number: computed directly from the claims artifact of the full 1,000-company run (not committed: 51 MB
+  with inline sources; `out/audit-report.json` and `out/run-summary.json` record it), and after the identity-gate precision fix demoted 24
   wrong-company matches (also in `LIMITATIONS.md`). Official-registry fields are
   ~100%; workforce size 84.1% (via OCR); prior-year annual accounts 82.3% (also via OCR,
   recovered from the same cached report text -- no new fetches); group structure 7.0%;

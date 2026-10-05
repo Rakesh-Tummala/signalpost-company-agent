@@ -1,0 +1,148 @@
+{
+  "summary": {
+    "claims": 2109,
+    "evidence_complete_in_result": 1921,
+    "body_inline_in_result": 1757,
+    "snapshot_hash_ok": 1921,
+    "span_exact": 1757,
+    "not_available_claims": 188,
+    "span_from_pdf": 164
+  },
+  "by_field_family": {
+    "accounting_obligation": {
+      "claims": 100,
+      "evidence_complete_in_result": 100,
+      "body_inline_in_result": 100,
+      "snapshot_hash_ok": 100,
+      "span_exact": 100
+    },
+    "annual_accounts": {
+      "claims": 365,
+      "evidence_complete_in_result": 364,
+      "body_inline_in_result": 283,
+      "snapshot_hash_ok": 364,
+      "span_exact": 283,
+      "span_from_pdf": 81
+    },
+    "annual_accounts_years_on_file": {
+      "claims": 100,
+      "evidence_complete_in_result": 100,
+      "body_inline_in_result": 100,
+      "snapshot_hash_ok": 100,
+      "span_exact": 100
+    },
+    "bankrupt": {
+      "claims": 100,
+      "evidence_complete_in_result": 100,
+      "body_inline_in_result": 100,
+      "snapshot_hash_ok": 100,
+      "span_exact": 100
+    },
+    "business_address": {
+      "claims": 100,
+      "evidence_complete_in_result": 100,
+      "body_inline_in_result": 100,
+      "snapshot_hash_ok": 100,
+      "span_exact": 100
+    },
+    "employees": {
+      "claims": 13,
+      "evidence_complete_in_result": 13,
+      "body_inline_in_result": 13,
+      "snapshot_hash_ok": 13,
+      "span_exact": 13
+    },
+    "group_structure": {
+      "claims": 100,
+      "evidence_complete_in_result": 5,
+      "body_inline_in_result": 5,
+      "snapshot_hash_ok": 5,
+      "span_exact": 5
+    },
+    "industry": {
+      "claims": 100,
+      "evidence_complete_in_result": 100,
+      "body_inline_in_result": 100,
+      "snapshot_hash_ok": 100,
+      "span_exact": 100
+    },
+    "latest_submitted_accounts": {
+      "claims": 100,
+      "evidence_complete_in_result": 100,
+      "body_inline_in_result": 100,
+      "snapshot_hash_ok": 100,
+      "span_exact": 100
+    },
+    "legal_form": {
+      "claims": 100,
+      "evidence_complete_in_result": 100,
+      "body_inline_in_result": 100,
+      "snapshot_hash_ok": 100,
+      "span_exact": 100
+    },
+    "legal_name": {
+      "claims": 100,
+      "evidence_complete_in_result": 100,
+      "body_inline_in_result": 100,
+      "snapshot_hash_ok": 100,
+      "span_exact": 100
+    },
+    "liquidating": {
+      "claims": 100,
+      "evidence_complete_in_result": 100,
+      "body_inline_in_result": 100,
+      "snapshot_hash_ok": 100,
+      "span_exact": 100
+    },
+    "location": {
+      "claims": 78,
+      "evidence_complete_in_result": 78,
+      "body_inline_in_result": 78,
+      "snapshot_hash_ok": 78,
+      "span_exact": 78
+    },
+    "official_website": {
+      "claims": 100,
+      "evidence_complete_in_result": 8,
+      "body_inline_in_result": 8,
+      "snapshot_hash_ok": 8,
+      "span_exact": 8
+    },
+    "registered_workplaces": {
+      "claims": 24,
+      "evidence_complete_in_result": 24,
+      "body_inline_in_result": 24,
+      "snapshot_hash_ok": 24,
+      "span_exact": 24
+    },
+    "role": {
+      "claims": 423,
+      "evidence_complete_in_result": 423,
+      "body_inline_in_result": 423,
+      "snapshot_hash_ok": 423,
+      "span_exact": 423
+    },
+    "site_news": {
+      "claims": 20,
+      "evidence_complete_in_result": 20,
+      "body_inline_in_result": 20,
+      "snapshot_hash_ok": 20,
+      "span_exact": 20
+    },
+    "social_profile": {
+      "claims": 3,
+      "evidence_complete_in_result": 3,
+      "body_inline_in_result": 3,
+      "snapshot_hash_ok": 3,
+      "span_exact": 3
+    },
+    "workforce_value": {
+      "claims": 83,
+      "evidence_complete_in_result": 83,
+      "snapshot_hash_ok": 83,
+      "span_from_pdf": 83
+    }
+  },
+  "failures": [],
+  "failure_count": 0
+}
