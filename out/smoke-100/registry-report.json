@@ -1,7 +1,7 @@
 {
   "run_id": "clean-100",
-  "started_at": "2026-10-06T04:39:48.317948Z",
-  "completed_at": "2026-10-06T04:44:18.415223Z",
+  "started_at": "2026-10-06T17:06:30.851503Z",
+  "completed_at": "2026-10-06T17:11:14.066737Z",
   "expected_count": 100,
   "emitted_envelopes": 100,
   "resumed_profiles": 0,
@@ -25,10 +25,10 @@
     "missing_from_bulk": []
   },
   "operations": {
-    "requests": 774,
-    "bytes": 9807567,
-    "p50_ms": 733,
-    "p95_ms": 1133
+    "requests": 766,
+    "bytes": 9410621,
+    "p50_ms": 717,
+    "p95_ms": 1077
   },
   "validation": {
     "passed": true,

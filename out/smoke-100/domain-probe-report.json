@@ -1,16 +1,16 @@
 {
   "connector": "domain_probe_v1",
-  "started_at": "2026-10-06T04:44:22.151472Z",
-  "completed_at": "2026-10-06T04:45:47.885179Z",
+  "started_at": "2026-10-06T17:11:17.882246Z",
+  "completed_at": "2026-10-06T17:12:11.164298Z",
   "counts": {
     "input_profiles": 100,
     "probed_profiles": 84,
     "candidates": 314,
-    "probe_requests": 170,
+    "probe_requests": 171,
     "hits_by_registered_place": 5,
-    "crawl_requests": 96,
-    "verified_sites": 4,
-    "hits_by_organisation_number": 2,
+    "crawl_requests": 80,
+    "verified_sites": 3,
+    "hits_by_organisation_number": 1,
     "quarantined_sites": 4,
     "hits_by_registered_contact": 1
   },

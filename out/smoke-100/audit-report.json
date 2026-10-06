@@ -1,11 +1,11 @@
 {
   "summary": {
     "claims": 2217,
-    "evidence_complete_in_result": 1935,
-    "body_inline_in_result": 1771,
-    "snapshot_hash_ok": 1935,
-    "span_exact": 1771,
-    "not_available_claims": 282,
+    "evidence_complete_in_result": 1934,
+    "body_inline_in_result": 1770,
+    "snapshot_hash_ok": 1934,
+    "span_exact": 1770,
+    "not_available_claims": 283,
     "span_from_pdf": 164
   },
   "by_field_family": {
@@ -110,10 +110,10 @@
     },
     "official_website": {
       "claims": 100,
-      "evidence_complete_in_result": 12,
-      "body_inline_in_result": 12,
-      "snapshot_hash_ok": 12,
-      "span_exact": 12
+      "evidence_complete_in_result": 11,
+      "body_inline_in_result": 11,
+      "snapshot_hash_ok": 11,
+      "span_exact": 11
     },
     "registered_workplaces": {
       "claims": 24,
