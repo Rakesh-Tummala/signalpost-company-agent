@@ -7,9 +7,9 @@ these are silently hidden: every gap below shows up as an honest `not_available`
 ## Real per-field coverage (1,000-company entry batch, final code, one clean-clone run)
 
 Produced by one `run_agent.py` run from a fresh clone, no API keys, Windows 11 (the same code also ran
-clean on Ubuntu 24.04, 10 companies): 1,000 terminal results, 21,829 claims, **1h35m** wall clock, about
-8,800 outbound requests (registry stage 6,776 including its homepage crawl, key-free site probe 1,132,
-Wikidata 39, about 855 annual-report downloads). Numbers below are from that run's `envelopes.jsonl`;
+clean on Ubuntu 24.04, 10 companies): 1,000 terminal results, 21,925 claims, **1h30m** wall clock, about
+10,900 outbound requests (registry stage 7,300 including its homepage crawl, key-free site probe and the crawl of
+its candidates 2,725, Wikidata 39, about 855 annual-report downloads). Numbers below are from that run's `envelopes.jsonl`;
 sections further down were written at earlier stages and describe the history of the work, so where a number
 differs, this table is current.
 
@@ -22,17 +22,17 @@ differs, this table is current.
 | **Prior-year annual accounts** (recovered from the same official annual-report OCR; 853 eligible, 818 accepted) | 818 | 81.8% |
 | Registered locations/subunits | 745 | 74.5% |
 | Registry-reported employee count | 142 | 14.2% |
-| Verified official website (identity gate: exact entity only) | 74 | 7.4% |
+| Verified official website (identity gate: exact entity only; 48 listed by the registry, 51 found by the key-free probe or Wikidata) | 99 | 9.9% |
 | Group/ownership structure | 70 | 7.0% |
-| Verified social profiles (64 links; Facebook 26, Instagram 18, LinkedIn 15) | 33 | 3.3% |
-| **Dated** company-owned news items (98 items, 86 from the site's own feed) | 17 | 1.7% |
+| Verified social profiles (79 links; Facebook 31, Instagram 22, LinkedIn 19) | 42 | 4.2% |
+| **Dated** company-owned news items (179 items, 165 from the site's own feed) | 29 | 2.9% |
 | Wikidata item matched by organisation number (CC0, independent of Brreg and of the company) | 8 | 0.8% |
 | **Real job postings** on the company's own site (3 role cards) | 1 | 0.1% |
 
-Evidence completeness in that run: of 21,829 claims, 18,976 are available, and all 18,976 carry a public source URL,
+Evidence completeness in that run: of 21,925 claims, 19,097 are available, and all 19,097 carry a public source URL,
 retrieval time, SHA-256 and supporting text. `scripts/audit_evidence.py` reports **0 failures** both ways: from
-`envelopes.jsonl` alone (17,318 text claims re-hashed and the excerpt found literally in the inline body; 1,658
-annual-report PDF claims checked by their recorded hash) and against the saved folder (all 18,976 hashes re-computed).
+`envelopes.jsonl` alone (17,439 text claims re-hashed and the excerpt found literally in the inline body; 1,658
+annual-report PDF claims checked by their recorded hash) and against the saved folder (all 19,097 hashes re-computed).
 
 Checked-and-empty results (no registered subunits: 255 companies) are published as an
 explicit empty list cited to the response's own `"totalElements":0`, not counted above.
@@ -376,7 +376,7 @@ too, so those claims are evidence-complete as well.
 
 **Official-run size and time are unknown to us.** The contract now says the official batch is 1,000
 companies (it may grow to 1,100) under "a fixed time and resource budget", without stating it. Measured
-here: **1h35m** for 1,000 companies on the final code with about 8,800 outbound requests (it was 3h12m before the
+here: **1h30m** for 1,000 companies on the final code with about 10,900 outbound requests (it was 3h12m before the
 annual-report OCR was started first, in the background, so it overlaps the registry stage, which is bound by
 Brreg's account-history rate limit of about 30 requests a minute). Since a timeout
 is unscored, there is an opt-in `--time-budget-minutes` mode (see `README.md`) that plans stages to fit and

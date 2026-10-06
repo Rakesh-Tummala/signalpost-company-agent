@@ -91,6 +91,25 @@ Lie Nilsen) fall out because their captured text carries none of the four signal
 That is the intended trade -- "it is better to miss some information than publish it
 under the wrong company."
 
+## Registry-declared contact proofs
+
+Brreg carries the e-mail address, mobile and phone number a company registered itself. They are company-declared,
+exact facts, and the crawl now reads every page's identifiers (organisation-number-like numbers, 8-digit phone
+numbers, e-mail addresses) from its **full visible text**, footers included -- the page excerpt used for the
+name checks drops exactly those. Three exact proofs result, each only together with the legal name in the site's
+hostname or title (a generic trailing word such as Norge, Holding or Group may be missing):
+
+1. the company's **organisation number** printed on any crawled page (contact, about, privacy, footer);
+2. the company's **registered phone number or e-mail address** printed on the site;
+3. the site sits on the company's **registered e-mail domain** (and has a substantive homepage).
+
+The name requirement is what keeps these safe, and each failure it prevents was seen in real data: accountants'
+and housing-association managers' sites carry a client's registered contact (`vbbl.no` and `usbl.no` for co-ops,
+`tfjelland.no` for an accountant's client), a group's contact page lists every subsidiary's organisation number
+(the existing SKS test), and a parent's site carries a subsidiary's registered phone (`backe.no`, `peab.no`). An
+earlier draft that let a *registry-listed* site publish on a registered phone alone was removed for exactly
+that reason. A registrar placeholder ("registrert domene") counts as parked.
+
 ## Key-free discovery and the precision audit
 
 `scripts/run_domain_probe.py` builds likely hostnames from the legal name and keeps a site only if its page shows

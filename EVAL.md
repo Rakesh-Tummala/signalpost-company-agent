@@ -14,11 +14,11 @@
   profiles, 19,080 claims, zero violations, zero per-profile conversion failures
   (the last one guarded by `build_envelopes_safe`, see its own commit).
 - `scripts/audit_evidence.py` — checks that every claim is backed by an exact saved
-  source. On the final one-command run over all 1,000 companies (21,829 claims, 18,976 available): every
+  source. On the final one-command run over all 1,000 companies (21,925 claims, 19,097 available): every
   available claim carries a public source URL, retrieval time, SHA-256 and supporting text inside the result
-  itself; **0 failures** both from `envelopes.jsonl` alone (17,318 text claims: body re-hashed, excerpt found
+  itself; **0 failures** both from `envelopes.jsonl` alone (17,439 text claims: body re-hashed, excerpt found
   literally; 1,658 annual-report PDF claims checked by their recorded hash) and against the saved folder
-  (all 18,976 hashes re-computed). Exits non-zero on any incomplete record or mismatch.
+  (all 19,097 hashes re-computed). Exits non-zero on any incomplete record or mismatch.
 - `scripts/validate_refresh_at_scale.py` — real-scale refresh validation (not just
   the offline fixture): zero false positives and zero crashes across all 1,000 real
   profiles, confirmed idempotency at scale, 50/50 injected changes on real company
@@ -51,9 +51,9 @@
   observations against evaluator-owned labels. **Not run** — we have no external
   observations to audit yet.
 - **Real per-field coverage from the final claims artifact** — see the table at the top of
-  `LIMITATIONS.md` (final code, one clean-clone run, 1h35m). Official-registry fields ~100%; workforce size
+  `LIMITATIONS.md` (final code, one clean-clone run, 1h30m). Official-registry fields ~100%; workforce size
   84.0% and prior-year accounts 81.8% (both via OCR of the official annual report); group structure 7.0%;
-  verified website 7.4%; social profiles 3.3%; dated company news 1.7%; real job postings 0.1%; Wikidata
+  verified website 9.9%; social profiles 4.2%; dated company news 2.9%; real job postings 0.1%; Wikidata
   items 0.8%. This tells us *our own* coverage, not how it compares to Builderr's independently verified
   collection or the other entrants' pooled findings, which is what the real coverage score is measured against.
 

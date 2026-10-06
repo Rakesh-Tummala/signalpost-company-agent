@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Key-free website discovery by probing name-derived domains, proven by organisation number.
+"""Key-free website discovery: probe the company's registered e-mail domain and name-derived domains.
 
-For each company with no website yet: build likely hostnames from its legal name
-(`norway_company_agent.domain_probe`), fetch the ones that resolve (robots.txt respected, public
-addresses only, bounded size), and keep a site only if its page shows this company's exact
-organisation number as a delimited number. A kept site then gets the full independent crawl and the
-normal identity gate; it is published only if the gate calls it exact. Needs no API key, so it runs
-before (and spares) the paid search stages.
+For each company with no website yet: take the domain of the e-mail address it registered with Brreg (unless it is a
+mail provider) and likely hostnames from its legal name (`norway_company_agent.domain_probe`), fetch the ones that
+resolve (robots.txt respected, public addresses only, bounded size, plus up to three contact, about or privacy pages),
+and keep a site only if it shows this company's exact organisation number, or the phone number or e-mail address the
+company registered (with its name in the hostname or title), or sits on the registered e-mail domain (same name
+requirement), or shows the registered postcode and town. A kept site then gets the full independent crawl and the
+normal identity gate; it is published only if the gate calls it exact. Needs no API key, so it runs before (and
+spares) the paid search stages.
 """
 from __future__ import annotations
 

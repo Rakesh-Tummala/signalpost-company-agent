@@ -134,7 +134,7 @@ confirms each excerpt is a literal slice of it, and exits non-zero on any gap or
 carries its own `source_snapshots` (see `DATA_SCHEMA.md`), so the envelope file alone is enough to verify
 text-source claims. A committed 100-company run from a clean clone is in `out/smoke-100/`.
 
-Runtime: 100 companies take about 11 minutes and 1,000 take about 1h35m (measured from clean clones; the registry
+Runtime: 100 companies take about 11 minutes and 1,000 take about 1h30m (measured from clean clones; the registry
 stage is bound by Brreg's ~30 requests/minute account-history limit, and the annual-report OCR runs in the
 background alongside it).
 If you are given a wall-clock budget, pass `--time-budget-minutes N` (or set
