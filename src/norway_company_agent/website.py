@@ -201,13 +201,20 @@ def normalize_social_url(url: str) -> dict[str, str] | None:
     return {"platform": platform, "url": f"https://{canonical_host}/{'/'.join(parts)}"}
 
 
-def _priority_links(base_url: str, soup: BeautifulSoup, limit: int = 6) -> list[str]:
-    # Was 4; PRIORITY_TERMS grew from 10 to 13 terms when careers/jobs pages were
-    # added, so a 4-link cap on a homepage with contact + news + careers links all
-    # present would silently drop one category rather than just fetching an extra
-    # page or two (crawl concurrency/per-domain limits already bound the real cost).
+# Which kind of page a link leads to, and how many of each kind a crawl may fetch. The budget is per kind so that
+# a site with a dozen "about" subpages cannot crowd out its careers or news page (a real case: shgroup.dk has six
+# /about/... pages and a /career page with six open roles).
+LINK_GROUPS: dict[str, tuple[tuple[str, ...], int]] = {
+    "identity": (("om-oss", "om_oss", "about", "kontakt", "contact", "ledelse", "management", "team", "people"), 3),
+    "places": (("locations", "lokasjoner", "avdelinger", "butikker"), 1),
+    "news": (("news", "press", "aktuelt", "nyheter", "blog", "blogg"), 2),
+    "jobs": (("careers", "career", "jobs", "job", "karriere", "ledige-stillinger", "stillinger", "stilling", "vacanc", "rekrutt"), 2),
+}
+
+
+def _priority_links(base_url: str, soup: BeautifulSoup, limit: int = 8) -> list[str]:
     base = urllib.parse.urlparse(base_url)
-    candidates: dict[str, int] = {}
+    best: dict[str, tuple[str, int, int]] = {}
     for anchor in soup.select("a[href]"):
         href = str(anchor.get("href") or "").strip()
         url = urllib.parse.urljoin(base_url, href)
@@ -215,14 +222,27 @@ def _priority_links(base_url: str, soup: BeautifulSoup, limit: int = 6) -> list[
         if parsed.scheme not in {"http", "https"} or parsed.netloc.lower() != base.netloc.lower():
             continue
         haystack = (parsed.path + " " + anchor.get_text(" ", strip=True)).casefold()
-        rank = next((index for index, term in enumerate(PRIORITY_TERMS) if term in haystack), None)
-        if rank is None:
+        # The more specific kinds are tried first, so /about/careers is a jobs page, not an identity page.
+        group = next((name for name in ("jobs", "news", "places", "identity") if any(term in haystack for term in LINK_GROUPS[name][0])), None)
+        if group is None:
             continue
         clean = urllib.parse.urlunparse((parsed.scheme, parsed.netloc, parsed.path or "/", "", "", ""))
         if clean.rstrip("/") == base_url.rstrip("/"):
             continue
-        candidates[clean] = min(rank, candidates.get(clean, rank))
-    return [url for url, _ in sorted(candidates.items(), key=lambda item: (item[1], item[0]))[:limit]]
+        # Shallow pages first: /career beats /about/our-history/2019 and an article slug that happens to contain "job".
+        depth = len([part for part in parsed.path.split("/") if part])
+        rank = min(index for index, term in enumerate(LINK_GROUPS[group][0]) if term in haystack)
+        key = (depth, rank)
+        if clean not in best or key < best[clean][1:]:
+            best[clean] = (group, *key)
+    chosen: list[str] = []
+    taken: dict[str, int] = {}
+    for url, (group, depth, rank) in sorted(best.items(), key=lambda item: (item[1][1], item[1][2], item[0])):
+        if taken.get(group, 0) >= LINK_GROUPS[group][1]:
+            continue
+        taken[group] = taken.get(group, 0) + 1
+        chosen.append(url)
+    return chosen[:limit]
 
 
 def _fetch_secondary_page(url: str, *, homepage_domain: str, timeout: float, max_bytes: int) -> tuple[dict[str, Any] | None, list[dict[str, str]], int, int, int, str | None]:

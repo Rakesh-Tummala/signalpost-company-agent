@@ -15,6 +15,8 @@ from norway_company_agent.domain_probe import candidate_hosts, contact_links, do
 from norway_company_agent.evidence import evidence  # noqa: E402
 from norway_company_agent.identity import assess_website_identity  # noqa: E402
 from norway_company_agent.page_signals import extract_page_signals  # noqa: E402
+from norway_company_agent.website import _priority_links  # noqa: E402
+from bs4 import BeautifulSoup  # noqa: E402
 
 BODY = "Vi leverer tjenester til bedrifter over hele landet. " * 4  # a substantive homepage
 
@@ -138,6 +140,28 @@ class TransientFetchTests(unittest.TestCase):
         with patch.object(website_module, "_fetch_website_once", side_effect=[(refused, dict(metrics))]) as once, patch.object(website_module.time, "sleep"):
             record, _ = website_module.fetch_website("https://example.no/")
         self.assertEqual((record["status"], once.call_count), ("blocked", 1))
+
+
+class CrawlBudgetTests(unittest.TestCase):
+    def _links(self, hrefs):
+        html = "<html><body>" + "".join(f'<a href="{href}">{label}</a>' for href, label in hrefs) + "</body></html>"
+        return _priority_links("https://example.com/", BeautifulSoup(html, "lxml"))
+
+    def test_a_careers_page_is_not_crowded_out_by_many_about_subpages(self):
+        # Real case: shgroup.dk has six /about/... pages and a /career page with six open roles.
+        links = self._links([("/about", "About"), ("/about/certifications", "Certifications"), ("/about/hse", "HSE"), ("/about/management", "Management"),
+                             ("/about/history", "History"), ("/about/organisation", "Organisation"), ("/contact", "Contact"), ("/career", "Career"), ("/news", "News")])
+        self.assertIn("https://example.com/career", links)
+        self.assertIn("https://example.com/news", links)
+        self.assertLessEqual(len([link for link in links if "/about" in link or "/contact" in link]), 3)
+
+    def test_shallow_pages_win_and_article_slugs_that_mention_jobs_lose(self):
+        links = self._links([("/artikkel/endelig-fikk-hun-drommejobben", "Les mer"), ("/artikkel/enda-en-jobb-historie", "Les mer"), ("/artikkel/tredje-jobb", "Les mer"), ("/karriere", "Karriere")])
+        self.assertEqual(links[0], "https://example.com/karriere")
+
+    def test_a_careers_link_under_about_is_still_a_jobs_page(self):
+        links = self._links([("/about/careers", "Careers"), ("/about", "About"), ("/about/a", "A"), ("/about/b", "B"), ("/about/c", "C")])
+        self.assertIn("https://example.com/about/careers", links)
 
 
 if __name__ == "__main__":
