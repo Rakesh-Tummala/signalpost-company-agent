@@ -1,16 +1,18 @@
 {
   "connector": "domain_probe_v1",
-  "started_at": "2026-10-05T19:28:06.941182Z",
-  "completed_at": "2026-10-05T19:28:28.817799Z",
+  "started_at": "2026-10-06T04:44:22.151472Z",
+  "completed_at": "2026-10-06T04:45:47.885179Z",
   "counts": {
     "input_profiles": 100,
     "probed_profiles": 84,
-    "candidates": 241,
-    "probe_requests": 61,
-    "hits_by_registered_place": 2,
-    "crawl_requests": 14,
-    "verified_sites": 1,
-    "quarantined_sites": 1
+    "candidates": 314,
+    "probe_requests": 170,
+    "hits_by_registered_place": 5,
+    "crawl_requests": 96,
+    "verified_sites": 4,
+    "hits_by_organisation_number": 2,
+    "quarantined_sites": 4,
+    "hits_by_registered_contact": 1
   },
-  "claim_boundary": "A site is published only if its page shows the exact organisation number (or, for a name-derived domain, the registered postcode and town) AND the identity gate calls it exact; a name-derived domain alone is never evidence."
+  "claim_boundary": "A site is published only if it shows the exact organisation number, or the phone number or e-mail address the company registered with Brreg (with its name in the hostname or title), or the registered postcode and town, AND the identity gate calls it exact; a name-derived domain alone is never evidence."
 }

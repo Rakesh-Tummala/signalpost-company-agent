@@ -4,8 +4,8 @@
   "companies_with_dated_articles": 3,
   "observations": 21,
   "by_evidence_kind": {
-    "feed_item": 3,
-    "time_element": 18
+    "feed_item": 7,
+    "time_element": 14
   },
   "claim_boundary": "Only items with a parseable publication date on an identity-verified company site or its own RSS/Atom feed; an undated news page is not published."
 }

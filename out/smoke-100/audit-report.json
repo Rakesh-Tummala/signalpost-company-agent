@@ -1,11 +1,11 @@
 {
   "summary": {
-    "claims": 2215,
-    "evidence_complete_in_result": 1930,
-    "body_inline_in_result": 1766,
-    "snapshot_hash_ok": 1930,
-    "span_exact": 1766,
-    "not_available_claims": 285,
+    "claims": 2217,
+    "evidence_complete_in_result": 1935,
+    "body_inline_in_result": 1771,
+    "snapshot_hash_ok": 1935,
+    "span_exact": 1771,
+    "not_available_claims": 282,
     "span_from_pdf": 164
   },
   "by_field_family": {
@@ -110,10 +110,10 @@
     },
     "official_website": {
       "claims": 100,
-      "evidence_complete_in_result": 9,
-      "body_inline_in_result": 9,
-      "snapshot_hash_ok": 9,
-      "span_exact": 9
+      "evidence_complete_in_result": 12,
+      "body_inline_in_result": 12,
+      "snapshot_hash_ok": 12,
+      "span_exact": 12
     },
     "registered_workplaces": {
       "claims": 24,
@@ -137,11 +137,11 @@
       "span_exact": 21
     },
     "social_profile": {
-      "claims": 6,
-      "evidence_complete_in_result": 6,
-      "body_inline_in_result": 6,
-      "snapshot_hash_ok": 6,
-      "span_exact": 6
+      "claims": 8,
+      "evidence_complete_in_result": 8,
+      "body_inline_in_result": 8,
+      "snapshot_hash_ok": 8,
+      "span_exact": 8
     },
     "wikidata_entity": {
       "claims": 100,
