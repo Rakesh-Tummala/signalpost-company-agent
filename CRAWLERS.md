@@ -17,6 +17,8 @@
 | Claims/evidence conversion | `scripts/build_output_contract.py` | (reshapes existing evidence + observation files, no new fetches) | — |
 | Offline viewer | `scripts/build_viewer.py` | (reads the finished claims artifact, no new fetches) | Best-effort; never blocks the submission if it fails |
 
+The site crawl spends its page budget per kind of page (identity 3, locations 1, news 2, careers 2, shallow paths first), so a site with many `/about/...` subpages cannot crowd out its careers or news page, and tries standard feed paths (`/feed/`, `/rss.xml`, `/index.xml`, `/feed.xml`) when none is advertised.
+
 Both site crawlers (the single-pass `urllib` crawl in the registry stage and the deep
 scrapy crawl) record the same per-page signals (`src/norway_company_agent/page_signals.py`)
 and fetch up to two same-domain RSS/Atom feeds (comment feeds excluded), so the dated-news
