@@ -14,11 +14,12 @@ import re
 import unicodedata
 from typing import Any
 
+from .contacts import GENERIC_SUFFIX_WORDS, own_email_domain, registered_contacts
 from .identity import _tokens
 
 MIN_SLUG = 4
 MAX_SLUG = 30
-MAX_CANDIDATES = 4
+MAX_CANDIDATES = 6
 ORG_PATTERN = re.compile(r"(?<!\d)(\d{3})[ . ]?(\d{3})[ . ]?(\d{3})(?!\d)")
 
 
@@ -30,6 +31,11 @@ def domain_candidates(name: str | None) -> list[str]:
     """Likely hostnames for a legal name, most probable first, at most MAX_CANDIDATES."""
     raw = str(name or "")
     variants: list[list[str]] = [_tokens(raw)]
+    # A trailing generic word (Holding, Norge, Gruppen ...) is often left off the company's own domain.
+    trimmed = list(variants[0])
+    while len(trimmed) > 1 and trimmed[-1] in GENERIC_SUFFIX_WORDS:
+        trimmed = trimmed[:-1]
+        variants.append(list(trimmed))
     # Norwegian domains often spell o-slash / a-ring / ae with letter pairs instead of the plain letter.
     if re.search(r"[øØæÆåÅ]", raw):
         paired = raw.translate(str.maketrans({"ø": "oe", "Ø": "OE", "æ": "ae", "Æ": "AE", "å": "aa", "Å": "AA"}))
@@ -68,3 +74,33 @@ def org_number_on_page(text: str, organisation_number: str) -> bool:
     """
     wanted = re.sub(r"\D", "", str(organisation_number))
     return any("".join(match.groups()) == wanted for match in ORG_PATTERN.finditer(text or ""))
+
+
+CONTACT_LINK = re.compile(r"kontakt|contact|om-oss|omoss|om_oss|about|personvern|privacy|impressum|vilkar|vilk[aå]r|terms|betingelser|handelsbetingelser", re.I)
+MAX_CONTACT_PAGES = 3
+
+
+def candidate_hosts(name: str | None, registry_row: dict | None) -> list[str]:
+    """The domain of the e-mail address the company registered (when it is not a mail provider), then name-derived hosts."""
+    registered = own_email_domain(registered_contacts(registry_row)["email_domain"])
+    hosts = [registered] if registered else []
+    for host in domain_candidates(name):
+        if host not in hosts:
+            hosts.append(host)
+    return hosts
+
+
+def contact_links(base_url: str, hrefs_and_labels: list[tuple[str, str]], host: str) -> list[str]:
+    """Same-site links to contact, about or privacy pages, where a company usually prints its organisation number."""
+    import urllib.parse
+
+    wanted = host.removeprefix("www.")
+    found: list[str] = []
+    for href, label in hrefs_and_labels:
+        url = urllib.parse.urljoin(base_url, href).split("#")[0]
+        parsed = urllib.parse.urlparse(url)
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname or parsed.hostname.removeprefix("www.") != wanted:
+            continue
+        if CONTACT_LINK.search(parsed.path + " " + label) and url not in found and url.rstrip("/") != base_url.rstrip("/"):
+            found.append(url)
+    return found[:MAX_CONTACT_PAGES]

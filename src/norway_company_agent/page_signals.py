@@ -23,6 +23,8 @@ from typing import Any
 
 from bs4 import BeautifulSoup, Tag
 
+from .contacts import page_identifiers
+
 
 MAX_ITEMS = 25
 MAX_SPAN = 400
@@ -502,7 +504,19 @@ def extract_page_signals(html: str, final_url: str) -> dict[str, Any]:
         "apply_actions": apply_actions,
         "feeds": _feeds(soup, final_url),
         "social_links": _social_links(html, soup, final_url, json_ld_objects),
+        "identifiers": _identifiers(soup),
     }
+
+
+def _identifiers(soup: BeautifulSoup) -> dict[str, list[str]]:
+    """Organisation numbers, phone numbers and e-mail addresses on the page, from its full visible text.
+
+    Footers and contact blocks are where a company prints these, and the main-text extraction used
+    for the page excerpt drops exactly those, so they are read here from every visible string.
+    """
+    strings = [str(node) for node in soup.find_all(string=True) if node.parent and node.parent.name not in {"script", "style", "noscript", "template"}]
+    hrefs = [str(tag.get("href")) for tag in soup.select('a[href^="mailto:"], a[href^="tel:"]')]
+    return page_identifiers(" ".join(strings), hrefs)
 
 
 def parse_feed_items(feed_text: str, base_url: str) -> list[dict[str, Any]]:

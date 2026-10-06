@@ -257,6 +257,9 @@ def _fetch_secondary_page(url: str, *, homepage_domain: str, timeout: float, max
         return None, [], 2, 0, int((time.monotonic() - started) * 1000), f"{type(exc).__name__}: {str(exc)[:120]}"
 
 
+GUESSED_FEED_PATHS = ("/feed/", "/rss.xml", "/index.xml", "/feed.xml")
+
+
 def _fetch_feed(url: str, *, timeout: float, max_bytes: int = 1_000_000) -> tuple[dict[str, Any] | None, int, int, int, str | None]:
     if not _robots_allowed(url, timeout):
         return None, 1, 0, 0, "robots.txt disallows feed"
@@ -299,7 +302,7 @@ def _extraction_state(text: str, soup: BeautifulSoup) -> str:
     return "js_fallback_candidate" if len(text.strip()) < 100 and len(soup.select("script[src]")) >= 2 else "static_complete"
 
 
-def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_000_000) -> tuple[dict[str, Any], dict[str, Any]]:
+def _fetch_website_once(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_000_000) -> tuple[dict[str, Any], dict[str, Any]]:
     supplied_url = str(url or "").strip()
     supplied_scheme = bool(re.match(r"^https?://", supplied_url, re.I))
     normalized = normalize_homepage(url)
@@ -387,6 +390,18 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
                 feeds.append(record)
             elif feed_error:
                 crawl_errors.append({"url": feed_url, "error": feed_error})
+        if not feed_urls:
+            # Many sites (WordPress, Hugo, static generators) publish a feed at a standard path without
+            # advertising it in the page markup. Try the usual ones on the company's own domain, stopping at
+            # the first real feed; a miss is not an error worth recording.
+            root = urllib.parse.urlunparse((urllib.parse.urlparse(final_url).scheme, urllib.parse.urlparse(final_url).netloc, "", "", "", ""))
+            for guess in GUESSED_FEED_PATHS:
+                record, feed_requests, feed_bytes, feed_elapsed, _ = _fetch_feed(root + guess, timeout=timeout)
+                requests += feed_requests
+                bytes_received += feed_bytes
+                if record and (record.get("items") or record.get("articles")):
+                    feeds.append(record)
+                    break
         value["pages"] = pages
         value["feeds"] = feeds
         value["social_links"] = list({(item["platform"], item["url"]): item for item in social}.values())
@@ -403,7 +418,7 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
     except urllib.error.URLError as exc:
         if not supplied_scheme and normalized.startswith("https://"):
             first_elapsed = int((time.monotonic() - started) * 1000)
-            record, metrics = fetch_website("http://" + supplied_url, timeout=timeout, max_bytes=max_bytes)
+            record, metrics = _fetch_website_once("http://" + supplied_url, timeout=timeout, max_bytes=max_bytes)
             metrics["requests"] += 2
             metrics["latencies_ms"].insert(0, first_elapsed)
             return record, metrics
@@ -412,3 +427,23 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
     except Exception as exc:
         elapsed = int((time.monotonic() - started) * 1000)
         return evidence("website", "source_error", "registry_linked_company_website", normalized, note=f"{type(exc).__name__}: {str(exc)[:180]}"), {"requests": 2, "bytes": 0, "latencies_ms": [elapsed]}
+
+
+
+TRANSIENT_NOTES = re.compile(r"^(HTTP 5\d\d|URLError: .*(timed out|temporar|reset|refused|unreachable)|RemoteDisconnected|TimeoutError|ConnectionResetError|IncompleteRead)", re.I)
+
+
+def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_000_000, retry_delay: float = 3.0) -> tuple[dict[str, Any], dict[str, Any]]:
+    """fetch_website with one retry for a transient failure (a 5xx, a timeout, a dropped connection).
+
+    A 4xx, a robots.txt refusal or a name that does not resolve is final; a server that merely stumbled
+    once is not, and one pause-and-retry recovers a real share of registry-listed sites.
+    """
+    record, metrics = _fetch_website_once(url, timeout=timeout, max_bytes=max_bytes)
+    if record.get("status") == "source_error" and TRANSIENT_NOTES.match(str(record.get("note") or "")):
+        time.sleep(retry_delay)
+        again, more = _fetch_website_once(url, timeout=timeout, max_bytes=max_bytes)
+        metrics = {"requests": metrics["requests"] + more["requests"], "bytes": metrics["bytes"] + more["bytes"], "latencies_ms": [*metrics["latencies_ms"], *more["latencies_ms"]]}
+        if again.get("status") != "source_error":
+            return again, metrics
+    return record, metrics

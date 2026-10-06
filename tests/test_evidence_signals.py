@@ -619,7 +619,7 @@ class DomainProbeTests(unittest.TestCase):
     def test_candidates_are_derived_from_the_legal_name_with_norwegian_letter_variants(self):
         from norway_company_agent.domain_probe import domain_candidates
 
-        self.assertEqual(domain_candidates("TRUCK INVEST AS"), ["truckinvest.no", "truck-invest.no", "truckinvest.com"])
+        self.assertEqual(domain_candidates("TRUCK INVEST AS"), ["truckinvest.no", "truck-invest.no", "truckinvest.com", "truck.no", "truck.com"])  # a trailing generic word is also tried off
         self.assertEqual(domain_candidates("BJØRN & SØNN BYGG AS")[:2], ["bjornsonnbygg.no", "bjorn-sonn-bygg.no"])
         self.assertIn("bjoernsoennbygg.no", domain_candidates("BJØRN & SØNN BYGG AS"))
         self.assertEqual(domain_candidates("AS"), [])

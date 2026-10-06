@@ -5,6 +5,8 @@ import unicodedata
 import urllib.parse
 from typing import Any
 
+from .contacts import GENERIC_SUFFIX_WORDS, identifier_proofs, own_email_domain, registered_contacts
+
 
 LEGAL_AND_GENERIC = {
     "as", "asa", "ans", "da", "enk", "iks", "sa", "sam", "sti", "stiftelsen",
@@ -97,6 +99,35 @@ def _registered_town_on_page(profile: dict[str, Any], core: list[str], candidate
     return bool(town_tokens) and town_tokens <= candidate_tokens and not town_tokens <= set(core)
 
 
+def registry_contact_proofs(profile: dict[str, Any], value: dict[str, Any]) -> list[str]:
+    """Which registry-declared identifiers (organisation number, registered phone, registered e-mail) the crawled pages print."""
+    evidence = profile.get("evidence") or {}
+    contacts = registered_contacts((evidence.get("registry") or {}).get("value"))
+    pages = value.get("pages") or []
+    identifiers = [((page.get("signals") or {}).get("identifiers") or {}) for page in pages]
+    return identifier_proofs(str(profile.get("organisation_number") or ""), contacts, identifiers)
+
+
+def registered_email_domain_site(profile: dict[str, Any], hostname: str) -> bool:
+    """The site is on the domain of the e-mail address the company registered with Brreg (not a mail provider or ISP)."""
+    evidence = profile.get("evidence") or {}
+    domain = own_email_domain(registered_contacts((evidence.get("registry") or {}).get("value"))["email_domain"])
+    host = hostname.casefold().removeprefix("www.")
+    return bool(domain) and (host == domain or host.endswith("." + domain))
+
+
+def _name_in_hostname_or_title(core: list[str], hostname: str, title: str) -> bool:
+    """The legal name is in the site's hostname or page title: all its words, or the whole name run together in the host."""
+    if not core:
+        return False
+    host_letters = re.sub(r"[^a-z0-9]", "", unicodedata.normalize("NFKD", hostname.casefold()).encode("ascii", "ignore").decode())
+    # A generic trailing word (Norge, Holding, Group ...) is routinely left off a company's own domain and title.
+    distinctive = [token for token in core if token not in GENERIC_SUFFIX_WORDS] or list(core)
+    compact = "".join(distinctive)
+    title_tokens = set(_tokens(title)) | set(_tokens(hostname))
+    return set(distinctive) <= title_tokens or (len(compact) >= 4 and compact in host_letters)
+
+
 def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     website = profile.get("evidence", {}).get("website", {})
     value = website.get("value") or {}
@@ -129,12 +160,16 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         "domain is for sale", "domain for sale", "hugedomains", "parked at", "miss hosting",
         "her flytter snart en ny gjest", "has been informing visitors",
         "find the best information and most relevant links on all topics related to",
+        # Registrar placeholders: the domain exists and may even be the company's, but there is no site to describe.
+        "registrert domene", "domene registrert hos", "this domain has been registered", "this domain is registered",
     )
     normalized_raw = unicodedata.normalize("NFKD", candidate_text).encode("ascii", "ignore").decode().casefold()
     homepage_token_sets = [set(_tokens(part)) for part in homepage_identity_parts if part]
     exact_homepage_name = bool(core and any(set(core).issubset(tokens) for tokens in homepage_token_sets))
     substantive_homepage = len(str(value.get("main_text_excerpt") or "").strip()) >= 100
     is_business_sports_club = bool(re.search(r"(?:^|\s)B\.?\s*I\.?\s*L\.?(?:\s|$)", str(profile.get("name") or ""), re.I))
+    contact_proofs = registry_contact_proofs(profile, value)
+    name_in_host_or_title = _name_in_hostname_or_title(core, hostname, str(value.get("title") or ""))
     if any(marker in normalized_raw for marker in parked_markers):
         score = 0.1
         reasons.append("captured page is a parked, for-sale, or generic hosting placeholder")
@@ -144,6 +179,20 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     elif org_digits and org_digits in compact_homepage_candidate:
         score = 1.0
         reasons.append("exact organisation number appears in homepage identity evidence")
+    elif "organisation_number" in contact_proofs and name_in_host_or_title:
+        # The company prints its own organisation number somewhere on its site -- a contact, about
+        # or privacy page or the footer, which the page excerpts above leave out. Delimited, exact, and only
+        # together with the legal name in the hostname or title: a group's contact page that lists every
+        # subsidiary's organisation number must not publish the group's site for each of them.
+        score = 1.0
+        reasons.append("exact organisation number appears on the site's pages (contact, about or footer)")
+    elif core and name_in_host_or_title and (set(contact_proofs) & {"registered_phone", "registered_email"} or (registered_email_domain_site(profile, hostname) and substantive_homepage)):
+        # The legal name is in the hostname or title and the site shows the phone number or e-mail
+        # address the company registered with Brreg, or sits on the registered e-mail domain. Both are
+        # company-declared, and the name requirement stops an accountant's or manager's site, which
+        # often carries a client's registered contact, from qualifying.
+        score = 0.95
+        reasons.append("the legal name is in the site's hostname or title and the site matches the contact details the company registered with Brreg (" + ", ".join(sorted((set(contact_proofs) & {"registered_phone", "registered_email"}) or {"registered e-mail domain"})) + ")")
     elif core and exact_homepage_name and registry_lists_site(profile, hostname):
         # The company itself told Brreg this is its website, and the page (or at least its
         # title/hostname, which is all a JavaScript-rendered homepage exposes) carries the
@@ -207,6 +256,7 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         "status": status,
         "score": score,
         "publishable": status == "exact",
+        "registry_contact_proofs": contact_proofs,
         "legal_name_tokens": core,
         "matched_tokens": overlap,
         "reasons": reasons,
