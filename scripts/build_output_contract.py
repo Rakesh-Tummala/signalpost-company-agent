@@ -207,6 +207,22 @@ def emit_registry_claims(emitter: Emitter, evidence: dict[str, Any]) -> None:
         if claim_value is None:
             continue
         emitter.claim(field, claim_value, record, module=module, span=spans.get(span_keys[field]))
+    # What the company says it does, in the registry's own words, and when it was founded.
+    bulk = evidence.get("registry") or {}
+    for field, live_key, bulk_key, span_key in (
+        ("business_activity", "activity", "aktivitet", "aktivitet"),
+        ("registered_purpose", "purpose", "vedtektsfestetFormaal", "vedtektsfestetFormaal"),
+        ("founded_date", "founded", "stiftelsesdato", "stiftelsesdato"),
+    ):
+        for source_record, key in ((record, live_key if module == "registry_live" else bulk_key), (bulk, bulk_key)):
+            raw = (source_record.get("value") or {}).get(key)
+            if isinstance(raw, (list, tuple)):
+                raw = " ".join(str(item) for item in raw)
+            raw = " ".join(str(raw).split()) if raw not in (None, "") else ""
+            span = (source_record.get("spans") or {}).get(span_key)
+            if raw and source_record.get("status") == "available" and span:
+                emitter.claim(field, raw, source_record, module="registry_live" if source_record is record and module == "registry_live" else "registry", span=span)
+                break
 
 
 def emit_accounting_obligation(emitter: Emitter, evidence: dict[str, Any]) -> None:
@@ -325,6 +341,8 @@ def emit_website(emitter: Emitter, evidence: dict[str, Any]) -> None:
         "official_website", value.get("final_url") or value.get("requested_url"), record, module="website",
         span=value.get("title_span"), availability="ambiguous" if unverified else None,
     )
+    if record.get("status") == "available" and not unverified and value.get("description") and value.get("description_span"):
+        emitter.claim("website_description", " ".join(str(value["description"]).split())[:600], record, module="website", span=value["description_span"])
 
 
 def emit_wikidata(emitter: Emitter, evidence: dict[str, Any]) -> None:
@@ -382,17 +400,43 @@ def _short(value: Any) -> str:
     return text if len(text) <= 40 else text[:37] + "..."
 
 
+SUMMARY_SECTIONS = ("What it does", "Financials", "People and places", "Online presence and activity", "Changes", "Not yet determined")
+ROLE_LABELS = {"LEDE": "chairs the board", "NEST": "is deputy chair of the board", "DAGL": "is the managing director (daglig leder)"}
+
+
+def _quote(text: Any, limit: int = 280) -> str:
+    """A literal, whitespace-collapsed quotation, cut at a word boundary when it is long."""
+    clean = " ".join(str(text or "").split()).rstrip(" .;")
+    if len(clean) <= limit:
+        return clean
+    cut = clean[:limit].rsplit(" ", 1)[0].rstrip(",;:")
+    return cut + "..."
+
+
+def _registry_text(registry_value: dict[str, Any], *keys: str) -> str:
+    for key in keys:
+        raw = registry_value.get(key)
+        if isinstance(raw, (list, tuple)):
+            raw = " ".join(str(item) for item in raw)
+        if raw and str(raw).strip():
+            return " ".join(str(raw).split())
+    return ""
+
+
 def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any]] | None = None, changes: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """Build a grounded, template-based summary -- every sentence traces to claims
     published in the same envelope (`sentences[].fields`, resolved to evidence ids by
     build_envelope). No model invents or infers anything here; this is string formatting
     over facts that already passed the identity/evidence gates.
 
-    `changes` is None when no previous run was supplied; otherwise the material changes
-    since that run (possibly empty), which the summary reports.
+    The summary is organised the way a reader decides about a company: what it does,
+    its financials, its people and places, its online presence and activity, what changed,
+    and what is still unknown. `changes` is None when no earlier snapshot exists (the
+    summary then says so) and a possibly empty list when one was compared.
     """
     registry_module = "registry_live" if (evidence.get("registry_live") or {}).get("status") == "available" else "registry"
     registry_value = (evidence.get(registry_module) or {}).get("value") or {}
+    bulk_value = (evidence.get("registry") or {}).get("value") or {}
     name = registry_value.get("name") or registry_value.get("navn") or "This company"
     legal_form = registry_value.get("legal_form") or registry_value.get("organisasjonsform.kode")
     industry = registry_value.get("industry") or registry_value.get("naeringskode1") or {}
@@ -404,17 +448,41 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
 
     sentences: list[dict[str, Any]] = []
 
-    def say(text: str, *fields: str) -> None:
-        sentences.append({"text": text, "fields": list(fields)})
+    def say(section: str, text: str, *fields: str) -> None:
+        sentences.append({"section": section, "text": text, "fields": list(fields)})
 
+    # ---- What it does -------------------------------------------------------------------------
+    section = "What it does"
     article = "an" if legal_form and legal_form[0].upper() in "AEIOU" else "a"
     identity_bits = [f"{article} {legal_form}" if legal_form else "a company", "registered in Norway"]
     if industry_label:
         identity_bits.append(f"operating in {industry_label.lower()}")
     if municipality:
         identity_bits.append(f"based in {municipality.title()}")
-    say(f"{name} is " + ", ".join(identity_bits) + ".", "legal_name", "legal_form", "industry", "business_address")
+    say(section, f"{name} is " + ", ".join(identity_bits) + ".", "legal_name", "legal_form", "industry", "business_address")
 
+    activity = _registry_text(registry_value, "activity", "aktivitet") or _registry_text(bulk_value, "aktivitet")
+    purpose = _registry_text(registry_value, "purpose", "vedtektsfestetFormaal") or _registry_text(bulk_value, "vedtektsfestetFormaal")
+    if activity:
+        say(section, f"Its registered activity is: \"{_quote(activity)}\".", "business_activity")
+    elif purpose:
+        say(section, f"Its registered purpose is: \"{_quote(purpose)}\".", "registered_purpose")
+    website_record = evidence.get("website") or {}
+    website_value = (website_record.get("value") or {})
+    website_url = website_value.get("final_url") or website_value.get("requested_url")
+    website_verified = (website_value.get("identity_assessment") or {}).get("publishable", True)
+    site_description = " ".join(str(website_value.get("description") or "").split())
+    if website_record.get("status") == "available" and website_verified and site_description and website_value.get("description_span"):
+        say(section, f"Its own website describes it as: \"{_quote(site_description)}\".", "website_description")
+    founded = registry_value.get("founded") or bulk_value.get("stiftelsesdato")
+    wikidata_value = (evidence.get("wikidata") or {}).get("value") or {}
+    if founded:
+        say(section, f"It was founded on {str(founded)[:10]}.", "founded_date")
+    elif (evidence.get("wikidata") or {}).get("status") == "available" and wikidata_value.get("inception"):
+        say(section, f"Wikidata, matched exactly by organisation number, records it as founded {wikidata_value['inception']}.", "wikidata_entity", "inception_date")
+
+    # ---- Financials ---------------------------------------------------------------------------
+    section = "Financials"
     financials_record = evidence.get("financials") or {}
     financials_records = (financials_record.get("value") or {}).get("records") or []
     unknowns: list[str] = []
@@ -425,7 +493,7 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
         revenue = latest.get("revenue")
         result = latest.get("annual_result")
         if revenue is not None:
-            say(f"Its most recently filed accounts ({year}) report revenue of {revenue:,.0f} NOK" + (f" and a result of {result:,.0f} NOK." if result is not None else "."), f"annual_accounts.{year}")
+            say(section, f"Its most recently filed accounts ({year}) report revenue of {revenue:,.0f} NOK" + (f" and a result of {result:,.0f} NOK." if result is not None else "."), f"annual_accounts.{year}")
 
         prior_year_items = [o for o in (observations or []) if o.get("signal_type") == "prior_year_financials"]
         if prior_year_items:
@@ -440,38 +508,82 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
                     trend = "fell"
                 else:
                     trend = "held steady"
-                say(f"Revenue {trend} from {prior_revenue:,.0f} NOK ({prior_year}) to {revenue:,.0f} NOK ({year}).", f"annual_accounts.{year}", f"annual_accounts.{prior_year}")
+                say(section, f"Revenue {trend} from {prior_revenue:,.0f} NOK ({prior_year}) to {revenue:,.0f} NOK ({year}).", f"annual_accounts.{year}", f"annual_accounts.{prior_year}")
             elif prior_year:
-                say(f"Additional filed figures for {prior_year} are also on file, recovered from the same official annual report.", f"annual_accounts.{prior_year}")
+                say(section, f"Additional filed figures for {prior_year} are also on file, recovered from the same official annual report.", f"annual_accounts.{prior_year}")
     else:
         unknowns.append("financial results")
 
+    workforce_items = [o for o in (observations or []) if o.get("signal_type") == "workforce_snapshot"]
+    registry_employees = registry_value.get("employees") if "employees" in registry_value else registry_value.get("antallAnsatte")
+    if workforce_items:
+        latest = max(workforce_items, key=lambda o: (o.get("metrics") or {}).get("year") or "")
+        metrics = latest.get("metrics") or {}
+        measure = "full-time equivalents" if metrics.get("measure") == "full_time_equivalents" else "employees"
+        say(section, f"Its official annual report states {metrics.get('workforce_value')} {measure} ({metrics.get('year')}).", f"workforce_value.{metrics.get('year')}")
+    elif registry_employees not in (None, ""):
+        say(section, f"The registry records {registry_employees} employee(s).", "employees")
+    else:
+        unknowns.append("workforce size (official annual-report headcount attempted but not found or not applicable for this company)")
+
+    # ---- People and places --------------------------------------------------------------------
+    section = "People and places"
     roles_record = evidence.get("roles") or {}
     roles = (roles_record.get("value") or {}).get("roles") or []
-    leader = next((r for r in roles if not r.get("inactive") and str(r.get("role_code") or "").upper() == "DAGL"), None)
-    if leader and leader.get("name"):
-        say(f"{leader['name']} is listed as daglig leder (managing director).", f"role.{roles.index(leader)}")
-    elif roles_record.get("status") != "available" or not roles:
+    said_role = False
+    for code in ("DAGL", "LEDE"):
+        holder = next((r for r in roles if not r.get("inactive") and str(r.get("role_code") or "").upper() == code), None)
+        if holder and holder.get("name"):
+            say(section, f"{holder['name']} {ROLE_LABELS[code]}.", f"role.{roles.index(holder)}")
+            said_role = True
+    active_roles = [r for r in roles if not r.get("inactive")]
+    if len(active_roles) > 2:
+        say(section, f"The registry lists {len(active_roles)} active role holders in all.", "role.*")
+    if not said_role and (roles_record.get("status") != "available" or not roles):
         unknowns.append("leadership")
 
-    website_record = evidence.get("website") or {}
-    website_value = (website_record.get("value") or {})
-    website_url = website_value.get("final_url") or website_value.get("requested_url")
-    website_verified = (website_value.get("identity_assessment") or {}).get("publishable", True)
+    locations_record = evidence.get("locations") or {}
+    locations = (locations_record.get("value") or {}).get("locations") or []
+    if locations_record.get("status") == "available" and locations:
+        towns = []
+        for location in locations:
+            place = location.get("address") if isinstance(location, dict) else None
+            town = (place or {}).get("poststed") or (place or {}).get("kommune") if isinstance(place, dict) else None
+            if town and town.title() not in towns:
+                towns.append(town.title())
+        where = f", in {', '.join(towns[:4])}" + (" and elsewhere" if len(towns) > 4 else "") if towns else ""
+        say(section, f"It has {len(locations)} registered workplace(s){where}.", "location.*")
+    elif locations_record.get("status") == "available":
+        say(section, "The registry lists no separate registered workplaces.", "registered_workplaces")
+    else:
+        unknowns.append("registered workplaces")
+
+    group_record = evidence.get("group") or {}
+    group_value = group_record.get("value") or {}
+    if group_record.get("status") == "available" and isinstance(group_value, dict) and (group_value.get("navn") or group_value.get("children")):
+        head = group_value.get("navn")
+        head_org = group_value.get("organisasjonsnummer")
+        children = group_value.get("children") or []
+        headed = f" headed by {head} ({head_org})" if head else ""
+        say(section, f"The registry shows a group structure{headed}, with {len(children)} directly linked company(ies).", "group_structure")
+    else:
+        unknowns.append("group/ownership structure")
+
+    # ---- Online presence and activity ---------------------------------------------------------
+    section = "Online presence and activity"
     if website_record.get("status") == "available" and website_url and website_verified:
-        say(f"Its verified official website is {website_url}.", "official_website")
+        say(section, f"Its verified official website is {website_url}.", "official_website")
     elif website_record.get("status") == "available" and website_url:
         unknowns.append("official website (a site is listed, but nothing on it ties it to this entity)")
     else:
         unknowns.append("official website")
 
     social_links = (website_value.get("social_links") or []) + ((evidence.get("website_discovered") or {}).get("value") or {}).get("social_links", [])
-    if social_links:
-        platforms = sorted({link.get("platform", "unknown") for link in social_links})
-        say(f"Verified social profiles were found on: {', '.join(platforms)}.", *[f"social_profile.{platform}" for platform in platforms])
-
-    if (evidence.get("group") or {}).get("status") != "available" or not ((evidence.get("group") or {}).get("value") or {}).get("companies"):
-        unknowns.append("group/ownership structure")
+    platforms = {link.get("platform", "unknown") for link in social_links} | set((wikidata_value.get("social_links") or {}).keys())
+    if platforms:
+        say(section, f"Verified social profiles were found on: {', '.join(sorted(platforms))}.", *[f"social_profile.{platform}" for platform in sorted(platforms)])
+    if (evidence.get("wikidata") or {}).get("status") == "available" and wikidata_value.get("qid"):
+        say(section, f"Wikidata, matched exactly by organisation number, has an item for it ({wikidata_value['qid']}).", "wikidata_entity")
 
     news_items = sorted(
         [o for o in (observations or []) if o.get("signal_type") == "public_post"],
@@ -479,18 +591,9 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
     )
     if news_items:
         latest_news = news_items[0].get("metrics") or {}
-        say(f"{len(news_items)} dated news item(s) on its own site; the latest, '{latest_news.get('headline')}', is dated {str(latest_news.get('published_at'))[:10]}.", "site_news.*")
+        say(section, f"{len(news_items)} dated news item(s) on its own site; the latest, '{latest_news.get('headline')}', is dated {str(latest_news.get('published_at'))[:10]}.", "site_news.*")
     else:
         unknowns.append("dated news/press")
-
-    workforce_items = [o for o in (observations or []) if o.get("signal_type") == "workforce_snapshot"]
-    if workforce_items:
-        latest = max(workforce_items, key=lambda o: (o.get("metrics") or {}).get("year") or "")
-        metrics = latest.get("metrics") or {}
-        measure = "full-time equivalents" if metrics.get("measure") == "full_time_equivalents" else "employees"
-        say(f"Its official annual report states {metrics.get('workforce_value')} {measure} ({metrics.get('year')}).", f"workforce_value.{metrics.get('year')}")
-    else:
-        unknowns.append("workforce size (official annual-report headcount attempted but not found or not applicable for this company)")
 
     job_items = [o for o in (observations or []) if o.get("signal_type") == "job_posting"]
     if job_items:
@@ -499,26 +602,27 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
             for o in job_items if (o.get("metrics") or {}).get("evidence_kind") != "apply_action"
         ][:3]
         if titles:
-            say(f"{len(job_items)} open role(s) shown on its own site, e.g. {', '.join(titles)}.", "job_posting.*")
+            say(section, f"It appears to be hiring: {len(job_items)} open role(s) shown on its own site, e.g. {', '.join(titles)}.", "job_posting.*")
         else:
-            say("Its own site shows an apply action for open roles.", "job_posting.*")
+            say(section, "It appears to be hiring: its own site shows an apply action for open roles.", "job_posting.*")
     else:
         unknowns.append("open roles (no job posting, role card or apply action found on its own site)")
 
-    wikidata_value = (evidence.get("wikidata") or {}).get("value") or {}
-    if (evidence.get("wikidata") or {}).get("status") == "available" and wikidata_value.get("inception"):
-        say(f"Wikidata, matched exactly by organisation number, records it as founded {wikidata_value['inception']}.", "wikidata_entity", "inception_date")
-
+    # ---- Changes ------------------------------------------------------------------------------
+    section = "Changes"
     if changes is not None:
         if changes:
             shown = [f"{item['field']} ({_short(item.get('old_value'))} -> {_short(item.get('new_value'))})" for item in changes[:3]]
             more = f" and {len(changes) - 3} more" if len(changes) > 3 else ""
-            say(f"Since the previous run {len(changes)} tracked field(s) changed: {'; '.join(shown)}{more}.")
+            say(section, f"Since the previous run {len(changes)} tracked field(s) changed: {'; '.join(shown)}{more}.")
         else:
-            say("No tracked field has changed since the previous run.")
+            say(section, "No tracked field has changed since the previous run. The earlier evidence is preserved alongside the new.")
+    else:
+        say(section, "This is the first recorded snapshot of this company, so there is no earlier snapshot to compare against; the next run keeps this evidence and lists any material change.")
 
+    # ---- Unknowns -----------------------------------------------------------------------------
     if unknowns:
-        say("Not yet determined: " + "; ".join(unknowns) + ".", "official_website", "leadership", "annual_accounts", "group_structure", "annual_accounts_years_on_file")
+        say("Not yet determined", "Not yet determined: " + "; ".join(unknowns) + ".")
 
     return {
         "text": " ".join(item["text"] for item in sentences),
@@ -526,6 +630,52 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
         "unknown_fields": unknowns,
         "grounded_in_claims": True,
     }
+
+
+def cite_summary(summary: dict[str, Any], evidence_entries: list[dict[str, Any]]) -> None:
+    """Number the distinct sources behind the summary and put [n] markers in its text.
+
+    After `resolve_summary_sources`, each sentence knows its evidence ids. Here those become numbered
+    references (one per distinct source URL), each sentence gets its markers, and `text` becomes
+    sectioned paragraphs followed by the numbered source list, so a reader of the text alone can see
+    what every statement rests on and when it was retrieved.
+    """
+    by_id = {item["id"]: item for item in evidence_entries}
+    numbers: dict[str, int] = {}
+    sources: list[dict[str, Any]] = []
+    for sentence in summary["sentences"]:
+        cited: list[int] = []
+        for evidence_id in sentence.get("evidence_ids", []):
+            entry = by_id.get(evidence_id)
+            if not entry or not entry.get("source_url"):
+                continue
+            url = entry["source_url"]
+            if url not in numbers:
+                numbers[url] = len(sources) + 1
+                sources.append({
+                    "n": numbers[url], "source_url": url, "retrieved_at": entry.get("retrieved_at"),
+                    "source_class": entry.get("source_class"), "evidence_ids": [],
+                })
+            source = sources[numbers[url] - 1]
+            if evidence_id not in source["evidence_ids"]:
+                source["evidence_ids"].append(evidence_id)
+            if numbers[url] not in cited:
+                cited.append(numbers[url])
+        sentence["citations"] = cited
+    paragraphs: list[str] = []
+    for section in SUMMARY_SECTIONS:
+        parts = [
+            item["text"] + "".join(f"[{n}]" for n in item.get("citations", []))
+            for item in summary["sentences"] if item.get("section") == section
+        ]
+        if parts:
+            label = "" if section == "Not yet determined" else f"{section}: "  # that sentence already starts with its own label
+            paragraphs.append(label + " ".join(parts))
+    listing = "\n".join(
+        f"[{item['n']}] {item['source_url']} (retrieved {str(item.get('retrieved_at') or 'unknown')[:10]})" for item in sources
+    )
+    summary["sources"] = sources
+    summary["text"] = "\n\n".join(paragraphs) + (("\n\nSources:\n" + listing) if listing else "")
 
 
 def resolve_summary_sources(summary: dict[str, Any], claims: list[dict[str, Any]]) -> None:
@@ -547,7 +697,7 @@ def resolve_summary_sources(summary: dict[str, Any], claims: list[dict[str, Any]
         sentence["evidence_ids"] = evidence_ids
 
 
-def emit_external_observations(emitter: Emitter, observations: list[dict[str, Any]]) -> None:
+def emit_external_observations(emitter: Emitter, observations: list[dict[str, Any]], company: dict[str, Any] | None = None) -> None:
     # Observations come from identity-verified company sites and official annual
     # reports; each already carries its own source, hash, snapshot and exact excerpt.
     news_index = 0
@@ -558,7 +708,12 @@ def emit_external_observations(emitter: Emitter, observations: list[dict[str, An
         if signal_type == "public_post":
             emitter.observation_claim(
                 f"site_news.{news_index}",
-                {"headline": metrics.get("headline"), "published_at": metrics.get("published_at"), "url": metrics.get("url")},
+                {
+                    # One item, one dated page of the company's own site: title, direct URL, publication date and
+                    # the exact company it belongs to (the organisation number the site was verified against).
+                    "title": metrics.get("headline"), "headline": metrics.get("headline"), "url": metrics.get("url"),
+                    "published_at": metrics.get("published_at"), "source_type": "company_owned_site", "company": company,
+                },
                 observation,
             )
             news_index += 1
@@ -568,6 +723,7 @@ def emit_external_observations(emitter: Emitter, observations: list[dict[str, An
                 {
                     "title": metrics.get("title"), "url": metrics.get("posting_url"), "date_posted": metrics.get("date_posted"),
                     "employment_type": metrics.get("employment_type"), "evidence_kind": metrics.get("evidence_kind"),
+                    "source_type": "company_owned_site", "company": company,
                 },
                 observation,
             )
@@ -601,10 +757,14 @@ def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, com
     emit_website(emitter, evidence)
     emit_social_links(emitter, evidence)
     emit_wikidata(emitter, evidence)
-    emit_external_observations(emitter, observations or [])
+    registry_now = (evidence.get("registry_live") if (evidence.get("registry_live") or {}).get("status") == "available" else evidence.get("registry")) or {}
+    registry_now_value = registry_now.get("value") or {}
+    company = {"organisation_number": str(profile.get("organisation_number") or ""), "legal_name": registry_now_value.get("name") or registry_now_value.get("navn")}
+    emit_external_observations(emitter, observations or [], company)
 
     summary = summarize_profile(evidence, observations, changes)
     resolve_summary_sources(summary, emitter.claims)
+    cite_summary(summary, emitter.evidence)
     metrics = profile.get("run_metrics") or {}
     errors = [
         {"module": module, "note": record.get("note")}

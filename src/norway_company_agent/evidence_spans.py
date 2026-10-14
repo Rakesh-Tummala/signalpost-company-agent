@@ -41,7 +41,7 @@ def entity_spans(raw: str) -> dict[str, str]:
     """Spans for the registry entity fields, keyed by the API's own field names."""
     spans: dict[str, str] = {}
     for key in ("organisasjonsnummer", "navn", "organisasjonsform", "antallAnsatte", "konkurs", "underAvvikling",
-                "forretningsadresse", "naeringskode1", "hjemmeside", "sisteInnsendteAarsregnskap"):
+                "forretningsadresse", "naeringskode1", "hjemmeside", "sisteInnsendteAarsregnskap", "aktivitet", "vedtektsfestetFormaal", "stiftelsesdato"):
         found = json_key_span(raw, key)
         if found:
             spans[key] = found[0]
@@ -145,7 +145,7 @@ def module_spans(module: str, raw_bytes: bytes | None, body: Any) -> Any:
         return spans
     if module == "registry":
         spans = {}
-        for key in ("organisasjonsnummer", "navn", "organisasjonsform.kode", "antallAnsatte", "konkurs", "underAvvikling", "sisteInnsendteAarsregnskap"):
+        for key in ("organisasjonsnummer", "navn", "organisasjonsform.kode", "antallAnsatte", "konkurs", "underAvvikling", "sisteInnsendteAarsregnskap", "aktivitet", "vedtektsfestetFormaal", "stiftelsesdato"):
             found = json_key_span(raw, key)
             if found:
                 spans[key] = found[0]

@@ -567,6 +567,16 @@ def looks_like_feed(raw: bytes) -> bool:
     return head.startswith((b"<?xml", b"<rss", b"<feed", b"<rdf"))
 
 
+def description_span(html: str) -> str | None:
+    """The page's own meta description tag, exactly as written (what the company says it does)."""
+    for match in re.finditer(r"<meta\s[^>]*>", html, re.I | re.S):
+        tag = match.group(0)
+        named = re.search(r"""(?:name|property)\s*=\s*["']?(?:description|og:description)["']?[\s/>]""", tag, re.I)
+        if named and re.search(r"""\scontent\s*=""", tag, re.I):
+            return _clip(tag)
+    return None
+
+
 def title_span(html: str) -> str | None:
     """The page's own `<title>` element, exactly as written (identity evidence for the site)."""
     match = re.search(r"<title\b[^>]*>.*?</title>", html, re.I | re.S)

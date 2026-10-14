@@ -142,10 +142,16 @@ If you are given a wall-clock budget, pass `--time-budget-minutes N` (or set
 the rate-limited history module when it alone would eat most of the budget, bounding the crawl, and
 starting no new OCR after the deadline -- and still writes one terminal result per company; whatever was
 skipped appears as an explicit `not_available`. Without the flag nothing is limited.
-`out/agent-run/viewer.html` is a self-contained offline page for browsing it, including each
-claim's excerpt — open it directly, no server required.
+`out/agent-run/viewer.html` is a self-contained offline page for browsing it -- open it directly, no server
+required. It is built for finding, comparing and verifying: search and filter companies by what was found, sort
+them, tick up to three to compare side by side, and open any profile to read a sectioned, cited summary with
+financials, people, workplaces, web presence and the exact excerpt, source link and retrieval date behind every
+fact. It works on a phone (one column, a back button, tables that scroll inside their own box).
 
-To refresh an earlier run, pass `--previous-profiles <earlier profiles.jsonl>`: websites it
+Running the same command again into the same `--output-dir` refreshes it: the finished run is kept as
+`out/agent-run/previous/` (earlier evidence preserved), everything is fetched fresh, and each result's `changes`
+and summary say what is different (or that nothing is). To refresh against a run kept elsewhere, pass
+`--previous-profiles <earlier profiles.jsonl>`: websites it
 found are re-crawled and pass through the same identity gate again (never trusted as-is) for
 companies the registry lists none for.
 

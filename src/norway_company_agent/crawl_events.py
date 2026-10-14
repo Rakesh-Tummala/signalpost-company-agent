@@ -8,7 +8,7 @@ import trafilatura
 from bs4 import BeautifulSoup
 
 from .evidence import evidence, utc_now
-from .page_signals import extract_page_signals, feed_record, looks_like_feed, title_span
+from .page_signals import description_span, extract_page_signals, feed_record, looks_like_feed, title_span
 from .snapshot_store import save_snapshot
 from .website import _extraction_state, _jsonld_organisations, _registered_domain, normalize_homepage
 
@@ -69,6 +69,7 @@ def extract_page_event(
         event["structured_organisations"] = _jsonld_organisations(structured)
         event["registered_domain"] = _registered_domain(final_url)
         event["title_span"] = title_span(page_html)
+        event["description_span"] = description_span(page_html)
     return event
 
 
@@ -199,6 +200,7 @@ def merge_profile_events(profile: dict[str, Any], events: list[dict[str, Any]]) 
         "feeds": feeds,
         "snapshot_path": homepage.get("snapshot_path"),
         "title_span": homepage.get("title_span"),
+        "description_span": homepage.get("description_span"),
         "crawl_errors": [
             {"url": item.get("final_url") or item.get("requested_url"), "error": item.get("error")}
             for item in events

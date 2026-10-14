@@ -23,7 +23,7 @@
   the offline fixture): zero false positives and zero crashes across all 1,000 real
   profiles, confirmed idempotency at scale, 50/50 injected changes on real company
   shapes correctly detected (precision 1.0, recall 1.0). See `REFRESH.md`.
-- `tests/` — 207 unit tests, 5 subtests (`test_poc.py` and `test_evidence_signals.py`), covering identity-gate edge
+- `tests/` — 237 unit tests, 5 subtests (`test_poc.py` and `test_evidence_signals.py`), covering identity-gate edge
   cases (parent/subsidiary confusion, generic name collisions, parked domains, multi-word names on
   foreign sites), the exact-excerpt and snapshot machinery, job/news extraction (including the false
   positives found on real pages), the ambiguous-not-available rule for unverified sites,

@@ -19,7 +19,7 @@ import tldextract
 import trafilatura
 
 from .evidence import evidence, utc_now
-from .page_signals import extract_page_signals, feed_record, looks_like_feed, title_span
+from .page_signals import description_span, extract_page_signals, feed_record, looks_like_feed, title_span
 from .snapshot_store import save_snapshot
 
 USER_AGENT = "builderr-signalpost-poc/0.1 (+https://builderr.ai)"
@@ -370,6 +370,7 @@ def _fetch_website_once(url: str | None, *, timeout: float = 15.0, max_bytes: in
             "extraction_state": _extraction_state(text, soup),
             "snapshot_path": snapshot_path,
             "title_span": title_span(html),
+            "description_span": description_span(html),
         }
         pages = [{"url": final_url, "title": title[:500], "main_text_excerpt": text[:5000], "content_sha256": value["content_sha256"], "retrieved_at": retrieved_at, "snapshot_path": snapshot_path, "signals": signals}]
         social = value["social_links"]

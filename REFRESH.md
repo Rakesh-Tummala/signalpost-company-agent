@@ -26,6 +26,12 @@ at the scale of a real submission.
 
 ## Wired into the one command
 
+Running the same command again into the same `--output-dir` is a refresh by itself: a finished run there (one that
+wrote `run-summary.json`) is kept as `<output-dir>/previous/` -- its profiles and envelopes, so the earlier
+evidence is preserved -- everything is fetched fresh, and the differences against it are reported as below. An
+unfinished run is resumed from its checkpoint instead. The summary's **Changes** section says what changed, that
+nothing did, or that this is the first recorded snapshot.
+
 `run_agent.py --previous-profiles <earlier run's profiles.jsonl>` compares the new run with that earlier
 one (organisations present in both) through `diff_datasets` and puts the material changes in each
 result's `changes`, one event per changed tracked field: field, old and new value, and **the earlier

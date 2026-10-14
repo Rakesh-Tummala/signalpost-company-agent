@@ -124,6 +124,28 @@ def backfill_top_level_website(profiles: list[dict]) -> None:
             row["website"] = value.get("final_url") or web.get("source_url")
 
 
+def archive_finished_run(output_dir: Path) -> str | None:
+    """If `output_dir` holds a finished run, keep it as `previous/` and return its profiles path.
+
+    A finished run (it wrote run-summary.json) is a snapshot to refresh, not a checkpoint to resume: its
+    profiles and envelopes are copied to `previous/` so the earlier evidence is preserved, the checkpoint is
+    removed so everything is fetched fresh, and the caller reports what changed against it. An unfinished
+    run (no run-summary.json) is left alone and resumed from its checkpoint, as before.
+    """
+    marker = output_dir / "run-summary.json"
+    earlier = output_dir / "profiles.jsonl"
+    if not (marker.exists() and earlier.exists()):
+        return None
+    archive = output_dir / "previous"
+    archive.mkdir(exist_ok=True)
+    for name in ("profiles.jsonl", "envelopes.jsonl"):
+        if (output_dir / name).exists():
+            shutil.copyfile(output_dir / name, archive / name)
+    shutil.move(str(marker), str(archive / "run-summary.json"))
+    earlier.unlink()
+    return str(archive / "profiles.jsonl")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the full Signalpost agent end to end.")
     parser.add_argument("--organisations", required=True, help="JSONL/JSON/text list of organisation numbers")
@@ -153,6 +175,10 @@ def main() -> None:
         os.environ[name] = str(scratch)
     tempfile.tempdir = str(scratch)
     atexit.register(shutil.rmtree, scratch, True)
+    archived = archive_finished_run(output_dir) if not args.previous_profiles else None
+    if archived:
+        args.previous_profiles = archived
+        print(f"Found a finished run in {output_dir}; kept it as {Path(archived).parent} and refreshing against it.", file=sys.stderr)
     started_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     run_started = time.time()
     budget_seconds = args.time_budget_minutes * 60 if args.time_budget_minutes else None

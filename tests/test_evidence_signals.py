@@ -526,7 +526,17 @@ class SummarySourcesAndChangesTests(unittest.TestCase):
         published = {c["field"] for c in envelope["claims"]}
         known_evidence = {e["id"] for e in envelope["evidence"]}
         by_text = {item["text"]: item for item in envelope["summary"]["sentences"]}
-        self.assertEqual(" ".join(by_text), envelope["summary"]["text"])
+        text = envelope["summary"]["text"]
+        for sentence_text in by_text:
+            self.assertIn(sentence_text, text)  # every sentence is in the readable text, with its [n] markers after it
+        self.assertIn("What it does:", text)
+        self.assertIn("Sources:", text)
+        sources = {item["n"]: item for item in envelope["summary"]["sources"]}
+        for item in envelope["summary"]["sentences"]:
+            for number in item["citations"]:
+                self.assertIn(f"[{number}]", text)
+                self.assertTrue(sources[number]["source_url"].startswith("http"))
+        self.assertTrue(all(source["evidence_ids"] and set(source["evidence_ids"]) <= known_evidence for source in sources.values()))
         for item in envelope["summary"]["sentences"]:
             self.assertTrue(set(item["fields"]) <= published, item)
             self.assertTrue(set(item["evidence_ids"]) <= known_evidence, item)

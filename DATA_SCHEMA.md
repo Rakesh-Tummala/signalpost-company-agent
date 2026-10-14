@@ -25,10 +25,19 @@ from the pipeline's internal profile format. This matches `OUTPUT_CONTRACT.md`:
 }
 ```
 
-`summary` carries, besides its `text`, a `sentences` list: each sentence with the claim `fields` it rests on
-and their `evidence_ids`, so every statement can be traced to its published claims and sources. When a
-previous run was supplied (`--previous-profiles`) the summary also says what changed (or that nothing did),
-and `changes` holds the events.
+`summary` is written for a reader deciding about the company and is organised in sections: **What it does**
+(the legal form, industry and town, the registry's own description of its activity, the company's own website
+description, when it was founded), **Financials**, **People and places** (managing director, chair, registered
+workplaces, group structure), **Online presence and activity** (verified website, profiles, dated news, open
+roles), **Changes** and **Not yet determined**. Every sentence is followed by `[n]` markers that point at a
+numbered **Sources** list at the end of `summary.text` (one entry per distinct source URL, with its retrieval
+date). Besides `text`, `summary` carries `sentences` (each with its `section`, the claim `fields` it rests on,
+their `evidence_ids` and its `citations` numbers) and `sources` (`n`, `source_url`, `retrieved_at`,
+`source_class`, `evidence_ids`), so the same traceability is machine-readable. The **Changes** section says
+what changed since the previous run, that nothing did, or that this is the first recorded snapshot. When the
+output folder already holds a finished run, that run is kept as `previous/` (its profiles and envelopes are
+preserved), everything is fetched fresh and the differences go to `changes`; `--previous-profiles` does the
+same for a run kept elsewhere.
 
 Every evidence entry also carries the same facts under the names reviewers use: `captured_at` and
 `capture_date` (= `retrieved_at`), `content_hash` (= `content_sha256`) and `retained_response_ref` (= `snapshot_id`,
@@ -40,7 +49,7 @@ is additive beyond OUTPUT_CONTRACT.md's minimal example — see AGENT.md for how
 built (template over already-published claims, never a model's own synthesis).
 
 Claim fields currently emitted:
-- From the official registry pipeline: `legal_name`, `legal_form`, `employees`,
+- From the official registry pipeline: `legal_name`, `legal_form`, `business_activity` and `registered_purpose` (the registry's own free-text description of what the company does and its statutory purpose), `founded_date`, `employees`,
   `bankrupt`, `liquidating`, `business_address`, `industry`,
   `latest_submitted_accounts`, `accounting_obligation`, `annual_accounts.<year>`
   (one per filed year the `financials` module actually returned figures for --
@@ -53,11 +62,11 @@ Claim fields currently emitted:
   (`{qid, url, label}`; `not_found` when no item carries the number, `failed` on a source error), `inception_date`,
   and `social_profile.<platform>` for handles Wikidata lists that the company's own site did not already supply.
   The retained response is the SPARQL rows returned for that company.
-- From website discovery/crawl: `official_website`, `social_profile.<platform>`
+- From website discovery/crawl: `official_website`, `website_description` (the company's own meta description, with that tag as the excerpt), `social_profile.<platform>`
   (one per verified social link found on the crawled site).
 - From the crawl-derived observation files (`--observations`, wired in by
   `run_agent.py`): `site_news.<index>` (one per **dated** company-owned news item --
-  value `{headline, published_at, url}` -- from `extract_company_site_news.py`; an
+  value `{title, headline, url, published_at, source_type, company}`, where `company` is the organisation number and legal name the site was verified against -- from `extract_company_site_news.py`; an
   undated news page is not published), `job_posting.<index>` (one per real role on the
   company's own site -- value `{title, url, date_posted, employment_type, evidence_kind}`
   where `evidence_kind` is `json_ld_jobposting`, `role_card` or `apply_action` -- from
