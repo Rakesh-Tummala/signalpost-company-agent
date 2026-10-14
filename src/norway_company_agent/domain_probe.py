@@ -20,6 +20,7 @@ from .identity import _tokens
 MIN_SLUG = 4
 MAX_SLUG = 30
 MAX_CANDIDATES = 6
+EXTRA_ENDINGS = (".net", ".org", ".eu", ".as")
 ORG_PATTERN = re.compile(r"(?<!\d)(\d{3})[ . ]?(\d{3})[ . ]?(\d{3})(?!\d)")
 
 
@@ -50,7 +51,16 @@ def domain_candidates(name: str | None) -> list[str]:
         for host in (f"{slug}.no", f"{'-'.join(tokens)}.no" if len(tokens) > 1 else None, f"{slug}.com"):
             if host and host not in hosts:
                 hosts.append(host)
-    return hosts[:MAX_CANDIDATES]
+    chosen = hosts[:MAX_CANDIDATES]
+    # Other domain endings small Norwegian companies use (badeog.net, freebit.eu, elite.as), for the full name only.
+    # They cost a DNS lookup each when they do not exist; a site found there is held to the same proof as any other.
+    first = next((tokens for tokens in variants if tokens and MIN_SLUG + 1 <= len("".join(tokens)) <= MAX_SLUG), None)
+    if first:
+        for ending in EXTRA_ENDINGS:
+            host = "".join(first) + ending
+            if host not in chosen:
+                chosen.append(host)
+    return chosen
 
 
 def place_on_page(text: str, postcode: str | None, town: str | None) -> bool:

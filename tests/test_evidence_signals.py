@@ -551,7 +551,7 @@ class SummarySourcesAndChangesTests(unittest.TestCase):
                  "old_content_sha256": "a" * 64, "new_content_sha256": "b" * 64, "old_retrieved_at": "2026-01-01T00:00:00Z"}
         changed = build_envelope(self._profile(), changes=[event], **self.ARGS)
         self.assertEqual(changed["changes"], [event])
-        self.assertIn("1 tracked field(s) changed: registry.employees (4 -> 6)", changed["summary"]["text"])
+        self.assertIn("1 tracked field changed: registry.employees (4 -> 6)", changed["summary"]["text"])
         unchanged = build_envelope(self._profile(), changes=[], **self.ARGS)
         self.assertEqual(unchanged["changes"], [])
         self.assertIn("No tracked field has changed since the previous run.", unchanged["summary"]["text"])
@@ -629,12 +629,13 @@ class DomainProbeTests(unittest.TestCase):
     def test_candidates_are_derived_from_the_legal_name_with_norwegian_letter_variants(self):
         from norway_company_agent.domain_probe import domain_candidates
 
-        self.assertEqual(domain_candidates("TRUCK INVEST AS"), ["truckinvest.no", "truck-invest.no", "truckinvest.com", "truck.no", "truck.com"])  # a trailing generic word is also tried off
+        self.assertEqual(domain_candidates("TRUCK INVEST AS"), ["truckinvest.no", "truck-invest.no", "truckinvest.com", "truck.no", "truck.com",
+                                                                 "truckinvest.net", "truckinvest.org", "truckinvest.eu", "truckinvest.as"])  # a trailing generic word is tried off; other endings for the full name
         self.assertEqual(domain_candidates("BJØRN & SØNN BYGG AS")[:2], ["bjornsonnbygg.no", "bjorn-sonn-bygg.no"])
         self.assertIn("bjoernsoennbygg.no", domain_candidates("BJØRN & SØNN BYGG AS"))
         self.assertEqual(domain_candidates("AS"), [])
         self.assertEqual(domain_candidates("X AS"), [])
-        self.assertLessEqual(len(domain_candidates("KNUT OLAV HALLAND BRØYTING OG GRAVING AS")), 4)
+        self.assertLessEqual(len(domain_candidates("KNUT OLAV HALLAND BRØYTING OG GRAVING AS")), 10)  # bounded: 6 name-derived hosts plus 4 other endings
 
     def test_the_organisation_number_must_be_a_delimited_number(self):
         from norway_company_agent.domain_probe import org_number_on_page
@@ -912,8 +913,8 @@ class ContractEvidenceTests(unittest.TestCase):
         page = _page()
         observations = job_observations(_profile([page]), today="2026-09-01") + news_observations(_profile([page]))
         text = summarize_profile(self._profile()["evidence"], observations)["text"]
-        self.assertIn("open role(s) shown on its own site", text)
-        self.assertIn("dated news item(s) on its own site", text)
+        self.assertIn("open roles shown on its own site", text)
+        self.assertIn("dated news items on its own site", text)
         empty = summarize_profile(self._profile()["evidence"], [])
         self.assertIn("dated news/press", empty["unknown_fields"])
         self.assertTrue(any(item.startswith("open roles") for item in empty["unknown_fields"]))

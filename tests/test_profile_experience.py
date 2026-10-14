@@ -98,7 +98,7 @@ class SummaryTests(unittest.TestCase):
         row["evidence"]["group"] = evidence("group", "available", "official_group", "https://data.brreg.no/enhetsregisteret/api/konsernstruktur/923609016",
                                             value={"navn": "PARENT AS", "organisasjonsnummer": "912805174", "children": [{"navn": "A"}, {"navn": "B"}]}, content_sha256="c" * 64)
         summary = build_envelope(row, **ARGS)["summary"]
-        self.assertIn("headed by PARENT AS (912805174), with 2 directly linked company(ies)", summary["text"])
+        self.assertIn("headed by PARENT AS (912805174), with 2 directly linked companies", summary["text"])
         self.assertNotIn("group/ownership structure", summary["unknown_fields"])
 
     def test_news_and_job_claims_carry_title_url_date_and_the_exact_company(self):

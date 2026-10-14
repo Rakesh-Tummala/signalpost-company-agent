@@ -400,6 +400,11 @@ def _short(value: Any) -> str:
     return text if len(text) <= 40 else text[:37] + "..."
 
 
+def _n(count: int, one: str, many: str) -> str:
+    """"1 workplace" / "2 workplaces": the count with the right singular or plural."""
+    return f"{count} {one if count == 1 else many}"
+
+
 SUMMARY_SECTIONS = ("What it does", "Financials", "People and places", "Online presence and activity", "Changes", "Not yet determined")
 ROLE_LABELS = {"LEDE": "chairs the board", "NEST": "is deputy chair of the board", "DAGL": "is the managing director (daglig leder)"}
 
@@ -519,10 +524,11 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
     if workforce_items:
         latest = max(workforce_items, key=lambda o: (o.get("metrics") or {}).get("year") or "")
         metrics = latest.get("metrics") or {}
-        measure = "full-time equivalents" if metrics.get("measure") == "full_time_equivalents" else "employees"
-        say(section, f"Its official annual report states {metrics.get('workforce_value')} {measure} ({metrics.get('year')}).", f"workforce_value.{metrics.get('year')}")
+        count = metrics.get("workforce_value")
+        one, many = ("full-time equivalent", "full-time equivalents") if metrics.get("measure") == "full_time_equivalents" else ("employee", "employees")
+        say(section, f"Its official annual report states {_n(count, one, many) if isinstance(count, int) else f'{count} {many}'} ({metrics.get('year')}).", f"workforce_value.{metrics.get('year')}")
     elif registry_employees not in (None, ""):
-        say(section, f"The registry records {registry_employees} employee(s).", "employees")
+        say(section, f"The registry records {_n(registry_employees, 'employee', 'employees') if isinstance(registry_employees, int) else str(registry_employees) + ' employees'}.", "employees")
     else:
         unknowns.append("workforce size (official annual-report headcount attempted but not found or not applicable for this company)")
 
@@ -552,7 +558,7 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
             if town and town.title() not in towns:
                 towns.append(town.title())
         where = f", in {', '.join(towns[:4])}" + (" and elsewhere" if len(towns) > 4 else "") if towns else ""
-        say(section, f"It has {len(locations)} registered workplace(s){where}.", "location.*")
+        say(section, f"It has {_n(len(locations), 'registered workplace', 'registered workplaces')}{where}.", "location.*")
     elif locations_record.get("status") == "available":
         say(section, "The registry lists no separate registered workplaces.", "registered_workplaces")
     else:
@@ -565,7 +571,7 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
         head_org = group_value.get("organisasjonsnummer")
         children = group_value.get("children") or []
         headed = f" headed by {head} ({head_org})" if head else ""
-        say(section, f"The registry shows a group structure{headed}, with {len(children)} directly linked company(ies).", "group_structure")
+        say(section, f"The registry shows a group structure{headed}, with {_n(len(children), 'directly linked company', 'directly linked companies')}.", "group_structure")
     else:
         unknowns.append("group/ownership structure")
 
@@ -591,7 +597,7 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
     )
     if news_items:
         latest_news = news_items[0].get("metrics") or {}
-        say(section, f"{len(news_items)} dated news item(s) on its own site; the latest, '{latest_news.get('headline')}', is dated {str(latest_news.get('published_at'))[:10]}.", "site_news.*")
+        say(section, f"{_n(len(news_items), 'dated news item', 'dated news items')} on its own site; the latest, '{latest_news.get('headline')}', is dated {str(latest_news.get('published_at'))[:10]}.", "site_news.*")
     else:
         unknowns.append("dated news/press")
 
@@ -602,7 +608,7 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
             for o in job_items if (o.get("metrics") or {}).get("evidence_kind") != "apply_action"
         ][:3]
         if titles:
-            say(section, f"It appears to be hiring: {len(job_items)} open role(s) shown on its own site, e.g. {', '.join(titles)}.", "job_posting.*")
+            say(section, f"It appears to be hiring: {_n(len(job_items), 'open role', 'open roles')} shown on its own site, e.g. {', '.join(titles)}.", "job_posting.*")
         else:
             say(section, "It appears to be hiring: its own site shows an apply action for open roles.", "job_posting.*")
     else:
@@ -614,7 +620,7 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
         if changes:
             shown = [f"{item['field']} ({_short(item.get('old_value'))} -> {_short(item.get('new_value'))})" for item in changes[:3]]
             more = f" and {len(changes) - 3} more" if len(changes) > 3 else ""
-            say(section, f"Since the previous run {len(changes)} tracked field(s) changed: {'; '.join(shown)}{more}.")
+            say(section, f"Since the previous run {_n(len(changes), 'tracked field', 'tracked fields')} changed: {'; '.join(shown)}{more}.")
         else:
             say(section, "No tracked field has changed since the previous run. The earlier evidence is preserved alongside the new.")
     else:

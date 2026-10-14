@@ -219,7 +219,9 @@ def _priority_links(base_url: str, soup: BeautifulSoup, limit: int = 8) -> list[
         href = str(anchor.get("href") or "").strip()
         url = urllib.parse.urljoin(base_url, href)
         parsed = urllib.parse.urlparse(url)
-        if parsed.scheme not in {"http", "https"} or parsed.netloc.lower() != base.netloc.lower():
+        # Same registered domain, not only the same host: career.example.com and karriere.example.no are the
+        # company's own pages, and a careers or news page often lives on such a subdomain.
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname or (parsed.netloc.lower() != base.netloc.lower() and _registered_domain(url) != _registered_domain(base_url)):
             continue
         haystack = (parsed.path + " " + anchor.get_text(" ", strip=True)).casefold()
         # The more specific kinds are tried first, so /about/careers is a jobs page, not an identity page.
