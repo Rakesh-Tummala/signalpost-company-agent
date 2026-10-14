@@ -1,1 +1,1 @@
-11m06s (666 s), one-command run from a clean clone of the pinned commit, Windows 11, no API keys
+10m31s (631 s), one-command run from a clean clone of the pinned commit, Windows 11, no API keys; 1,237 outbound HTTP requests counted at the library level
