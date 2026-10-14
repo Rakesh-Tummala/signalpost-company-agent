@@ -97,7 +97,9 @@ claims/evidence format in one call.
 ```bash
 # Server-side secrets, per the locked evaluator budget -- optional; the agent
 # needs no key. Without them website discovery uses the key-free domain probe,
-# Wikidata and the registry-listed site; the keys only add search-based candidates.
+# Wikidata and the registry-listed site; each key below only adds search-based
+# candidates, tried in this order for companies still missing a site. Any subset works.
+export BRAVE_SEARCH_API_KEY=...   # or BRAVE_API_KEY
 export TAVILY_API_KEY=...
 export EXA_API_KEY=...
 

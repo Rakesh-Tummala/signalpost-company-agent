@@ -15,7 +15,7 @@ from norway_company_agent.evidence import evidence  # noqa: E402
 from norway_company_agent.page_signals import description_span  # noqa: E402
 from scripts.build_output_contract import SUMMARY_SECTIONS, build_envelope  # noqa: E402
 from scripts.build_viewer import PAGE_TEMPLATE, embed_safe, flatten_envelope  # noqa: E402
-from scripts.run_agent import archive_finished_run  # noqa: E402
+from scripts.run_agent import archive_finished_run, discovery_stages  # noqa: E402
 
 ARGS = {"run_id": "r", "started_at": "2026-10-14T00:00:00Z", "completed_at": "2026-10-14T00:01:00Z"}
 
@@ -157,6 +157,42 @@ class ViewerTests(unittest.TestCase):
         self.assertEqual(page.count("</script>"), 1)  # only the page's own closing tag
         for needed in ('id="compare-btn"', 'id="search"', 'viewport', 'prefers-color-scheme', 'data-view="list"', "max-width: 860px"):
             self.assertIn(needed, page)
+
+
+class SearchProviderTests(unittest.TestCase):
+    def test_providers_run_only_when_their_key_is_set_in_the_documented_order(self):
+        self.assertEqual(discovery_stages({}), [])
+        both = discovery_stages({"TAVILY_API_KEY": "t", "BRAVE_API_KEY": "b", "EXA_API_KEY": " "})
+        self.assertEqual([(n, v) for n, _, v in both], [("brave", "BRAVE_API_KEY"), ("tavily", "TAVILY_API_KEY")])
+        self.assertEqual(discovery_stages({"BRAVE_SEARCH_API_KEY": "x"})[0][2], "BRAVE_SEARCH_API_KEY")
+
+    def test_the_brave_stage_crawls_a_candidate_and_publishes_only_what_the_gate_accepts(self):
+        import os
+        from unittest.mock import patch
+
+        import scripts.run_brave_discovery as brave
+
+        rows = [
+            {"organisation_number": "923609016", "name": "EXAMPLE TOOLS AS", "evidence": {}},
+            {"organisation_number": "923609017", "name": "HAS SITE AS", "website": "https://has.no", "evidence": {}},
+        ]
+        results = [{"url": "https://exampletools.no/", "title": "Example Tools AS - 923609016", "snippet": "Example Tools AS 923609016", "rank": 1, "provider": "brave_search_api", "query": "q"}]
+        page = evidence("website", "available", "company_site", "https://exampletools.no/", value={
+            "final_url": "https://exampletools.no/", "title": "Example Tools AS", "main_text_excerpt": "Example Tools AS organisasjonsnummer 923 609 016. " * 4,
+        })
+        with tempfile.TemporaryDirectory() as directory:
+            src, out, report = Path(directory) / "in.jsonl", Path(directory) / "out.jsonl", Path(directory) / "r.json"
+            src.write_text(chr(10).join(json.dumps(r) for r in rows) + chr(10), encoding="utf-8")
+            argv = ["run_brave_discovery.py", "--input", str(src), "--output", str(out), "--report", str(report), "--limit", "5", "--promote-verified", "--min-interval", "0"]
+            with patch.dict(os.environ, {"BRAVE_SEARCH_API_KEY": "test"}), patch.object(sys, "argv", argv),                     patch.object(brave, "brave_search", return_value=(results, {"status": 200, "latency_ms": 5, "bytes": 10, "query_sha256": "a" * 64})) as search,                     patch.object(brave, "fetch_website", return_value=(page, {"requests": 3})):
+                brave.main()
+            written = [json.loads(line) for line in out.read_text(encoding="utf-8").splitlines()]
+        self.assertEqual(search.call_count, 1)  # the company that already has a site is not queried
+        found = written[0]["evidence"]
+        self.assertEqual(found["website_discovery"]["status"], "available")
+        self.assertEqual(found["website"]["value"]["final_url"], "https://exampletools.no/")
+        self.assertNotIn("Example Tools AS - 923609016", json.dumps(found["website_discovery"]))  # the search title and snippet are never kept
+        self.assertNotIn("evidence", {k: v for k, v in written[1].items() if k == "website_discovery"})
 
 
 if __name__ == "__main__":

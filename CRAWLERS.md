@@ -7,6 +7,7 @@
 | Registry identity + financials + financial_history + roles + locations + group | `scripts/run_competition_batch.py` | Official BRREG bulk snapshot + live per-org API | 8 parallel workers, checkpoints every 25. `financial_history` is rate-limited server-side to ~30 request-starts/minute (`_reserve_history_slot` in `official.py`) |
 | Website discovery (key-free probe) | `scripts/run_domain_probe.py` | The domain of the e-mail address the company registered with Brreg (unless a mail provider or ISP), then name-derived domains (`exampletools.no`, `example-tools.no`, `.com`; Norwegian letter variants; a trailing Holding/Norge/Gruppen dropped). Fetches only those that resolve, robots.txt respected, plus up to three contact, about or privacy pages of a resolving site | About 1.3 requests per probed company; no API key; runs first so the paid stages query only what is still missing. A site is kept only if its pages show the exact organisation number, or the phone number or e-mail address the company registered (with the legal name in the hostname or title), or sit on the registered e-mail domain (with the name in the hostname or title), or show the registered postcode and town; the normal full crawl and identity gate then decide |
 | Independent facts (Wikidata, CC0) | `scripts/run_wikidata_enrichment.py` | One batched SPARQL query per 150 companies, matched exactly by organisation number (`P2333`): attributed website, social handles, founding date. A Wikidata-listed website is crawled and run through the identity gate like any other candidate, with Wikidata's listing as an independent anchor | 1 request per 150 companies; honours `Retry-After`; every profile gets an explicit `available` / `not_found` / `source_error` record. About 2.5% of Norwegian companies have an item (8 of the 1,000 entry companies), so this is a small but genuinely third-party source |
+| Website discovery (fallback 0, Brave) | `scripts/run_brave_discovery.py` | Brave Search API (the provider Builderr's source policy recommends), transient query only | Runs first among the search providers, only if `BRAVE_SEARCH_API_KEY` (or `BRAVE_API_KEY`) is set; same skip logic, crawl-candidate gate and identity gate as the other two; 0.1s min interval |
 | Website discovery (fallback 1) | `scripts/run_tavily_discovery.py` | Tavily Search API, transient query only | 0.3s min interval, checkpoints every 25, only runs if `TAVILY_API_KEY` is set |
 | Website discovery (fallback 2) | `scripts/run_exa_discovery.py` | Exa Search API, transient query only | 0.3s min interval, checkpoints every 25, only runs if `EXA_API_KEY` is set |
 | Deep multi-page site crawl | `scripts/run_scrapy_websites.py` | Registry-linked or discovered company website | 8 concurrent requests, 2/domain; best-effort -- skipped cleanly if `scrapy` isn't installed |
@@ -53,16 +54,13 @@ of the official-registry foundation.
   `scripts/run_youtube_search_connector.py`,
   `scripts/normalize_google_maps_results.py` — all self-tagged
   `rights_review_experiment` / `unofficial_api_experiment`.
-- `scripts/run_brave_discovery.py` — a third search-discovery fallback, same safe
-  pattern as Tavily/Exa; not wired into `run_agent.py` only because it needs a paid
-  key we don't currently hold. Would be a straightforward third fallback to add.
 - `scripts/run_sentiment_model.py` — local HF model over collected snippets; no gold
   corpus to evaluate it against yet, and no independent public-text sources feed it
   today anyway.
 
 ## Fallback order
 
-`run_agent.py` tries Tavily first, then Exa, for any company still missing a website
+`run_agent.py` tries Brave first (if its key is set), then Tavily, then Exa, for any company still missing a website
 after the previous stage — each connector's own skip logic checks
 `evidence.website.status == "available"`, so a company Tavily already resolved is not
 re-queried by Exa. See the `run_tavily_discovery.py` / `run_exa_discovery.py` commit

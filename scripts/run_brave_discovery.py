@@ -111,8 +111,11 @@ def main() -> None:
     for row in rows:
         if queried >= args.limit:
             break
-        if row.get("website"):
+        if row.get("website") or (row.get("evidence", {}).get("website") or {}).get("status") == "available":
             counts["registry_website_present_skipped"] += 1
+            continue
+        if not row.get("name"):
+            counts["skipped_no_name"] += 1
             continue
         queried += 1
         results, operation = brave_search(row, api_key, timeout=args.timeout, count=args.count)

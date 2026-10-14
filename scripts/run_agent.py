@@ -7,10 +7,11 @@ Chains every stage of the pipeline into one command, as required by the
   1. registry batch (identity, financials, financial_history, roles, group,
      locations, single-page website fetch) -- required, no optional deps.
   2. website discovery: first a key-free probe of name-derived domains (a site is kept only if
-     its page shows the exact organisation number or the registered postcode and town), then
-     (Tavily, then Exa) for companies still missing a site --
-     runs only if TAVILY_API_KEY / EXA_API_KEY is set (server-side secret, per
-     the locked evaluator budget's own requirement).
+     its page shows the exact organisation number, the registered phone or e-mail with the legal
+     name in the hostname or title, or the registered postcode and town), then (Brave, Tavily, Exa)
+     for companies still missing a site -- each runs only if its key (BRAVE_SEARCH_API_KEY or
+     BRAVE_API_KEY, TAVILY_API_KEY, EXA_API_KEY) is set (server-side secrets, per the locked
+     evaluator budget's own requirement).
   3. deep multi-page site crawl (scrapy) for every company with a website
      candidate -- best-effort: skipped cleanly if the `scrapy` package isn't
      installed in this environment, rather than failing the whole run.
@@ -41,6 +42,7 @@ import subprocess
 import tempfile
 import sys
 import time
+from typing import Any
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -122,6 +124,27 @@ def backfill_top_level_website(profiles: list[dict]) -> None:
         if web.get("status") == "available":
             value = web.get("value") or {}
             row["website"] = value.get("final_url") or web.get("source_url")
+
+
+# Search-discovery providers in the order they are tried, with the environment variables (server-side secrets) that
+# switch each on. A provider with no key set is skipped and the run is complete without it.
+DISCOVERY_PROVIDERS = (
+    ("brave", "run_brave_discovery.py", ("BRAVE_SEARCH_API_KEY", "BRAVE_API_KEY")),
+    ("tavily", "run_tavily_discovery.py", ("TAVILY_API_KEY",)),
+    ("exa", "run_exa_discovery.py", ("EXA_API_KEY",)),
+)
+
+
+def discovery_stages(environ: Any) -> list[tuple[str, str, str]]:
+    """(name, script, env_var) for each search provider that has a key in `environ`, in the order to run them."""
+    stages = []
+    for name, script, env_vars in DISCOVERY_PROVIDERS:
+        chosen = next((var for var in env_vars if str(environ.get(var, "")).strip()), None)
+        if chosen:
+            stages.append((name, script, chosen))
+        else:
+            print(f"No {' / '.join(env_vars)} set -- skipping {name} discovery.", file=sys.stderr)
+    return stages
 
 
 def archive_finished_run(output_dir: Path) -> str | None:
@@ -263,11 +286,9 @@ def main() -> None:
         profiles_path = wikidata_path
         stages_run.append("wikidata")
 
-    # 2b. Website discovery: Tavily, then Exa, for whatever's still missing.
-    for name, script, env_var in (("tavily", "run_tavily_discovery.py", "TAVILY_API_KEY"), ("exa", "run_exa_discovery.py", "EXA_API_KEY")):
-        if not os.environ.get(env_var, "").strip():
-            print(f"No {env_var} set -- skipping {name} discovery.", file=sys.stderr)
-            continue
+    # 2b. Website discovery through whichever search providers the environment supplies a key for
+    # (Brave, then Tavily, then Exa), each for whatever is still missing after the one before.
+    for name, script, env_var in discovery_stages(os.environ):
         discovered_path = output_dir / f"profiles-with-{name}.jsonl"
         ok = run([
             args.python, str(ROOT / script),
@@ -276,6 +297,7 @@ def main() -> None:
             "--report", str(output_dir / f"{name}-discovery-report.json"),
             "--limit", str(discovery_limit),
             "--promote-verified",
+            *(["--api-key-env", env_var] if name == "brave" else []),
         ], optional=True)
         if ok:
             profiles_path = discovered_path
