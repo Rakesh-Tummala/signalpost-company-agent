@@ -523,6 +523,7 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
     section = "Financials"
     financials_record = evidence.get("financials") or {}
     financials_records = (financials_record.get("value") or {}).get("records") or []
+    all_financial_records = list(financials_records)
     own_records = [r for r in financials_records if str(r.get("account_type") or "").upper() != "KONSERN"]
     consolidated_only = bool(financials_records) and not own_records
     financials_records = own_records or financials_records  # the company's own accounts; group accounts only if that is all there is
@@ -542,6 +543,10 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
         elif revenue is not None:
             scope_note = " (consolidated group accounts)" if consolidated_only else ""
             say(section, f"Its most recently filed accounts ({year}){scope_note} report revenue of {revenue:,.0f} NOK" + (f" and a result of {result:,.0f} NOK." if result is not None else "."), f"annual_accounts.{year}{'.consolidated' if consolidated_only else ''}")
+
+        group_record = next((r for r in all_financial_records if str(r.get("account_type") or "").upper() == "KONSERN" and _filing_year(r) == year), None)
+        if group_record and group_record.get("revenue") is not None and not consolidated_only:
+            say(section, f"The consolidated group accounts for {year} report revenue of {group_record['revenue']:,.0f} NOK, a different scope from the company's own accounts above.", f"annual_accounts.{year}.consolidated")
 
         # The trend uses the structured register's own prior-year record when it has one; a figure recovered from the
         # annual-report text is used only for a year the register lacks (and has passed usable_observations).

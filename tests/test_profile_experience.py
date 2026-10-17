@@ -111,8 +111,8 @@ class SummaryTests(unittest.TestCase):
         fields = [c["field"] for c in envelope["claims"] if c["field"].startswith("annual_accounts.") and c["availability"] == "available"]
         self.assertEqual(sorted(fields), ["annual_accounts.2023", "annual_accounts.2023.consolidated"])
         text = envelope["summary"]["text"]
-        self.assertIn("revenue of 142,268,177 NOK", text)  # the company's own accounts, not the group's
-        self.assertNotIn("208,764,678", text)
+        self.assertIn("revenue of 142,268,177 NOK", text)  # the company's own accounts
+        self.assertIn("The consolidated group accounts for 2023 report revenue of 208,764,678 NOK, a different scope", text)  # the group figure, labelled as such
         flat = flatten_envelope(envelope)
         self.assertEqual((flat["facts"]["revenue"], flat["facts"]["year"]), (142268177.0, "2023"))
         self.assertEqual(sorted(a["scope"] for a in flat["accounts"]), ["company", "group"])
