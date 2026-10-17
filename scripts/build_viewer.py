@@ -122,6 +122,8 @@ def flatten_envelope(envelope: dict[str, Any]) -> dict[str, Any]:
             sections.append({"title": title, "sentences": []})
         sections[-1]["sentences"].append({"text": sentence.get("text"), "cites": sentence.get("citations", [])})
     revenue = accounts[0]["revenue"] if accounts else None
+    registry_latest = str(raw("latest_submitted_accounts") or "")
+    later_filed = registry_latest if (accounts and registry_latest.isdigit() and accounts[0]["year"].isdigit() and int(registry_latest) > int(accounts[0]["year"])) else None
     return {
         "org": envelope.get("organisation_number"),
         "name": raw("legal_name"),
@@ -133,7 +135,7 @@ def flatten_envelope(envelope: dict[str, Any]) -> dict[str, Any]:
         "facts": {
             "revenue": revenue, "result": accounts[0]["result"] if accounts else None, "year": accounts[0]["year"] if accounts else None,
             "employees": raw("employees"), "workforce": workforce, "leader": leader["name"] if leader else None, "people": len(people),
-            "workplaces": len(places), "website": website, "founded": raw("founded_date") or raw("inception_date"),
+            "workplaces": len(places), "later_filed": later_filed, "website": website, "founded": raw("founded_date") or raw("inception_date"),
             "news": len(news), "jobs": len(jobs), "socials": [s["platform"] for s in socials],
             "activity": raw("business_activity") or raw("registered_purpose"),
         },
@@ -388,8 +390,8 @@ function renderDetail(org) {
       <h3 id="s-overview">Overview</h3>
       ${summaryHtml(c)}
       <div class="facts">
-        ${fact('Latest revenue' + (f.year ? ' (' + f.year + ')' : ''), nok(f.revenue), true)}
-        ${fact('Latest result', nok(f.result), true)}
+        ${fact((f.later_filed ? 'Latest captured revenue' : 'Latest revenue') + (f.year ? ' (' + f.year + ')' : ''), nok(f.revenue), true)}
+        ${fact('Result' + (f.year ? ' (' + f.year + ')' : ''), nok(f.result), true)}
         ${fact('Employees (registry)', num(f.employees))}
         ${fact('Workforce (annual report)', f.workforce ? num(f.workforce.value) + ' (' + esc(f.workforce.year) + ')' : '-', true)}
         ${fact('Registered workplaces', c.places.length ? String(c.places.length) : '-')}
@@ -397,6 +399,7 @@ function renderDetail(org) {
         ${fact('Open roles', String(f.jobs))}
         ${fact('Verified website', f.website ? link(f.website, f.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')) : '-', true)}
       </div>
+      ${f.later_filed ? `<p class="sub">The registry shows a later accounts filing (${esc(f.later_filed)}) whose figures were not captured, so ${esc(f.year)} is the newest year shown here.</p>` : ''}
       ${c.unknowns.length ? `<div class="unknown"><b>Not yet determined:</b> ${c.unknowns.map(esc).join('; ')}.</div>` : ''}
       ${c.changes.length ? `<h3>Changed since the previous run</h3><div class="tablewrap"><table><thead><tr><th>Field</th><th>Was</th><th>Now</th></tr></thead><tbody>${c.changes.map(x => `<tr><td>${esc(x.field)}</td><td>${esc(x.old)}</td><td>${esc(x.new)}</td></tr>`).join('')}</tbody></table></div>` : ''}
       <h3 id="s-fin">Financials</h3>

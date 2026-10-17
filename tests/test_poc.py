@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import json
 import gzip
 import csv
@@ -884,8 +885,23 @@ class OutputContractTests(unittest.TestCase):
             "evidence_span": "Prior-year (2023) figures cross-checked against the known current-year value on the same line.",
             "metrics": {"revenue": 150.0, "year": "2023"},
         }]
-        summary = summarize_profile(self._profile()["evidence"], observations)
+        evidence_2024_only = copy.deepcopy(self._profile()["evidence"])
+        records = evidence_2024_only["financials"]["value"]["records"]
+        evidence_2024_only["financials"]["value"]["records"] = [r for r in records if str((r.get("period") or {}).get("tilDato"))[:4] == "2024"]
+        summary = summarize_profile(evidence_2024_only, observations)  # the register has no 2023 record, so the recovered figure may be used
         self.assertIn("Revenue grew from 150 NOK (2023) to 200 NOK (2024).", summary["text"])
+
+    def test_the_register_wins_over_an_ocr_recovered_figure_for_the_same_year_and_misreads_are_dropped(self):
+        from scripts.build_output_contract import usable_observations
+
+        def recovered(year, revenue):
+            return {"organisation_number": "923609016", "signal_type": "prior_year_financials", "id": f"pyf-{year}", "metrics": {"revenue": revenue, "year": year}}
+
+        evidence = self._profile()["evidence"]  # the register returns 2023 and 2024; latest revenue is 200
+        kept = usable_observations(evidence, [recovered("2023", 150.0), recovered("2022", 1.0), recovered("2022", 150.0), recovered("2021", 50000.0)])
+        self.assertEqual([(o["metrics"]["year"], o["metrics"]["revenue"]) for o in kept], [("2022", 150.0)])
+        summary = summarize_profile(evidence, [recovered("2023", 999.0)])
+        self.assertNotIn("999", summary["text"])  # a recovered 2023 figure never overrides the register's own 2023 record
 
     def test_workforce_observation_becomes_claim_and_summary_sentence(self):
         observations = [{

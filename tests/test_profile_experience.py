@@ -85,6 +85,18 @@ class SummaryTests(unittest.TestCase):
                 self.assertIn(f"[{number}]", summary["text"])
                 self.assertIn(number, by_number)
 
+    def test_an_older_captured_year_is_not_called_the_latest_when_the_registry_shows_a_later_filing(self):
+        row = profile()
+        row["evidence"]["registry_live"]["value"]["latest_submitted_accounts"] = "2025"
+        row["evidence"]["financials"] = evidence(
+            "financials", "available", "official_financials", "https://data.brreg.no/regnskapsregisteret/regnskap/923609016",
+            value={"records": [{"period": {"tilDato": "2024-12-31"}, "revenue": 1000.0, "annual_result": 10.0}]}, content_sha256="e" * 64,
+        )
+        text = build_envelope(row, **ARGS)["summary"]["text"]
+        self.assertIn("The latest accounts with captured figures are for 2024", text)
+        self.assertIn("a later filing (2025) whose figures were not captured", text)
+        self.assertNotIn("most recently filed accounts (2024)", text)
+
     def test_a_first_snapshot_says_so_and_a_refresh_reports_the_change(self):
         first = build_envelope(profile(), **ARGS)["summary"]["text"]
         self.assertIn("first recorded snapshot", first)

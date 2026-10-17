@@ -405,6 +405,35 @@ def _n(count: int, one: str, many: str) -> str:
     return f"{count} {one if count == 1 else many}"
 
 
+def _filing_year(record: dict[str, Any]) -> str:
+    return str((record.get("period") or {}).get("tilDato") or "")[:4]
+
+
+def usable_observations(evidence: dict[str, Any], observations: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+    """Drop OCR-recovered prior-year figures that must not be published.
+
+    The structured register is authoritative for a year it returns, so a recovered figure for that year is
+    dropped (two values for one year is a period/scope conflict, and a real misread -- revenue read as 2.0 against
+    2,405,235 in the register -- showed up that way). For a year the register lacks, a recovered revenue that is
+    wildly out of scale with the latest filed revenue is a misread, not a result, and is dropped too.
+    """
+    records = ((evidence.get("financials") or {}).get("value") or {}).get("records") or []
+    api_years = {_filing_year(record) for record in records}
+    latest = max(records, key=_filing_year) if records else {}
+    current = latest.get("revenue")
+    kept = []
+    for item in observations or []:
+        if item.get("signal_type") == "prior_year_financials":
+            metrics = item.get("metrics") or {}
+            if str(metrics.get("year")) in api_years:
+                continue
+            revenue = metrics.get("revenue")
+            if isinstance(revenue, (int, float)) and isinstance(current, (int, float)) and revenue > 0 and current > 0 and not (current / 100 <= revenue <= current * 100):
+                continue
+        kept.append(item)
+    return kept
+
+
 SUMMARY_SECTIONS = ("What it does", "Financials", "People and places", "Online presence and activity", "Changes", "Not yet determined")
 ROLE_LABELS = {"LEDE": "chairs the board", "NEST": "is deputy chair of the board", "DAGL": "is the managing director (daglig leder)"}
 
@@ -497,25 +526,35 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
         year = str(period.get("tilDato") or "")[:4] or "the latest filed year"
         revenue = latest.get("revenue")
         result = latest.get("annual_result")
-        if revenue is not None:
+        registry_latest = str(registry_value.get("latest_submitted_accounts") or registry_value.get("sisteInnsendteAarsregnskap") or "")
+        later_filed = registry_latest.isdigit() and year.isdigit() and int(registry_latest) > int(year)
+        if revenue is not None and later_filed:
+            say(section, f"The latest accounts with captured figures are for {year}: revenue of {revenue:,.0f} NOK" + (f" and a result of {result:,.0f} NOK" if result is not None else "") + f". The registry shows a later filing ({registry_latest}) whose figures were not captured.", f"annual_accounts.{year}", "latest_submitted_accounts")
+        elif revenue is not None:
             say(section, f"Its most recently filed accounts ({year}) report revenue of {revenue:,.0f} NOK" + (f" and a result of {result:,.0f} NOK." if result is not None else "."), f"annual_accounts.{year}")
 
-        prior_year_items = [o for o in (observations or []) if o.get("signal_type") == "prior_year_financials"]
-        if prior_year_items:
-            prior = max(prior_year_items, key=lambda o: (o.get("metrics") or {}).get("year") or "")
-            prior_metrics = prior.get("metrics") or {}
-            prior_year = prior_metrics.get("year")
-            prior_revenue = prior_metrics.get("revenue")
-            if revenue is not None and prior_revenue is not None and prior_year:
-                if revenue > prior_revenue:
-                    trend = "grew"
-                elif revenue < prior_revenue:
-                    trend = "fell"
-                else:
-                    trend = "held steady"
-                say(section, f"Revenue {trend} from {prior_revenue:,.0f} NOK ({prior_year}) to {revenue:,.0f} NOK ({year}).", f"annual_accounts.{year}", f"annual_accounts.{prior_year}")
-            elif prior_year:
-                say(section, f"Additional filed figures for {prior_year} are also on file, recovered from the same official annual report.", f"annual_accounts.{prior_year}")
+        # The trend uses the structured register's own prior-year record when it has one; a figure recovered from the
+        # annual-report text is used only for a year the register lacks (and has passed usable_observations).
+        prior_year = prior_revenue = None
+        if year.isdigit():
+            prior_record = next((r for r in financials_records if _filing_year(r) == str(int(year) - 1)), None)
+            if prior_record and prior_record.get("revenue") is not None:
+                prior_year, prior_revenue = str(int(year) - 1), prior_record.get("revenue")
+        if prior_year is None:
+            prior_year_items = [o for o in usable_observations(evidence, observations) if o.get("signal_type") == "prior_year_financials"]
+            if prior_year_items:
+                prior_metrics = (max(prior_year_items, key=lambda o: (o.get("metrics") or {}).get("year") or "").get("metrics") or {})
+                prior_year, prior_revenue = prior_metrics.get("year"), prior_metrics.get("revenue")
+        if revenue is not None and prior_revenue is not None and prior_year:
+            if revenue > prior_revenue:
+                trend = "grew"
+            elif revenue < prior_revenue:
+                trend = "fell"
+            else:
+                trend = "held steady"
+            say(section, f"Revenue {trend} from {prior_revenue:,.0f} NOK ({prior_year}) to {revenue:,.0f} NOK ({year}).", f"annual_accounts.{year}", f"annual_accounts.{prior_year}")
+        elif prior_year:
+            say(section, f"Additional filed figures for {prior_year} are also on file.", f"annual_accounts.{prior_year}")
     else:
         unknowns.append("financial results")
 
@@ -766,6 +805,7 @@ def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, com
     registry_now = (evidence.get("registry_live") if (evidence.get("registry_live") or {}).get("status") == "available" else evidence.get("registry")) or {}
     registry_now_value = registry_now.get("value") or {}
     company = {"organisation_number": str(profile.get("organisation_number") or ""), "legal_name": registry_now_value.get("name") or registry_now_value.get("navn")}
+    observations = usable_observations(evidence, observations)
     emit_external_observations(emitter, observations or [], company)
 
     summary = summarize_profile(evidence, observations, changes)
