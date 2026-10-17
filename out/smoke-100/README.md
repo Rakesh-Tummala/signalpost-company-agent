@@ -12,10 +12,10 @@ python scripts/run_agent.py --organisations out/smoke-100/input-organisations.js
 | | |
 |---|---|
 | terminal results | 100 for 100 inputs, all unique, none failed |
-| claims | 2,444 (2,162 available) |
-| wall clock | 10m04s (`wall-clock.txt`; runs of the same code vary between about 10 and 13 minutes with the network) |
+| claims | 2,444 (2,167 available; 17 companies with a website, 5 of them registry-declared) |
+| wall clock | 11m29s (`wall-clock.txt`; runs of the same code vary between about 10 and 13 minutes with the network) |
 | outbound requests | 1,241 counted at the HTTP-library level, redirects and robots.txt included (the official limit is 2,000 per 100-company shard) |
-| evidence audit | `audit-report.json`: every one of 2,162 available claims has a public source URL, retrieval time, SHA-256 and supporting text. Run on `envelopes.jsonl` alone (`python scripts/audit_evidence.py --envelopes envelopes.jsonl`): 2,076 text claims verify completely (inline `source_snapshots`: body hash and exact excerpt) and the other 86 rest on annual-report PDFs, carried by hash/size/path and checked by that recorded hash: **0 failures**. Against the full output folder (`--root`): all 2,162 hashes re-computed, 0 failures (the committed `audit-report.json`) |
+| evidence audit | `audit-report.json`: every one of 2,167 available claims has a public source URL, retrieval time, SHA-256 and supporting text. Run on `envelopes.jsonl` alone (`python scripts/audit_evidence.py --envelopes envelopes.jsonl`): 2,081 text claims verify completely (inline `source_snapshots`: body hash and exact excerpt) and the other 86 rest on annual-report PDFs, carried by hash/size/path and checked by that recorded hash: **0 failures**. Against the full output folder (`--root`): all 2,167 hashes re-computed, 0 failures (the committed `audit-report.json`) |
 | Elopak (811413682), Builderr's evidence-complete example | 41 available claims, including the verified website, its Wikidata item and social profiles, each with its own saved source |
 
 `envelopes.jsonl` is one JSON object per line. `viewer.html` opens offline. The raw saved bodies

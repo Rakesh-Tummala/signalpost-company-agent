@@ -1,11 +1,11 @@
 {
   "summary": {
     "claims": 2444,
-    "evidence_complete_in_result": 2162,
-    "body_inline_in_result": 2076,
-    "snapshot_hash_ok": 2162,
-    "span_exact": 2076,
-    "not_available_claims": 282,
+    "evidence_complete_in_result": 2167,
+    "body_inline_in_result": 2081,
+    "snapshot_hash_ok": 2167,
+    "span_exact": 2081,
+    "not_available_claims": 277,
     "span_from_pdf": 86
   },
   "by_field_family": {
@@ -124,10 +124,10 @@
     },
     "official_website": {
       "claims": 100,
-      "evidence_complete_in_result": 12,
-      "body_inline_in_result": 12,
-      "snapshot_hash_ok": 12,
-      "span_exact": 12
+      "evidence_complete_in_result": 17,
+      "body_inline_in_result": 17,
+      "snapshot_hash_ok": 17,
+      "span_exact": 17
     },
     "registered_purpose": {
       "claims": 95,

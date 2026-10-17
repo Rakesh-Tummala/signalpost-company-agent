@@ -23,6 +23,7 @@ differs, this table is current.
 | Registered locations/subunits | 745 | 74.5% |
 | Registry-reported employee count | 142 | 14.2% |
 | Verified official website (identity gate: exact entity only; 48 listed by the registry, 53 found by the key-free probe or Wikidata) | 101 | 10.1% |
+| Registry-declared website (declared to Brreg by the company and at most one other entity; labelled, confidence 0.75; added after this run, measured offline on the same 1,000) | about 25 more | about 2.5% |
 | Group/ownership structure | 70 | 7.0% |
 | Verified social profiles (82 links; Facebook 32, Instagram 22, LinkedIn 20) | 43 | 4.3% |
 | **Dated** company-owned news items (203 items, 195 from the site's own feed) | 32 | 3.2% |
