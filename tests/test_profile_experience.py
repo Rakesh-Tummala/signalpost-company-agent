@@ -136,7 +136,7 @@ class SummaryTests(unittest.TestCase):
 
     def test_the_assessment_stays_grammatical_and_honest_when_no_accounts_were_captured(self):
         text = build_envelope(profile(), **ARGS)["summary"]["text"]
-        self.assertIn("In short: EXAMPLE AS has no annual-accounts figures captured; it has no verified website", text)
+        self.assertIn("In short: EXAMPLE AS has no annual-accounts figures captured; the registry records 12 employees; it has no verified website", text)
 
     def test_a_first_snapshot_says_so_and_a_refresh_reports_the_change(self):
         first = build_envelope(profile(), **ARGS)["summary"]["text"]
