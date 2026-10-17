@@ -117,6 +117,27 @@ class SummaryTests(unittest.TestCase):
         self.assertEqual((flat["facts"]["revenue"], flat["facts"]["year"]), (142268177.0, "2023"))
         self.assertEqual(sorted(a["scope"] for a in flat["accounts"]), ["company", "group"])
 
+    def test_the_summary_opens_with_one_supported_assessment_of_the_whole_company(self):
+        from norway_company_agent.official import normalize_financials
+
+        row = profile()
+        row["evidence"]["financials"] = evidence(
+            "financials", "available", "official_financials", "https://data.brreg.no/regnskapsregisteret/regnskap/923609016",
+            value=normalize_financials(FinancialRecordOrderTests()._body()), content_sha256="d" * 64,
+        )
+        summary = build_envelope(row, **ARGS)["summary"]
+        first = summary["sentences"][0]
+        self.assertEqual(first["section"], "In short")
+        self.assertTrue(first["text"].startswith("In short: EXAMPLE AS was profitable in 2025"), first["text"])
+        self.assertIn("no open roles were found on its own site", first["text"])
+        self.assertTrue(first["evidence_ids"] and first["citations"])  # every clause rests on cited claims
+        self.assertTrue(summary["text"].startswith("In short: EXAMPLE AS"))
+        self.assertEqual(summary["text"].count("In short:"), 1)
+
+    def test_the_assessment_stays_grammatical_and_honest_when_no_accounts_were_captured(self):
+        text = build_envelope(profile(), **ARGS)["summary"]["text"]
+        self.assertIn("In short: EXAMPLE AS has no annual-accounts figures captured; it has no verified website", text)
+
     def test_a_first_snapshot_says_so_and_a_refresh_reports_the_change(self):
         first = build_envelope(profile(), **ARGS)["summary"]["text"]
         self.assertIn("first recorded snapshot", first)
@@ -142,6 +163,49 @@ class SummaryTests(unittest.TestCase):
         value = next(c["value"] for c in envelope["claims"] if c["field"] == "site_news.0")
         self.assertEqual((value["title"], value["url"], value["published_at"]), ("We launch", "https://example.no/news/1", "2026-10-01T00:00:00Z"))
         self.assertEqual(value["company"], {"organisation_number": "923609016", "legal_name": "EXAMPLE AS"})
+
+
+class FinancialRecordOrderTests(unittest.TestCase):
+    """The register returns accounts oldest-first; the newest filings must not be the ones that get dropped."""
+
+    def _body(self):
+        def record(identifier, year, kind="SELSKAP", revenue=1000):
+            return {"id": identifier, "regnskapstype": kind, "regnskapsperiode": {"fraDato": f"{year}-01-01", "tilDato": f"{year}-12-31"}, "valuta": "NOK",
+                    "resultatregnskapResultat": {"driftsresultat": {"driftsinntekter": {"sumDriftsinntekter": revenue + int(year)}}, "aarsresultat": 5}}
+        return [record(101, "2019"), record(102, "2020"), record(103, "2021"), record(104, "2022"), record(105, "2023"),
+                record(106, "2024"), record(107, "2025", "KONSERN", 9000), record(108, "2025")]
+
+    def test_the_newest_filings_are_kept_newest_first_with_the_companys_own_accounts_ahead_of_the_groups(self):
+        from norway_company_agent.official import normalize_financials
+
+        records = normalize_financials(self._body())["records"]
+        self.assertEqual([(r["period"]["tilDato"][:4], r["account_type"]) for r in records],
+                         [("2025", "SELSKAP"), ("2025", "KONSERN"), ("2024", "SELSKAP"), ("2023", "SELSKAP"), ("2022", "SELSKAP"), ("2021", "SELSKAP")])
+
+    def test_each_kept_record_has_an_excerpt_from_its_own_part_of_the_response(self):
+        from norway_company_agent.evidence_spans import financials_spans
+
+        body = self._body()
+        raw = json.dumps(body, separators=(",", ":"))
+        spans = financials_spans(raw, body)
+        self.assertEqual(len(spans), 6)
+        self.assertTrue(all(span["period"] in raw for span in spans))  # a literal slice of the saved response
+        self.assertIn("2025-12-31", spans[0]["period"])
+        self.assertIn("2024-12-31", spans[2]["period"])
+
+    def test_the_summary_names_the_newest_year_not_the_oldest_captured(self):
+        from norway_company_agent.official import normalize_financials
+
+        row = profile()
+        row["evidence"]["registry_live"]["value"]["latest_submitted_accounts"] = "2025"
+        row["evidence"]["financials"] = evidence(
+            "financials", "available", "official_financials", "https://data.brreg.no/regnskapsregisteret/regnskap/923609016",
+            value=normalize_financials(self._body()), content_sha256="d" * 64,
+        )
+        text = build_envelope(row, **ARGS)["summary"]["text"]
+        self.assertIn("most recently filed accounts (2025)", text)
+        self.assertIn("Revenue", text)
+        self.assertNotIn("most recently filed accounts (2021)", text)
 
 
 class DescriptionSpanTests(unittest.TestCase):
@@ -176,7 +240,7 @@ class ViewerTests(unittest.TestCase):
         self.assertEqual((flat["org"], flat["name"], flat["form"]), ("923609016", "EXAMPLE AS", "AS"))
         self.assertEqual(flat["facts"]["website"], "https://example.no/")
         self.assertEqual(flat["facts"]["employees"], 12)
-        self.assertEqual([s["title"] for s in flat["summary_sections"]][0], "What it does")
+        self.assertEqual([s["title"] for s in flat["summary_sections"]][:2], ["In short", "What it does"])
         complete, available = flat["evidence_complete"]
         self.assertGreater(available, 0)
         self.assertLessEqual(complete, available)

@@ -437,7 +437,7 @@ def usable_observations(evidence: dict[str, Any], observations: list[dict[str, A
     return kept
 
 
-SUMMARY_SECTIONS = ("What it does", "Financials", "People and places", "Online presence and activity", "Changes", "Not yet determined")
+SUMMARY_SECTIONS = ("In short", "What it does", "Financials", "People and places", "Online presence and activity", "Changes", "Not yet determined")
 ROLE_LABELS = {"LEDE": "chairs the board", "NEST": "is deputy chair of the board", "DAGL": "is the managing director (daglig leder)"}
 
 
@@ -484,6 +484,7 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
         municipality = address.get("kommune")
 
     sentences: list[dict[str, Any]] = []
+    overall: dict[str, Any] = {}  # the facts the closing assessment ("In short") is assembled from
 
     def say(section: str, text: str, *fields: str) -> None:
         sentences.append({"section": section, "text": text, "fields": list(fields)})
@@ -534,6 +535,8 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
         result = latest.get("annual_result")
         registry_latest = str(registry_value.get("latest_submitted_accounts") or registry_value.get("sisteInnsendteAarsregnskap") or "")
         later_filed = registry_latest.isdigit() and year.isdigit() and int(registry_latest) > int(year)
+        overall["fin"] = {"year": year, "revenue": revenue, "result": result, "later": registry_latest if later_filed else None,
+                          "field": f"annual_accounts.{year}{'.consolidated' if consolidated_only else ''}"}
         if revenue is not None and later_filed:
             say(section, f"The latest accounts with captured figures are for {year}: revenue of {revenue:,.0f} NOK" + (f" and a result of {result:,.0f} NOK" if result is not None else "") + f". The registry shows a later filing ({registry_latest}) whose figures were not captured.", f"annual_accounts.{year}", "latest_submitted_accounts")
         elif revenue is not None:
@@ -560,6 +563,7 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
             else:
                 trend = "held steady"
             say(section, f"Revenue {trend} from {prior_revenue:,.0f} NOK ({prior_year}) to {revenue:,.0f} NOK ({year}).", f"annual_accounts.{year}", f"annual_accounts.{prior_year}")
+            overall["trend"] = {"word": trend, "from": prior_revenue, "to": revenue, "year": prior_year, "fields": [f"annual_accounts.{year}", f"annual_accounts.{prior_year}"]}
         elif prior_year:
             say(section, f"Additional filed figures for {prior_year} are also on file.", f"annual_accounts.{prior_year}")
     else:
@@ -573,8 +577,10 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
         count = metrics.get("workforce_value")
         one, many = ("full-time equivalent", "full-time equivalents") if metrics.get("measure") == "full_time_equivalents" else ("employee", "employees")
         say(section, f"Its official annual report states {_n(count, one, many) if isinstance(count, int) else f'{count} {many}'} ({metrics.get('year')}).", f"workforce_value.{metrics.get('year')}")
+        overall["staff"] = (f"its annual report states {_n(count, one, many) if isinstance(count, int) else f'{count} {many}'}", f"workforce_value.{metrics.get('year')}")
     elif registry_employees not in (None, ""):
         say(section, f"The registry records {_n(registry_employees, 'employee', 'employees') if isinstance(registry_employees, int) else str(registry_employees) + ' employees'}.", "employees")
+        overall["staff"] = (f"the registry records {_n(registry_employees, 'employee', 'employees') if isinstance(registry_employees, int) else str(registry_employees) + ' employees'}", "employees")
     else:
         unknowns.append("workforce size (official annual-report headcount attempted but not found or not applicable for this company)")
 
@@ -625,6 +631,7 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
     section = "Online presence and activity"
     if website_record.get("status") == "available" and website_url and website_verified:
         say(section, f"Its verified official website is {website_url}.", "official_website")
+        overall["site"] = True
     elif website_record.get("status") == "available" and website_url:
         unknowns.append("official website (a site is listed, but nothing on it ties it to this entity)")
     else:
@@ -671,6 +678,47 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
             say(section, "No tracked field has changed since the previous run. The earlier evidence is preserved alongside the new.")
     else:
         say(section, "This is the first recorded snapshot of this company, so there is no earlier snapshot to compare against; the next run keeps this evidence and lists any material change.")
+
+    # ---- In short: one supported assessment across the company --------------------------------
+    parts: list[str] = []
+    fields: list[str] = ["legal_name"]
+    fin = overall.get("fin")
+    if fin and fin.get("revenue") is not None:
+        result = fin.get("result")
+        when = f"in {fin['year']}" if not fin.get("later") else f"in {fin['year']} (the latest accounts with captured figures)"
+        if result is None:
+            parts.append(f"reported revenue of {fin['revenue']:,.0f} NOK {when}")
+        else:
+            verdict = "was profitable" if result > 0 else "made a loss" if result < 0 else "broke even"
+            parts.append(f"{verdict} {when}, with a result of {result:,.0f} NOK on revenue of {fin['revenue']:,.0f} NOK")
+        fields.append(fin["field"])
+    else:
+        parts.append("has no annual-accounts figures captured")
+    trend = overall.get("trend")
+    if trend:
+        if trend["word"] == "held steady":
+            parts.append(f"revenue held steady against {trend['year']}")
+        elif trend["from"] and trend["from"] > 0:
+            change = abs(trend["to"] - trend["from"]) / trend["from"] * 100
+            parts.append(f"revenue {trend['word']} {change:.1f}% against {trend['year']}")
+        fields.extend(trend["fields"])
+    if overall.get("staff"):
+        parts.append(overall["staff"][0])
+        fields.append(overall["staff"][1])
+    if overall.get("site"):
+        extra = f" and {_n(len(news_items), 'dated news item', 'dated news items')} on its own site" if news_items else ""
+        parts.append(f"it has a verified website{extra}")
+        fields.extend(["official_website"] + (["site_news.*"] if news_items else []))
+    else:
+        parts.append("it has no verified website")
+        fields.append("official_website")
+    if job_items:
+        parts.append("it appears to be hiring")
+        fields.append("job_posting.*")
+    else:
+        parts.append("no open roles were found on its own site")
+    if parts:
+        sentences.insert(0, {"section": "In short", "text": f"In short: {name} " + "; ".join(parts) + ".", "fields": fields})
 
     # ---- Unknowns -----------------------------------------------------------------------------
     if unknowns:
@@ -721,7 +769,7 @@ def cite_summary(summary: dict[str, Any], evidence_entries: list[dict[str, Any]]
             for item in summary["sentences"] if item.get("section") == section
         ]
         if parts:
-            label = "" if section == "Not yet determined" else f"{section}: "  # that sentence already starts with its own label
+            label = "" if section in ("Not yet determined", "In short") else f"{section}: "  # those sentences already start with their own label
             paragraphs.append(label + " ".join(parts))
     listing = "\n".join(
         f"[{item['n']}] {item['source_url']} (retrieved {str(item.get('retrieved_at') or 'unknown')[:10]})" for item in sources

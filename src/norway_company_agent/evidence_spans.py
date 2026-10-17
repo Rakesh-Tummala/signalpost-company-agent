@@ -48,17 +48,32 @@ def entity_spans(raw: str) -> dict[str, str]:
     return spans
 
 
+MAX_FINANCIAL_RECORDS = 6
+
+
+def select_financial_records(body: Any, limit: int = MAX_FINANCIAL_RECORDS) -> list[dict[str, Any]]:
+    """The newest `limit` records of the register's accounts response, newest period first.
+
+    The register returns its records oldest-first, so taking the first few would drop exactly the filings that
+    matter most (a company with five years on file would show 2021 as its latest). Records for the same period
+    keep the company's own accounts ahead of the consolidated group accounts.
+    """
+    records = [item for item in (body if isinstance(body, list) else []) if isinstance(item, dict)]
+    return sorted(
+        records,
+        key=lambda item: (str((item.get("regnskapsperiode") or {}).get("tilDato") or ""), 0 if str(item.get("regnskapstype") or "").upper() != "KONSERN" else -1),
+        reverse=True,
+    )[:limit]
+
+
 def financials_spans(raw: str, body: Any) -> list[dict[str, str]]:
-    """One span map per normalised record (same order as normalize_financials)."""
+    """One span map per normalised record (same selection and order as normalize_financials)."""
     out: list[dict[str, str]] = []
-    cursor = 0
-    for item in (body if isinstance(body, list) else [])[:3]:
+    for item in select_financial_records(body):
         entry: dict[str, str] = {}
         identifier = item.get("id")
-        anchor = f'"id":{identifier}' if identifier is not None else None
-        position = raw.find(anchor, cursor) if anchor else -1
-        if position < 0:
-            position = cursor
+        found = re.search(r'"id"\s*:\s*' + re.escape(str(identifier)) + r'(?!\d)', raw) if identifier is not None else None
+        position = found.start() if found else 0
         period = json_key_span(raw, "regnskapsperiode", after=position)
         if period:
             entry["period"] = period[0]
@@ -66,7 +81,6 @@ def financials_spans(raw: str, body: Any) -> list[dict[str, str]]:
         if revenue:
             entry["revenue"] = revenue[0]
         out.append(entry)
-        cursor = position + 1
     return out
 
 

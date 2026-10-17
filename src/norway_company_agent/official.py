@@ -5,7 +5,7 @@ import time
 from typing import Any, Callable
 
 from .evidence import evidence
-from .evidence_spans import module_spans
+from .evidence_spans import module_spans, select_financial_records
 from .http import FetchResult, fetch_json
 from .snapshot_store import save_snapshot
 
@@ -78,7 +78,7 @@ def normalize_financials(body: Any) -> dict[str, Any]:
     if not records:
         return {"records": []}
     normalized = []
-    for item in records[:3]:
+    for item in select_financial_records(records):
         normalized.append({
             "record_id": item.get("id"),
             "account_type": item.get("regnskapstype"),
