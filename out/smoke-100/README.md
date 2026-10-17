@@ -12,10 +12,10 @@ python scripts/run_agent.py --organisations out/smoke-100/input-organisations.js
 | | |
 |---|---|
 | terminal results | 100 for 100 inputs, all unique, none failed |
-| claims | 2,517 (2,235 available) |
-| wall clock | 10m31s (`wall-clock.txt`; runs of the same code vary between about 10 and 12 minutes with the network) |
+| claims | 2,439 (2,157 available) |
+| wall clock | 12m23s (`wall-clock.txt`; runs of the same code vary between about 10 and 13 minutes with the network) |
 | outbound requests | 1,237 counted at the HTTP-library level, redirects and robots.txt included (the official limit is 2,000 per 100-company shard) |
-| evidence audit | `audit-report.json`: every one of 2,235 available claims has a public source URL, retrieval time, SHA-256 and supporting text. Run on `envelopes.jsonl` alone (`python scripts/audit_evidence.py --envelopes envelopes.jsonl`): 2,071 text claims verify completely (inline `source_snapshots`: body hash and exact excerpt) and the other 164 rest on annual-report PDFs, carried by hash/size/path and checked by that recorded hash: **0 failures**. Against the full output folder (`--root`): all 2,235 hashes re-computed, 0 failures (the committed `audit-report.json`) |
+| evidence audit | `audit-report.json`: every one of 2,157 available claims has a public source URL, retrieval time, SHA-256 and supporting text. Run on `envelopes.jsonl` alone (`python scripts/audit_evidence.py --envelopes envelopes.jsonl`): 2,071 text claims verify completely (inline `source_snapshots`: body hash and exact excerpt) and the other 164 rest on annual-report PDFs, carried by hash/size/path and checked by that recorded hash: **0 failures**. Against the full output folder (`--root`): all 2,157 hashes re-computed, 0 failures (the committed `audit-report.json`) |
 | Elopak (811413682), Builderr's evidence-complete example | 38 available claims, including the verified website, its Wikidata item and social profiles, each with its own saved source |
 
 `envelopes.jsonl` is one JSON object per line. `viewer.html` opens offline. The raw saved bodies

@@ -1,7 +1,7 @@
 {
   "connector": "domain_probe_v1",
-  "started_at": "2026-10-14T05:46:11.177261Z",
-  "completed_at": "2026-10-14T05:47:11.820695Z",
+  "started_at": "2026-10-17T04:15:00.421570Z",
+  "completed_at": "2026-10-17T04:16:10.667830Z",
   "counts": {
     "input_profiles": 100,
     "probed_profiles": 84,

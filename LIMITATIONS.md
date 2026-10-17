@@ -4,12 +4,12 @@ Honest account of what this agent does not yet do, as of this submission. None o
 these are silently hidden: every gap below shows up as an honest `not_available` /
 `not_applicable` claim rather than a fabricated or zero value.
 
-## Real per-field coverage (1,000-company entry batch, final code, one clean-clone run)
+## Real per-field coverage (1,000-company entry batch, one clean-clone run on commit 0ceaf50)
 
 Produced by one `run_agent.py` run from a fresh clone, no API keys, Windows 11 (the same code also ran
 clean on Ubuntu 24.04, 10 companies): 1,000 terminal results, 24,955 claims, **1h33m** wall clock (the last four
 runs took 1h30m to 1h39m, so expect 1.5 to 1.7 hours), about 11,500 outbound requests (registry stage 7,274 including its
-homepage crawl, key-free site probe and the crawl of its candidates 3,284, Wikidata 48, about 855 annual-report downloads). Numbers below are from that run's `envelopes.jsonl`;
+homepage crawl, key-free site probe and the crawl of its candidates 3,284, Wikidata 48, about 855 annual-report downloads). Numbers below are from that run's `envelopes.jsonl` (later commits changed only how financial years are reconciled, so the annual-accounts claim count is slightly lower now, plus an optional key-gated search stage and docs; the 100-company shard was re-run on the final commit);
 sections further down were written at earlier stages and describe the history of the work, so where a number
 differs, this table is current.
 

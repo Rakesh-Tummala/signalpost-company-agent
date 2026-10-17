@@ -1,12 +1,12 @@
 {
   "summary": {
-    "claims": 2517,
-    "evidence_complete_in_result": 2235,
+    "claims": 2439,
+    "evidence_complete_in_result": 2157,
     "body_inline_in_result": 2071,
-    "snapshot_hash_ok": 2235,
+    "snapshot_hash_ok": 2157,
     "span_exact": 2071,
     "not_available_claims": 282,
-    "span_from_pdf": 164
+    "span_from_pdf": 86
   },
   "by_field_family": {
     "accounting_obligation": {
@@ -17,12 +17,12 @@
       "span_exact": 100
     },
     "annual_accounts": {
-      "claims": 365,
-      "evidence_complete_in_result": 364,
+      "claims": 287,
+      "evidence_complete_in_result": 286,
       "body_inline_in_result": 283,
-      "snapshot_hash_ok": 364,
+      "snapshot_hash_ok": 286,
       "span_exact": 283,
-      "span_from_pdf": 81
+      "span_from_pdf": 3
     },
     "annual_accounts_years_on_file": {
       "claims": 100,
