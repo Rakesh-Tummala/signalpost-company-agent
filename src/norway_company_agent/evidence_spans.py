@@ -159,7 +159,7 @@ def module_spans(module: str, raw_bytes: bytes | None, body: Any) -> Any:
         return spans
     if module == "registry":
         spans = {}
-        for key in ("organisasjonsnummer", "navn", "organisasjonsform.kode", "antallAnsatte", "konkurs", "underAvvikling", "sisteInnsendteAarsregnskap", "aktivitet", "vedtektsfestetFormaal", "stiftelsesdato"):
+        for key in ("organisasjonsnummer", "navn", "organisasjonsform.kode", "antallAnsatte", "konkurs", "underAvvikling", "sisteInnsendteAarsregnskap", "aktivitet", "vedtektsfestetFormaal", "stiftelsesdato", "hjemmeside"):
             found = json_key_span(raw, key)
             if found:
                 spans[key] = found[0]

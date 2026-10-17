@@ -106,6 +106,7 @@ def flatten_envelope(envelope: dict[str, Any]) -> dict[str, Any]:
         workforce = {"value": item["raw"], "year": name.split(".", 1)[1], "source_url": item["source_url"]}
         break
     website = raw("official_website") if isinstance(raw("official_website"), str) else None
+    website_basis = next((c.get("basis") for c in envelope.get("claims", []) if c.get("field") == "official_website"), None)
     leader = next((p for p in people if str(p["role"]).lower().startswith("daglig")), None)
     areas = {
         "overview": bool(raw("legal_name")),
@@ -137,7 +138,7 @@ def flatten_envelope(envelope: dict[str, Any]) -> dict[str, Any]:
         "facts": {
             "revenue": revenue, "result": own[0]["result"] if own else None, "year": own[0]["year"] if own else None,
             "employees": raw("employees"), "workforce": workforce, "leader": leader["name"] if leader else None, "people": len(people),
-            "workplaces": len(places), "later_filed": later_filed, "website": website, "founded": raw("founded_date") or raw("inception_date"),
+            "workplaces": len(places), "later_filed": later_filed, "website": website, "website_basis": website_basis, "founded": raw("founded_date") or raw("inception_date"),
             "news": len(news), "jobs": len(jobs), "socials": [s["platform"] for s in socials],
             "activity": raw("business_activity") or raw("registered_purpose"),
         },
@@ -399,7 +400,7 @@ function renderDetail(org) {
         ${fact('Registered workplaces', c.places.length ? String(c.places.length) : '-')}
         ${fact('Dated news items', String(f.news))}
         ${fact('Open roles', String(f.jobs))}
-        ${fact('Verified website', f.website ? link(f.website, f.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')) : '-', true)}
+        ${fact(f.website_basis === 'registry_declared' ? 'Website (registry-declared)' : 'Verified website', f.website ? link(f.website, f.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')) : '-', true)}
       </div>
       ${f.later_filed ? `<p class="sub">The registry shows a later accounts filing (${esc(f.later_filed)}) whose figures were not captured, so ${esc(f.year)} is the newest year shown here.</p>` : ''}
       ${c.unknowns.length ? `<div class="unknown"><b>Not yet determined:</b> ${c.unknowns.map(esc).join('; ')}.</div>` : ''}
@@ -410,7 +411,7 @@ function renderDetail(org) {
       ${people ? `<div class="tablewrap"><table><thead><tr><th>Name</th><th>Role</th><th>Changed</th><th>Evidence</th></tr></thead><tbody>${people}</tbody></table></div>` : '<p class="sub">No role holders were found.</p>'}
       ${places ? `<h3>Registered workplaces</h3><div class="tablewrap"><table><thead><tr><th>Name</th><th>Town</th><th>Employees</th><th>Evidence</th></tr></thead><tbody>${places}</tbody></table></div>` : ''}
       <h3 id="s-web">Web &amp; activity</h3>
-      ${f.website ? `<p>Verified website: ${link(f.website)}</p>` : '<p class="sub">No website could be verified as belonging to this exact company.</p>'}
+      ${f.website ? (f.website_basis === 'registry_declared' ? `<p>Registry-declared website: ${link(f.website)} <span class="sub">(the company lists it with Brreg; its pages did not confirm the legal name)</span></p>` : `<p>Verified website: ${link(f.website)}</p>`) : '<p class="sub">No website could be verified as belonging to this exact company.</p>'}
       ${c.socials.length ? `<p>Verified profiles: ${c.socials.map(s => link(s.url, s.platform)).join(' &middot; ')}</p>` : ''}
       ${news ? `<h3>Dated news from its own site</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Title</th><th>Evidence</th></tr></thead><tbody>${news}</tbody></table></div>` : ''}
       ${jobs ? `<h3>Open roles on its own site</h3><div class="tablewrap"><table><thead><tr><th>Role</th><th>Posted</th><th>Evidence</th></tr></thead><tbody>${jobs}</tbody></table></div>` : ''}

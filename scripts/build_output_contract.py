@@ -331,12 +331,70 @@ def emit_group(emitter: Emitter, evidence: dict[str, Any]) -> None:
     emitter.claim("group_structure", record.get("value"), record, module="group", span=(record.get("spans") or {}).get("whole"))
 
 
-def emit_website(emitter: Emitter, evidence: dict[str, Any]) -> None:
+REGISTRY_DECLARED_MAX_ENTITIES = 2
+# Where an abandoned domain gets redirected for sale: not a company website.
+DOMAIN_MARKETPLACES = ("fruits.co", "sedo.com", "dan.com", "afternic.com", "hugedomains.com", "undeveloped.com", "bodis.com", "parkingcrew.net", "domainmarket.com")
+REGISTRY_DECLARED_CONFIDENCE = 0.75
+
+
+def _registry_declaration(evidence: dict[str, Any]) -> tuple[dict[str, Any], str, str] | None:
+    """(registry record, literal `"hjemmeside":...` excerpt, module) for the registry response that lists the site."""
+    for module, key in (("registry_live", "website"), ("registry", "hjemmeside")):
+        record = evidence.get(module) or {}
+        span = (record.get("spans") or {}).get("hjemmeside")
+        if record.get("status") == "available" and (record.get("value") or {}).get(key) and span:
+            return record, span, module
+    return None
+
+
+def registry_declared_website(evidence: dict[str, Any], declared: dict[str, Any] | None) -> str | None:
+    """The URL to publish as a registry-declared website, or None.
+
+    Published only when the gate did not verify the site, the entity declared it to Brreg, at most two registered
+    entities declare that same site (not a manager's, franchisor's or group's umbrella site), and the site exists:
+    fetched and not a parked or empty page, or present but refusing or failing the fetch (robots, 403, 5xx, timeout,
+    oversized). A name that does not resolve is not a website.
+    """
+    if not declared or int(declared.get("declared_by") or 99) > REGISTRY_DECLARED_MAX_ENTITIES or not _registry_declaration(evidence):
+        return None
+    record = evidence.get("website") or {}
+    value = record.get("value") or {}
+    from norway_company_agent.identity import _host
+
+    requested = _host(value.get("requested_url") or record.get("source_url"))
+    if requested and requested != declared.get("host") and not requested.endswith("." + str(declared.get("host"))):
+        return None  # the fetched site is not the declared one (for example a discovered candidate)
+    status = record.get("status")
+    note = str(record.get("note") or "")
+    if status == "available":
+        assessment = value.get("identity_assessment") or {}
+        if assessment.get("publishable") or (assessment.get("score") or 0) <= 0.1 or str(value.get("title") or "").lower().startswith("index of"):
+            return None
+        final = value.get("final_url") or value.get("requested_url") or ""
+        final_host = _host(final)
+        if any(final_host == market or final_host.endswith("." + market) for market in DOMAIN_MARKETPLACES) or "/domain/" in final.lower():
+            return None  # the declared domain now redirects to a domain-for-sale page
+        return final
+    if status in {"blocked", "source_error"} and "did not resolve" not in note:
+        return record.get("source_url") or value.get("requested_url")
+    return None
+
+
+def emit_website(emitter: Emitter, evidence: dict[str, Any], declared: dict[str, Any] | None = None) -> None:
     # A discovered-and-promoted site lives in evidence.website; otherwise fall back
     # to whatever the registry-listed website module found (may be not_found).
     record = evidence.get("website") or {}
     value = record.get("value") or {}
     assessment = value.get("identity_assessment")
+    declared_url = registry_declared_website(evidence, declared)
+    if declared_url:
+        # The company declared this site to Brreg and (almost) nobody else did; the evidence is that declaration,
+        # quoted literally, and the claim says plainly that the site's own content did not confirm the legal name.
+        registry_record, span, module = _registry_declaration(evidence)
+        emitter.claim("official_website", declared_url, registry_record, module=module, span=span, method="registry_declared_website", availability="available")
+        emitter.claims[-1]["confidence"] = REGISTRY_DECLARED_CONFIDENCE
+        emitter.claims[-1]["basis"] = "registry_declared"
+        return
     # A fetched site the identity gate could not tie to this exact entity is not published as
     # the company's website: when the match is uncertain the answer is "ambiguous".
     unverified = record.get("status") == "available" and assessment is not None and not assessment.get("publishable")
@@ -460,7 +518,7 @@ def _registry_text(registry_value: dict[str, Any], *keys: str) -> str:
     return ""
 
 
-def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any]] | None = None, changes: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any]] | None = None, changes: list[dict[str, Any]] | None = None, declared_site: str | None = None) -> dict[str, Any]:
     """Build a grounded, template-based summary -- every sentence traces to claims
     published in the same envelope (`sentences[].fields`, resolved to evidence ids by
     build_envelope). No model invents or infers anything here; this is string formatting
@@ -637,6 +695,9 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
     if website_record.get("status") == "available" and website_url and website_verified:
         say(section, f"Its verified official website is {website_url}.", "official_website")
         overall["site"] = True
+    elif declared_site:
+        say(section, f"Its registry-declared website is {declared_site}: the company lists it with Brreg, though the site's own pages did not confirm the legal name.", "official_website")
+        overall["declared_site"] = True
     elif website_record.get("status") == "available" and website_url:
         unknowns.append("official website (a site is listed, but nothing on it ties it to this entity)")
     else:
@@ -714,6 +775,9 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
         extra = f" and {_n(len(news_items), 'dated news item', 'dated news items')} on its own site" if news_items else ""
         parts.append(f"it has a verified website{extra}")
         fields.extend(["official_website"] + (["site_news.*"] if news_items else []))
+    elif overall.get("declared_site"):
+        parts.append("it has a registry-declared website")
+        fields.append("official_website")
     else:
         parts.append("it has no verified website")
         fields.append("official_website")
@@ -859,7 +923,7 @@ def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, com
     emit_roles(emitter, evidence)
     emit_locations(emitter, evidence)
     emit_group(emitter, evidence)
-    emit_website(emitter, evidence)
+    emit_website(emitter, evidence, profile.get("registry_declared_site"))
     emit_social_links(emitter, evidence)
     emit_wikidata(emitter, evidence)
     registry_now = (evidence.get("registry_live") if (evidence.get("registry_live") or {}).get("status") == "available" else evidence.get("registry")) or {}
@@ -868,7 +932,8 @@ def build_envelope(profile: dict[str, Any], *, run_id: str, started_at: str, com
     observations = usable_observations(evidence, observations)
     emit_external_observations(emitter, observations or [], company)
 
-    summary = summarize_profile(evidence, observations, changes)
+    declared_claim = next((c for c in emitter.claims if c["field"] == "official_website" and c.get("basis") == "registry_declared"), None)
+    summary = summarize_profile(evidence, observations, changes, declared_site=declared_claim["value"] if declared_claim else None)
     resolve_summary_sources(summary, emitter.claims)
     cite_summary(summary, emitter.evidence)
     metrics = profile.get("run_metrics") or {}

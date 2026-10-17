@@ -315,6 +315,12 @@ def main() -> None:
                 row["website_seed_source"] = "previous_run"
                 seeded += 1
         print(f"Seeded {seeded} website(s) from the previous run; they go through the same crawl and identity gate.", file=sys.stderr)
+    try:
+        from norway_company_agent.registry_sites import annotate_declared_sites
+
+        annotate_declared_sites(profiles, Path(args.bulk))  # how many registry entities declare the same website
+    except Exception as exc:  # noqa: BLE001 -- best-effort; without it no registry-declared site is published
+        print(f"  (declared-site count failed, continuing without it: {exc})", file=sys.stderr)
     write_jsonl(output_dir / "profiles.jsonl", profiles)
     profiles_path = output_dir / "profiles.jsonl"
 

@@ -208,6 +208,80 @@ class FinancialRecordOrderTests(unittest.TestCase):
         self.assertNotIn("most recently filed accounts (2021)", text)
 
 
+class RegistryDeclaredWebsiteTests(unittest.TestCase):
+    """A site the company declared to Brreg, that (almost) no other entity declares, is published as registry-declared."""
+
+    def _row(self, *, status="available", score=0.3, title="Kjokken", note=None, declared_by=1, host="engsol.no"):
+        from norway_company_agent.evidence_spans import module_spans
+
+        body = ('{"organisasjonsnummer":"923609016","navn":"ENGINEERING SOLUTIONS AS","hjemmeside":"' + host + '"}').encode()
+        live = evidence("registry_live", "available", "official_registry_live", "https://data.brreg.no/enhetsregisteret/api/enheter/923609016",
+                        value={"name": "ENGINEERING SOLUTIONS AS", "legal_form": "AS", "website": host}, content_sha256="a" * 64,
+                        spans=module_spans("registry_live", body, json.loads(body)))
+        site_value = {"requested_url": f"https://{host}/", "final_url": f"https://{host}/", "title": title,
+                      "identity_assessment": {"publishable": False, "score": score, "reasons": ["registry-linked URL lacks strong exact-entity identity evidence"]}}
+        site = evidence("website", status, "registry_linked_company_website", f"https://{host}/", value=site_value if status == "available" else None, note=note, content_sha256="b" * 64)
+        return {"organisation_number": "923609016", "registry_declared_site": {"host": host, "declared_by": declared_by},
+                "evidence": {"registry_live": live, "website": site}}
+
+    def _website_claim(self, row):
+        envelope = build_envelope(row, **ARGS)
+        return envelope, next(c for c in envelope["claims"] if c["field"] == "official_website")
+
+    def test_a_uniquely_declared_site_is_published_with_the_declaration_as_its_evidence(self):
+        envelope, claim = self._website_claim(self._row())
+        self.assertEqual((claim["availability"], claim["basis"], claim["confidence"]), ("available", "registry_declared", 0.75))
+        excerpt = next(e["claim_span"] for e in envelope["evidence"] if e["id"] == claim["evidence_ids"][0])
+        self.assertEqual(excerpt, '"hjemmeside":"engsol.no"')
+        text = envelope["summary"]["text"]
+        self.assertIn("Its registry-declared website is https://engsol.no/", text)
+        self.assertIn("it has a registry-declared website", text)
+        self.assertNotIn("verified official website", text)
+        flat = flatten_envelope(envelope)
+        self.assertEqual((flat["facts"]["website"], flat["facts"]["website_basis"]), ("https://engsol.no/", "registry_declared"))
+
+    def test_an_umbrella_site_declared_by_many_entities_is_not_published(self):
+        _, claim = self._website_claim(self._row(declared_by=636, host="obos.no"))
+        self.assertEqual(claim["availability"], "ambiguous")
+        self.assertNotIn("basis", claim)
+
+    def test_a_site_that_refuses_the_fetch_is_published_but_a_name_that_does_not_resolve_is_not(self):
+        _, blocked = self._website_claim(self._row(status="blocked", note="robots.txt disallows this user agent"))
+        self.assertEqual((blocked["availability"], blocked["basis"]), ("available", "registry_declared"))
+        _, failed = self._website_claim(self._row(status="source_error", note="HTTP 403"))
+        self.assertEqual(failed["availability"], "available")
+        _, dead = self._website_claim(self._row(status="blocked", note="Hostname did not resolve"))
+        self.assertNotEqual(dead["availability"], "available")
+
+    def test_a_parked_or_empty_page_is_not_published(self):
+        _, parked = self._website_claim(self._row(score=0.1))
+        self.assertNotEqual(parked["availability"], "available")
+        _, listing = self._website_claim(self._row(title="Index of /"))
+        self.assertNotEqual(listing["availability"], "available")
+
+    def test_a_declared_domain_that_now_redirects_to_a_domain_sale_page_is_not_published(self):
+        row = self._row(host="drd.no", title="drd.no | fruits")
+        row["evidence"]["website"]["value"]["final_url"] = "https://www.fruits.co/en/domain/drd.no"
+        _, claim = self._website_claim(row)
+        self.assertNotEqual(claim["availability"], "available")
+
+    def test_declarations_are_counted_across_the_whole_bulk_file(self):
+        import gzip as gz
+        from norway_company_agent.registry_sites import annotate_declared_sites
+
+        with tempfile.TemporaryDirectory() as directory:
+            bulk = Path(directory) / "bulk.csv.gz"
+            with gz.open(bulk, "wt", encoding="utf-8", newline="") as handle:
+                handle.write('"organisasjonsnummer","navn","hjemmeside"' + chr(10))
+                for index, site in enumerate(["engsol.no", "www.obos.no", "obos.no", "https://obos.no/", ""]):
+                    handle.write(f'"92360901{index}","X{index} AS","{site}"' + chr(10))
+            rows = [self._row(), self._row(host="obos.no")]
+            for row in rows:
+                row.pop("registry_declared_site")
+            self.assertEqual(annotate_declared_sites(rows, bulk), 2)
+        self.assertEqual([r["registry_declared_site"] for r in rows], [{"host": "engsol.no", "declared_by": 1}, {"host": "obos.no", "declared_by": 3}])
+
+
 class DescriptionSpanTests(unittest.TestCase):
     def test_meta_description_variants_are_found_literally(self):
         for tag in ('<meta name="description" content="A">', "<meta property='og:description' content='A'>", '<META NAME=description CONTENT="A">'):

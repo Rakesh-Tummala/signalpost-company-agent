@@ -162,6 +162,7 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         "find the best information and most relevant links on all topics related to",
         # Registrar placeholders: the domain exists and may even be the company's, but there is no site to describe.
         "registrert domene", "domene registrert hos", "this domain has been registered", "this domain is registered",
+        "index of /",  # an empty web-server directory listing, not a company site
     )
     normalized_raw = unicodedata.normalize("NFKD", candidate_text).encode("ascii", "ignore").decode().casefold()
     homepage_token_sets = [set(_tokens(part)) for part in homepage_identity_parts if part]

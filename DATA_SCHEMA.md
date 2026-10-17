@@ -62,7 +62,7 @@ Claim fields currently emitted:
   (`{qid, url, label}`; `not_found` when no item carries the number, `failed` on a source error), `inception_date`,
   and `social_profile.<platform>` for handles Wikidata lists that the company's own site did not already supply.
   The retained response is the SPARQL rows returned for that company.
-- From website discovery/crawl: `official_website`, `website_description` (the company's own meta description, with that tag as the excerpt), `social_profile.<platform>`
+- From website discovery/crawl: `official_website` (gate-verified; or, with `"basis": "registry_declared"` and confidence 0.75, a site the company declared to Brreg that no more than one other entity declares -- its evidence is the registry's `"hjemmeside"` excerpt, see `IDENTITY_RESOLUTION.md`), `website_description` (the company's own meta description, with that tag as the excerpt), `social_profile.<platform>`
   (one per verified social link found on the crawled site).
 - From the crawl-derived observation files (`--observations`, wired in by
   `run_agent.py`): `site_news.<index>` (one per **dated** company-owned news item --

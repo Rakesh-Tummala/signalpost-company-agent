@@ -121,6 +121,25 @@ the page, 20 by name plus a Norway signal). The audit led to one more tightening
 `.no` match on a common word is the same collision risk in a smaller form. There is no labelled ground truth for
 websites, so the precision is audited, not measured; the trade (a few genuine sites quarantined) is deliberate.
 
+## Registry-declared websites (published, labelled, lower confidence)
+
+A website the company itself declared to Brreg (`hjemmeside`) whose pages do not carry the legal name is not
+gate-verified, but it is the company's own public statement about its own site. It is published as
+`official_website` with `"basis": "registry_declared"`, confidence 0.75, and the registry's literal
+`"hjemmeside":...` as the evidence -- and the summary and viewer say "registry-declared", never "verified" --
+when all of these hold:
+
+- at most two entities in the whole bulk registry declare that same site. A site declared by many is an umbrella
+  site, never one company's own: `usbl.no` is declared by about 1,900 entities, `obos.no` by about 640, `vbbl.no`
+  by about 210, `7-eleven.no` by 61, `backe.no` by 15;
+- the site exists: fetched and not a parked, for-sale or empty directory page (a domain that now redirects to a
+  domain marketplace is excluded), or present but refusing or failing the fetch (robots.txt, HTTP 403/5xx,
+  timeouts). A name that does not resolve is not published.
+
+Registry-declared sites are never used for news, jobs or social profiles: those facts may belong to a parent or
+brand whose site the company declared. The trade is deliberate and visible: on the entry batch this adds about 25
+websites, a few of which are a parent's or brand's global site (for example `ecolab.com` declared by Ecolab AS).
+
 ## When uncertain
 
 If a candidate fails the gate, or no candidate exists, the profile gets a
