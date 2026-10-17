@@ -1,12 +1,12 @@
 {
   "connector": "domain_probe_v1",
-  "started_at": "2026-10-17T04:15:00.421570Z",
-  "completed_at": "2026-10-17T04:16:10.667830Z",
+  "started_at": "2026-10-17T05:30:37.405851Z",
+  "completed_at": "2026-10-17T05:31:47.853784Z",
   "counts": {
     "input_profiles": 100,
     "probed_profiles": 84,
     "candidates": 634,
-    "probe_requests": 222,
+    "probe_requests": 223,
     "hits_by_registered_place": 5,
     "crawl_requests": 92,
     "verified_sites": 4,
