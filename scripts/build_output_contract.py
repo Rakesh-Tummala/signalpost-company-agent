@@ -265,7 +265,10 @@ def emit_financials(emitter: Emitter, evidence: dict[str, Any]) -> None:
         period = item.get("period") or {}
         year = str(period.get("tilDato") or period.get("fraDato") or item.get("record_id"))[:4]
         entry = record_spans[index] if index < len(record_spans) else {}
-        emitter.claim(f"annual_accounts.{year}", item, record, module="financials", span=entry.get("period") or entry.get("revenue"))
+        # A group's consolidated accounts and the company's own accounts can cover the same year with different
+        # figures; they are different scopes, so the consolidated ones get their own field name.
+        scope = ".consolidated" if str(item.get("account_type") or "").upper() == "KONSERN" else ""
+        emitter.claim(f"annual_accounts.{year}{scope}", item, record, module="financials", span=entry.get("period") or entry.get("revenue"))
 
 
 def emit_financial_history(emitter: Emitter, evidence: dict[str, Any], organisation_number: str | None = None) -> None:
@@ -519,6 +522,9 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
     section = "Financials"
     financials_record = evidence.get("financials") or {}
     financials_records = (financials_record.get("value") or {}).get("records") or []
+    own_records = [r for r in financials_records if str(r.get("account_type") or "").upper() != "KONSERN"]
+    consolidated_only = bool(financials_records) and not own_records
+    financials_records = own_records or financials_records  # the company's own accounts; group accounts only if that is all there is
     unknowns: list[str] = []
     if financials_record.get("status") == "available" and financials_records:
         latest = max(financials_records, key=lambda item: (item.get("period") or {}).get("tilDato") or "")
@@ -531,7 +537,8 @@ def summarize_profile(evidence: dict[str, Any], observations: list[dict[str, Any
         if revenue is not None and later_filed:
             say(section, f"The latest accounts with captured figures are for {year}: revenue of {revenue:,.0f} NOK" + (f" and a result of {result:,.0f} NOK" if result is not None else "") + f". The registry shows a later filing ({registry_latest}) whose figures were not captured.", f"annual_accounts.{year}", "latest_submitted_accounts")
         elif revenue is not None:
-            say(section, f"Its most recently filed accounts ({year}) report revenue of {revenue:,.0f} NOK" + (f" and a result of {result:,.0f} NOK." if result is not None else "."), f"annual_accounts.{year}")
+            scope_note = " (consolidated group accounts)" if consolidated_only else ""
+            say(section, f"Its most recently filed accounts ({year}){scope_note} report revenue of {revenue:,.0f} NOK" + (f" and a result of {result:,.0f} NOK." if result is not None else "."), f"annual_accounts.{year}{'.consolidated' if consolidated_only else ''}")
 
         # The trend uses the structured register's own prior-year record when it has one; a figure recovered from the
         # annual-report text is used only for a year the register lacks (and has passed usable_observations).

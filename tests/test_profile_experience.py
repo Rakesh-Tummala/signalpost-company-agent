@@ -97,6 +97,26 @@ class SummaryTests(unittest.TestCase):
         self.assertIn("a later filing (2025) whose figures were not captured", text)
         self.assertNotIn("most recently filed accounts (2024)", text)
 
+    def test_group_and_company_accounts_for_one_year_are_separate_claims_and_the_summary_uses_the_companys_own(self):
+        row = profile()
+        period = {"fraDato": "2023-01-01", "tilDato": "2023-12-31"}
+        row["evidence"]["financials"] = evidence(
+            "financials", "available", "official_financials", "https://data.brreg.no/regnskapsregisteret/regnskap/923609016",
+            value={"records": [
+                {"record_id": 2, "account_type": "KONSERN", "period": period, "revenue": 208764678.0, "annual_result": 3825143.0},
+                {"record_id": 1, "account_type": "SELSKAP", "period": period, "revenue": 142268177.0, "annual_result": 3978330.0},
+            ]}, content_sha256="f" * 64,
+        )
+        envelope = build_envelope(row, **ARGS)
+        fields = [c["field"] for c in envelope["claims"] if c["field"].startswith("annual_accounts.") and c["availability"] == "available"]
+        self.assertEqual(sorted(fields), ["annual_accounts.2023", "annual_accounts.2023.consolidated"])
+        text = envelope["summary"]["text"]
+        self.assertIn("revenue of 142,268,177 NOK", text)  # the company's own accounts, not the group's
+        self.assertNotIn("208,764,678", text)
+        flat = flatten_envelope(envelope)
+        self.assertEqual((flat["facts"]["revenue"], flat["facts"]["year"]), (142268177.0, "2023"))
+        self.assertEqual(sorted(a["scope"] for a in flat["accounts"]), ["company", "group"])
+
     def test_a_first_snapshot_says_so_and_a_refresh_reports_the_change(self):
         first = build_envelope(profile(), **ARGS)["summary"]["text"]
         self.assertIn("first recorded snapshot", first)

@@ -75,10 +75,10 @@ def flatten_envelope(envelope: dict[str, Any]) -> dict[str, Any]:
     for name, item in families("annual_accounts."):
         value = item["raw"] if isinstance(item["raw"], dict) else {}
         accounts.append({
-            "year": name.split(".", 1)[1], "revenue": value.get("revenue"), "result": value.get("annual_result"),
+            "year": name.split(".")[1], "scope": "group" if name.endswith(".consolidated") else "company", "revenue": value.get("revenue"), "result": value.get("annual_result"),
             "operating_result": value.get("operating_result"), "source_url": item["source_url"], "sha": item["sha"],
         })
-    accounts.sort(key=lambda a: a["year"], reverse=True)
+    accounts.sort(key=lambda a: (a["year"], a["scope"] == "company"), reverse=True)
     people = []
     for name, item in families("role."):
         value = item["raw"] if isinstance(item["raw"], dict) else {}
@@ -121,9 +121,11 @@ def flatten_envelope(envelope: dict[str, Any]) -> dict[str, Any]:
         if not sections or sections[-1]["title"] != title:
             sections.append({"title": title, "sentences": []})
         sections[-1]["sentences"].append({"text": sentence.get("text"), "cites": sentence.get("citations", [])})
-    revenue = accounts[0]["revenue"] if accounts else None
+    own = [a for a in accounts if a["scope"] == "company"] or accounts
+    accounts_for_facts = own
+    revenue = own[0]["revenue"] if own else None
     registry_latest = str(raw("latest_submitted_accounts") or "")
-    later_filed = registry_latest if (accounts and registry_latest.isdigit() and accounts[0]["year"].isdigit() and int(registry_latest) > int(accounts[0]["year"])) else None
+    later_filed = registry_latest if (own and registry_latest.isdigit() and own[0]["year"].isdigit() and int(registry_latest) > int(own[0]["year"])) else None
     return {
         "org": envelope.get("organisation_number"),
         "name": raw("legal_name"),
@@ -133,7 +135,7 @@ def flatten_envelope(envelope: dict[str, Any]) -> dict[str, Any]:
         "areas": areas,
         "area_count": sum(areas.values()),
         "facts": {
-            "revenue": revenue, "result": accounts[0]["result"] if accounts else None, "year": accounts[0]["year"] if accounts else None,
+            "revenue": revenue, "result": own[0]["result"] if own else None, "year": own[0]["year"] if own else None,
             "employees": raw("employees"), "workforce": workforce, "leader": leader["name"] if leader else None, "people": len(people),
             "workplaces": len(places), "later_filed": later_filed, "website": website, "founded": raw("founded_date") or raw("inception_date"),
             "news": len(news), "jobs": len(jobs), "socials": [s["platform"] for s in socials],
@@ -366,7 +368,7 @@ function renderDetail(org) {
   const c = byOrg.get(org);
   if (!c) { $('detail').innerHTML = '<div class="panel empty">Company not found.</div>'; return; }
   const f = c.facts;
-  const finRows = c.accounts.map(a => `<tr><td>${esc(a.year)}</td><td class="num">${nok(a.revenue)}</td><td class="num">${nok(a.operating_result)}</td><td class="num">${nok(a.result)}</td><td>${link(a.source_url, 'source')}</td></tr>`).join('');
+  const finRows = c.accounts.map(a => `<tr><td>${esc(a.year)}${a.scope === 'group' ? ' (group)' : ''}</td><td class="num">${nok(a.revenue)}</td><td class="num">${nok(a.operating_result)}</td><td class="num">${nok(a.result)}</td><td>${link(a.source_url, 'source')}</td></tr>`).join('');
   const people = c.people.map(p => `<tr><td>${esc(p.name)}</td><td>${esc(p.role)}</td><td>${esc(p.since || '')}</td><td>${link(p.source_url, 'source')}</td></tr>`).join('');
   const places = c.places.map(p => `<tr><td>${esc(p.name)}</td><td>${esc(p.town)}</td><td class="num">${num(p.employees)}</td><td>${link(p.source_url, 'source')}</td></tr>`).join('');
   const news = c.news.map(n => `<tr><td class="num">${esc(n.date)}</td><td>${link(n.url, n.title || n.url)}</td><td>${link(n.source_url, 'saved page')}</td></tr>`).join('');
